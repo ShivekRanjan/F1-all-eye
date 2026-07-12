@@ -13,7 +13,7 @@ import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select } from "../components/controls";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton, Spinner } from "../components/ui";
-import { TrackOutline } from "../components/TrackOutline";
+import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, fmtPlan, pct, teamColor, trackSearchText } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
 import type {
@@ -92,7 +92,8 @@ function RaceHub({ track, season }: { track: string; season: number }) {
   return (
     <div className="space-y-5">
       {/* Race header strip */}
-      <Card className="flex flex-wrap items-center gap-x-8 gap-y-3 p-4">
+      <Card className="relative flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden p-4">
+        <TrackWatermark track={track} className="-right-14 -top-14 h-60 w-60" />
         <TrackOutline track={track} size={44} className="text-accent" />
         <div>
           <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">

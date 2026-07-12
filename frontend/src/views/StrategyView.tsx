@@ -15,7 +15,7 @@ import {
 import { api } from "../api/client";
 import { Field, Segmented, Select, Slider } from "../components/controls";
 import { Callout, Card, CardSkeleton, ErrorNote, SectionTitle, Spinner } from "../components/ui";
-import { TrackOutline } from "../components/TrackOutline";
+import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
 import type {
@@ -281,7 +281,8 @@ function RecommendationBanner({ rec, best }: { rec: RecommendResp; best: Strateg
   const confidence = Math.round((1 - runnerUp) * 100);
   const softLaps = stintLaps(best, rec.total_laps).find((s) => s.compound === "SOFT")?.laps;
   return (
-    <Card className="overflow-hidden border-line-card">
+    <Card className="relative overflow-hidden border-line-card">
+      <TrackWatermark track={rec.track} className="-right-16 -top-16 h-72 w-72" />
       <div className="flex flex-wrap">
         <div className="min-w-[280px] flex-1 border-line p-5 sm:border-r">
           <div className="flex items-center gap-2">

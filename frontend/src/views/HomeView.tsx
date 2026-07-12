@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { DriverTag } from "../components/Driver";
 import { TrackOutline } from "../components/TrackOutline";
 import { pct, teamColor, timeAgo } from "../lib/format";
@@ -160,9 +161,11 @@ function PodiumBlocks({
           >
             <div className="flex flex-col items-center gap-1.5 pb-2.5">
               <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
-              <span className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}>
-                {pct(row.podium_prob)}
-              </span>
+              <AnimatedNumber
+                value={row.podium_prob}
+                format={pct}
+                className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}
+              />
             </div>
             <div
               className={`flex w-full items-start justify-center rounded-t-lg border border-b-0 pt-1.5 ${riser} ${tone}`}
@@ -229,12 +232,10 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
                 style={{ width: `${(d.points / maxPts) * 100}%` }}
               />
             </div>
-            <span className="nums w-12 text-right font-mono text-[12px] text-ink">
-              {d.points.toFixed(0)}
-            </span>
+            <AnimatedNumber value={d.points} className="nums w-12 text-right font-mono text-[12px] text-ink" />
             {data.ongoing && (
               <span className="nums w-12 text-right font-mono text-[12px] text-accent">
-                {d.win_prob != null ? pct(d.win_prob) : "—"}
+                {d.win_prob != null ? <AnimatedNumber value={d.win_prob} format={pct} /> : "—"}
               </span>
             )}
           </div>

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, SectionTitle } from "../components/ui";
+import { AnimatedNumber } from "../components/AnimatedNumber";
 import { DriverTag } from "../components/Driver";
 import { pct } from "../lib/format";
 import { teamColor } from "../lib/format";
@@ -177,11 +178,15 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
           <span className="text-sm text-ink-muted">{leader.team}</span>
         </div>
       </div>
-      <Stat label="Points" value={leader.points.toFixed(0)} />
-      <Stat label="Lead" value={second ? `+${gap.toFixed(0)}` : "—"} sub={second ? `over ${second.driver}` : ""} />
+      <Stat label="Points" value={<AnimatedNumber value={leader.points} />} />
+      <Stat
+        label="Lead"
+        value={second ? <AnimatedNumber value={gap} format={(n) => `+${n.toFixed(0)}`} /> : "—"}
+        sub={second ? `over ${second.driver}` : ""}
+      />
       <Stat label="Wins" value={String(leader.wins)} />
       {leader.win_prob != null && (
-        <Stat label="Title odds" value={pct(leader.win_prob)} accent />
+        <Stat label="Title odds" value={<AnimatedNumber value={leader.win_prob} format={pct} />} accent />
       )}
     </Card>
   );
@@ -194,7 +199,7 @@ function Stat({
   accent = false,
 }: {
   label: string;
-  value: string;
+  value: ReactNode;
   sub?: string;
   accent?: boolean;
 }) {
@@ -227,7 +232,7 @@ function DriversCard({ data }: { data: StandingsResp }) {
     { key: "team", header: "Team", render: (d) => <TeamCell team={d.team} /> },
     { key: "wins", header: "W", align: "right", render: (d) => (d.wins ? d.wins : <span className="text-ink-faint">—</span>) },
     { key: "pod", header: "Pod", align: "right", render: (d) => (d.podiums ? d.podiums : <span className="text-ink-faint">—</span>) },
-    { key: "points", header: "Points", align: "right", render: (d) => <span className="font-600">{d.points.toFixed(0)}</span> },
+    { key: "points", header: "Points", align: "right", render: (d) => <AnimatedNumber value={d.points} className="font-600" /> },
   ];
   if (data.ongoing) {
     cols.push({
@@ -241,7 +246,7 @@ function DriversCard({ data }: { data: StandingsResp }) {
               className="inline-block h-1.5 rounded-full bg-accent align-middle"
               style={{ width: `${Math.max(3, (d.win_prob / maxProb) * 56)}px` }}
             />
-            {pct(d.win_prob)}
+            <AnimatedNumber value={d.win_prob} format={pct} />
           </span>
         ) : (
           <span className="text-ink-faint">—</span>
@@ -269,7 +274,7 @@ function ConstructorsCard({ rows }: { rows: ConstructorStanding[] }) {
     { key: "pos", header: "#", align: "right", render: (c) => <span className="text-ink-muted">{c.pos}</span> },
     { key: "team", header: "Constructor", render: (c) => <TeamCell team={c.team} /> },
     { key: "wins", header: "W", align: "right", render: (c) => (c.wins ? c.wins : <span className="text-ink-faint">—</span>) },
-    { key: "points", header: "Points", align: "right", render: (c) => <span className="font-600">{c.points.toFixed(0)}</span> },
+    { key: "points", header: "Points", align: "right", render: (c) => <AnimatedNumber value={c.points} className="font-600" /> },
   ];
   return (
     <Card className="p-4">

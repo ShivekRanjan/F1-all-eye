@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, forwardRef, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { CursorGlow } from "./components/CursorGlow";
 import { Spinner } from "./components/ui";
 import { useSettings } from "./lib/useSettings";
@@ -65,6 +65,17 @@ export default function App() {
   useSettings(); // ensures <html data-accent/motion> stays applied + reactive
   const active = TABS.find((t) => t.id === tab)!;
 
+  // Sliding indicator that tracks the active nav item — measured off the
+  // real DOM node rather than computed from layout constants, so it stays
+  // correct however the group headers/spacing change.
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<Partial<Record<TabId, HTMLButtonElement | null>>>({});
+  const [indicator, setIndicator] = useState({ top: 0, height: 0, ready: false });
+  useLayoutEffect(() => {
+    const btn = itemRefs.current[tab];
+    if (btn) setIndicator({ top: btn.offsetTop, height: btn.offsetHeight, ready: true });
+  }, [tab, collapsed]);
+
   return (
     <div className="lg:flex">
       {/* ---- Ambient grid drift — page-wide, behind every screen (not just
@@ -98,7 +109,15 @@ export default function App() {
           {!collapsed && <Brand />}
         </div>
 
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+        <nav ref={navRef} className="relative flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+          <div
+            className="pointer-events-none absolute left-0 w-[3px] rounded-r bg-accent shadow-glow transition-[transform,height,opacity] duration-300 ease-out"
+            style={{
+              transform: `translateY(${indicator.top}px)`,
+              height: indicator.height,
+              opacity: indicator.ready ? 1 : 0,
+            }}
+          />
           {GROUP_ORDER.map((g) => (
             <div key={g} className="mb-5">
               {!collapsed && (
@@ -109,6 +128,9 @@ export default function App() {
               {TABS.filter((t) => t.group === g).map((t) => (
                 <NavItem
                   key={t.id}
+                  ref={(el) => {
+                    itemRefs.current[t.id] = el;
+                  }}
                   label={t.label}
                   collapsed={collapsed}
                   active={tab === t.id}
@@ -218,21 +240,13 @@ function Logo() {
   );
 }
 
-function NavItem({
-  label,
-  active,
-  collapsed,
-  icon,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  collapsed: boolean;
-  icon?: string;
-  onClick: () => void;
-}) {
+const NavItem = forwardRef<
+  HTMLButtonElement,
+  { label: string; active: boolean; collapsed: boolean; icon?: string; onClick: () => void }
+>(function NavItem({ label, active, collapsed, icon, onClick }, ref) {
   return (
     <button
+      ref={ref}
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       title={collapsed ? label : undefined}
@@ -252,7 +266,7 @@ function NavItem({
       )}
     </button>
   );
-}
+});
 
 function MobileTab({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
