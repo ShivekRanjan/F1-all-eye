@@ -34,6 +34,37 @@
   animation: none !important;
 }
 
+/* --- Density -----------------------------------------------------------
+   "Compact" tightens the spacing utilities used across every view — card
+   padding, table row height, and stack gaps — without touching individual
+   components. The attribute-scoped selectors below outrank the single-class
+   Tailwind utilities on specificity, so they win regardless of source order. */
+[data-density="compact"] main {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+[data-density="compact"] .p-4 {
+  padding: 0.65rem;
+}
+[data-density="compact"] .p-5 {
+  padding: 0.85rem;
+}
+[data-density="compact"] th,
+[data-density="compact"] td {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+[data-density="compact"] .space-y-5 > * + * {
+  margin-top: 0.85rem;
+}
+[data-density="compact"] .space-y-2 > * + *,
+[data-density="compact"] .space-y-2\.5 > * + * {
+  margin-top: 0.4rem;
+}
+[data-density="compact"] .gap-5 {
+  gap: 0.85rem;
+}
+
 @layer base {
   html {
     @apply bg-surface-page text-ink;

@@ -156,7 +156,7 @@ export default function App() {
             <span className="text-ink-faint">2023–26 · CRN</span>
           </div>
         </div>
-        <main className="mx-auto max-w-[1180px] px-5 py-6">
+        <main className="mx-auto max-w-[1600px] px-5 py-6">
           {/* Keyed by tab: a brief rise preserves continuity between sections. */}
           <div key={tab} className="animate-fadein">
             <Suspense fallback={<Spinner label="Loading…" />}>{active.el}</Suspense>
