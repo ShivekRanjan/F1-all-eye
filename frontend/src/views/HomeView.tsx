@@ -45,14 +45,6 @@ function NextRaceHero() {
 
   return (
     <Card className="relative overflow-hidden border-l-2 border-l-accent p-4">
-      <div
-        className="pointer-events-none absolute inset-0 animate-gridmove opacity-[0.05]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgb(var(--accent)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--accent)) 1px, transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-sweep bg-gradient-to-r from-transparent via-accent/[0.06] to-transparent" />
       <div className="relative">
         <Hero round={round} next={next} up={up.data ?? null} upErr={!!up.error} />

@@ -66,6 +66,18 @@ export default function App() {
 
   return (
     <div className="lg:flex">
+      {/* ---- Ambient grid drift — page-wide, behind every screen (not just
+          Home's hero card). Shows through the page's negative space; opaque
+          card backgrounds naturally occlude it, so it reads as texture, not
+          noise. Obeys the Settings motion toggle via .animate-gridmove. */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0 animate-gridmove opacity-[0.035]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgb(var(--accent)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--accent)) 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
       {/* ---- Sidebar (desktop) — collapsible 252px/76px rail --------------- */}
       <aside
         className="sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-r border-line bg-surface-rail transition-[width] duration-200 ease-out lg:flex"
