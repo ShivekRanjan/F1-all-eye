@@ -421,6 +421,14 @@ def news(limit: int = 40) -> dict:
     return fetch_news(limit=limit)
 
 
+@app.get("/drivers_meta")
+def drivers_meta() -> dict:
+    """Code → {name, team, country} lookup (for full-name hover + avatars)."""
+    from f1se.standalone.drivers_meta import driver_info
+
+    return {"drivers": driver_info()}
+
+
 @app.get("/calendar/{season}")
 def calendar(season: int) -> dict:
     """Season race calendar: rounds, circuits, session times, next-race countdown."""

@@ -31,6 +31,7 @@ data/processed/by_race_sprints/
 !data/processed/race_laps.parquet
 !data/processed/results.parquet
 !data/processed/sprint_points.parquet
+!data/processed/driver_info.parquet
 
 # Notebooks
 .ipynb_checkpoints/

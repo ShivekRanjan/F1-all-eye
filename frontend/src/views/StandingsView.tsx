@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, SectionTitle } from "../components/ui";
+import { DriverTag } from "../components/Driver";
 import { pct } from "../lib/format";
 import { teamColor } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
@@ -172,7 +173,7 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
             className="inline-block h-4 w-1 rounded-sm"
             style={{ background: teamColor(leader.team) }}
           />
-          <span className="text-2xl font-700 text-ink">{leader.driver}</span>
+          <DriverTag code={leader.driver} team={leader.team} size={32} />
           <span className="text-sm text-ink-muted">{leader.team}</span>
         </div>
       </div>
@@ -222,7 +223,7 @@ function DriversCard({ data }: { data: StandingsResp }) {
   const maxProb = Math.max(0.01, ...data.drivers.map((d) => d.win_prob ?? 0));
   const cols: Column<DriverStanding>[] = [
     { key: "pos", header: "#", align: "right", render: (d) => <span className="text-ink-muted">{d.pos}</span> },
-    { key: "driver", header: "Driver", render: (d) => <span className="font-700">{d.driver}</span> },
+    { key: "driver", header: "Driver", render: (d) => <DriverTag code={d.driver} team={d.team} size={24} /> },
     { key: "team", header: "Team", render: (d) => <TeamCell team={d.team} /> },
     { key: "wins", header: "W", align: "right", render: (d) => (d.wins ? d.wins : <span className="text-ink-faint">—</span>) },
     { key: "pod", header: "Pod", align: "right", render: (d) => (d.podiums ? d.podiums : <span className="text-ink-faint">—</span>) },
