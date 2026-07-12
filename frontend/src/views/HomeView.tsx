@@ -203,7 +203,7 @@ function TitleRace() {
 }
 
 function TitleRaceBody({ data }: { data: StandingsResp }) {
-  const top = data.drivers.slice(0, 5);
+  const top = data.drivers.slice(0, 8);
   const maxPts = Math.max(1, ...top.map((d) => d.points));
   return (
     <Card className="p-4">
