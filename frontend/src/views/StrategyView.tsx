@@ -160,6 +160,17 @@ function Rail(props: {
     : p.tracks;
   return (
     <Card className="h-fit space-y-5 p-4">
+      {/* Ceremony header — same status language as the recommendation banner,
+          so the control rail reads as the pit wall, not a bare settings form. */}
+      <div className="-mx-4 -mt-4 flex items-center justify-between border-b border-line bg-surface-inset px-4 py-2.5">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+          ◆ Pit wall
+        </span>
+        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+          <span className="h-[6px] w-[6px] animate-f1pulse rounded-full bg-accent" />
+          race setup
+        </span>
+      </div>
       <div>
         <SectionTitle>Circuit</SectionTitle>
         <input

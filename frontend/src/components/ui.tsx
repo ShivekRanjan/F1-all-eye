@@ -140,20 +140,29 @@ export function ErrorNote({ error }: { error: string }) {
   // error returned with a message — don't mislabel the latter as "unreachable".
   const isNetwork = /failed to fetch|load failed|networkerror|fetch/i.test(error);
   return (
-    <Callout tone="warn">
+    <Card className="relative overflow-hidden border-l-2 border-l-amber-400 p-4">
+      {/* Same status-header language as the rest of the broadcast UI — an
+          error is a pit-wall status, not a browser alert. */}
+      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-amber-300">
+        <span className="h-[7px] w-[7px] animate-f1pulse rounded-full bg-amber-400" />
+        {isNetwork ? "Engine offline" : "Engine error"}
+      </div>
       {isNetwork ? (
         <>
-          <span className="font-600">Couldn’t reach the engine.</span> {error}
-          <div className="mt-1 text-xs text-ink-muted">
+          <div className="mt-2 text-sm text-ink">
+            Couldn’t reach the engine — <span className="text-ink-muted">{error}</span>
+          </div>
+          <div className="mt-1.5 text-xs text-ink-muted">
             The API may be waking from sleep (free hosting takes ~30–60s) — refresh in a moment.
-            Running locally? <code className="text-ink">uvicorn f1se.api:app</code>
+            Running locally?{" "}
+            <code className="rounded bg-surface-inset2 px-1.5 py-0.5 font-mono text-[11px] text-ink">
+              uvicorn f1se.api:app
+            </code>
           </div>
         </>
       ) : (
-        <>
-          <span className="font-600">Engine error:</span> {error}
-        </>
+        <div className="mt-2 text-sm text-ink">{error}</div>
       )}
-    </Callout>
+    </Card>
   );
 }
