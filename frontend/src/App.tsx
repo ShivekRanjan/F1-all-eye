@@ -1,5 +1,19 @@
-import { Suspense, forwardRef, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, forwardRef, lazy, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { CursorGlow } from "./components/CursorGlow";
+import {
+  BarsIcon,
+  CalendarIcon,
+  DiceIcon,
+  HelmetIcon,
+  HomeIcon,
+  InfoIcon,
+  LiveIcon,
+  NewsIcon,
+  SlidersIcon,
+  SwapIcon,
+  TargetIcon,
+  WheelIcon,
+} from "./components/NavIcons";
 import { Spinner } from "./components/ui";
 import { useSettings } from "./lib/useSettings";
 
@@ -21,19 +35,19 @@ const SettingsView = lazy(() => import("./views/SettingsView"));
 const REPO = "https://github.com/ShivekRanjan/f1-strategy-engine";
 
 const TABS = [
-  { id: "home", label: "Home", group: "Overview", el: <HomeView /> },
-  { id: "strategy", label: "Strategy", group: "Strategy", el: <StrategyView /> },
-  { id: "undercut", label: "Undercut", group: "Strategy", el: <UndercutView /> },
-  { id: "calendar", label: "Calendar", group: "Race weekend", el: <CalendarView /> },
-  { id: "racehub", label: "Race Hub", group: "Race weekend", el: <RaceHubView /> },
-  { id: "live", label: "Live Race", group: "Race weekend", el: <LiveView /> },
-  { id: "standings", label: "Standings", group: "Championship", el: <StandingsView /> },
-  { id: "profiles", label: "Drivers & Teams", group: "Championship", el: <ProfilesView /> },
-  { id: "outcome", label: "Outcome", group: "Championship", el: <OutcomeView /> },
-  { id: "news", label: "News", group: "Paddock", el: <NewsView /> },
-  { id: "about", label: "About", group: "Paddock", el: <AboutView /> },
+  { id: "home", label: "Home", group: "Overview", el: <HomeView />, Icon: HomeIcon },
+  { id: "strategy", label: "Strategy", group: "Strategy", el: <StrategyView />, Icon: TargetIcon },
+  { id: "undercut", label: "Undercut", group: "Strategy", el: <UndercutView />, Icon: SwapIcon },
+  { id: "calendar", label: "Calendar", group: "Race weekend", el: <CalendarView />, Icon: CalendarIcon },
+  { id: "racehub", label: "Race Hub", group: "Race weekend", el: <RaceHubView />, Icon: WheelIcon },
+  { id: "live", label: "Live Race", group: "Race weekend", el: <LiveView />, Icon: LiveIcon },
+  { id: "standings", label: "Standings", group: "Championship", el: <StandingsView />, Icon: BarsIcon },
+  { id: "profiles", label: "Drivers & Teams", group: "Championship", el: <ProfilesView />, Icon: HelmetIcon },
+  { id: "outcome", label: "Outcome", group: "Championship", el: <OutcomeView />, Icon: DiceIcon },
+  { id: "news", label: "News", group: "Paddock", el: <NewsView />, Icon: NewsIcon },
+  { id: "about", label: "About", group: "Paddock", el: <AboutView />, Icon: InfoIcon },
   // Pinned to the sidebar's bottom, outside the scrollable groups (handoff).
-  { id: "settings", label: "Settings", group: "_pinned", el: <SettingsView /> },
+  { id: "settings", label: "Settings", group: "_pinned", el: <SettingsView />, Icon: SlidersIcon },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -132,6 +146,7 @@ export default function App() {
                     itemRefs.current[t.id] = el;
                   }}
                   label={t.label}
+                  icon={<t.Icon />}
                   collapsed={collapsed}
                   active={tab === t.id}
                   onClick={() => setTab(t.id)}
@@ -145,7 +160,7 @@ export default function App() {
         <div className="border-t border-line px-3 py-2">
           <NavItem
             label="Settings"
-            icon="⚙"
+            icon={<SlidersIcon />}
             collapsed={collapsed}
             active={tab === "settings"}
             onClick={() => setTab("settings")}
@@ -246,7 +261,7 @@ function Logo() {
 
 const NavItem = forwardRef<
   HTMLButtonElement,
-  { label: string; active: boolean; collapsed: boolean; icon?: string; onClick: () => void }
+  { label: string; active: boolean; collapsed: boolean; icon?: ReactNode; onClick: () => void }
 >(function NavItem({ label, active, collapsed, icon, onClick }, ref) {
   return (
     <button
@@ -258,16 +273,13 @@ const NavItem = forwardRef<
         active ? "bg-accent/15 text-accent" : "text-ink-dim hover:bg-surface-inset/70 hover:text-ink-soft"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
-      <span
-        className={`h-2 w-2 shrink-0 rounded-[3px] ${active ? "bg-accent" : "bg-line-hover"}`}
-        aria-hidden
-      />
-      {!collapsed && (
-        <span className="truncate">
-          {icon ? `${icon} ` : ""}
-          {label}
-        </span>
-      )}
+      {/* SVG icons use stroke="currentColor", so they pick up the button's
+          active/inactive text color automatically — no separate dot needed,
+          the icon itself is the identity + state cue now. */}
+      <span className="shrink-0" aria-hidden>
+        {icon}
+      </span>
+      {!collapsed && <span className="truncate">{label}</span>}
     </button>
   );
 });
