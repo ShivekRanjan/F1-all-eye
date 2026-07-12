@@ -75,6 +75,16 @@ export default {
         sans: ["'Space Grotesk'", "system-ui", "sans-serif"],
         mono: ["'IBM Plex Mono'", "ui-monospace", "monospace"],
       },
+      // Numeric weight utilities (font-500/600/700) used ~50x across the app
+      // for hierarchy — Space Grotesk is loaded at these exact weights
+      // (index.html). Without this extension Tailwind silently drops them
+      // (no arbitrary-value brackets), so every "bold" label was rendering
+      // at normal weight until this was added.
+      fontWeight: {
+        500: "500",
+        600: "600",
+        700: "700",
+      },
       boxShadow: {
         card: "0 1px 0 0 rgba(255,255,255,0.02) inset, 0 10px 30px -16px rgba(0,0,0,0.75)",
         glow: "0 0 14px -2px rgb(var(--accent) / 0.5)",

@@ -100,7 +100,7 @@ export default function App() {
           <button
             onClick={() => setCollapsed(!collapsed)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex h-8 w-8 shrink-0 flex-col items-center justify-center gap-[3px] rounded-md border border-line-ctl transition hover:border-line-hover"
+            className="flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-[3px] rounded-md border border-line-ctl transition hover:border-line-hover"
           >
             <span className="h-[2px] w-4 rounded bg-ink-dim" />
             <span className="h-[2px] w-4 rounded bg-ink-dim" />
@@ -162,7 +162,7 @@ export default function App() {
             repo ↗
           </a>
         </div>
-        <div className="flex items-center gap-1 overflow-x-auto border-t border-line px-3 pb-2 pt-1">
+        <div className="flex items-center gap-1 overflow-x-auto border-t border-line px-3">
           {GROUP_ORDER.map((g, gi) => (
             <span key={g} className="flex items-center gap-1">
               {gi > 0 && <span className="mx-1 h-4 w-px shrink-0 bg-line-hover/60" />}
@@ -193,6 +193,10 @@ export default function App() {
           </div>
         </div>
         <main className="mx-auto max-w-[1600px] px-5 py-6">
+          {/* Screen-reader page title — the visible breadcrumb above conveys
+              this visually on desktop, but nothing does on mobile, and
+              without an h1 the document has no top-level heading at all. */}
+          <h1 className="sr-only">{active.label}</h1>
           {/* Keyed by tab: a brief rise preserves continuity between sections. */}
           <div key={tab} className="animate-fadein">
             <Suspense fallback={<Spinner label="Loading…" />}>{active.el}</Suspense>
@@ -250,7 +254,7 @@ const NavItem = forwardRef<
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       title={collapsed ? label : undefined}
-      className={`relative flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-left text-[13px] transition ${
+      className={`relative flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[13px] transition ${
         active ? "bg-accent/15 text-accent" : "text-ink-dim hover:bg-surface-inset/70 hover:text-ink-soft"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
@@ -272,7 +276,7 @@ function MobileTab({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       onClick={onClick}
-      className={`whitespace-nowrap rounded-md px-3 py-1.5 font-mono text-[12px] transition ${
+      className={`flex min-h-[44px] items-center whitespace-nowrap rounded-md px-3 font-mono text-[12px] transition ${
         active ? "bg-accent/15 text-accent" : "text-ink-dim hover:text-ink-muted"
       }`}
     >

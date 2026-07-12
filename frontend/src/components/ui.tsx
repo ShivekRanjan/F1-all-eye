@@ -20,9 +20,9 @@ export function Card({
 
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="mb-3 text-xs font-700 uppercase tracking-[0.14em] text-ink-muted">
+    <h2 className="mb-3 text-xs font-700 uppercase tracking-[0.14em] text-ink-muted">
       {children}
-    </h3>
+    </h2>
   );
 }
 

@@ -94,12 +94,14 @@ function Body({
             <button
               key={y}
               onClick={() => setSeason(y === data.latest ? null : y)}
+              aria-pressed={y === active}
               className={`rounded-md border px-3 py-1.5 font-mono text-[12px] transition ${
                 y === active
-                  ? "border-accent/60 bg-accent/10 text-accent"
+                  ? "border-accent/60 bg-accent/10 font-700 text-accent"
                   : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
               }`}
             >
+              {y === active && <span aria-hidden>✓ </span>}
               {y}
             </button>
           ))}
