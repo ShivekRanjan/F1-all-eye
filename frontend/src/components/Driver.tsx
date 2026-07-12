@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useDrivers } from "../lib/useDrivers";
 import { teamColor } from "../lib/format";
+import { driverPhotoUrl } from "../lib/driverPhotos";
 
-/** Small circular initials badge, ringed in the driver's team colour.
- *  Photos are Phase 6 (Wikimedia, license-checked) — initials for now. */
+/** Circular avatar ringed in the driver's team colour: a licensed Wikimedia
+ *  photo when we have one (see ATTRIBUTIONS.md), initials otherwise — and
+ *  initials again if the photo fails to load. */
 export function DriverAvatar({
   code,
   team,
@@ -14,13 +16,15 @@ export function DriverAvatar({
   size?: number;
 }) {
   const { meta } = useDrivers();
+  const [photoFailed, setPhotoFailed] = useState(false);
   const info = meta(code);
   const resolvedTeam = team ?? info?.team ?? "";
   const color = teamColor(resolvedTeam);
   const initials = info?.name ? initialsOf(info.name) : code.slice(0, 2);
+  const photo = !photoFailed ? driverPhotoUrl(code) : null;
   return (
     <span
-      className="inline-flex shrink-0 items-center justify-center rounded-full bg-surface-inset2 font-mono font-700 text-ink"
+      className="inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface-inset2 font-mono font-700 text-ink"
       style={{
         width: size,
         height: size,
@@ -28,7 +32,18 @@ export function DriverAvatar({
         boxShadow: `0 0 0 1.5px ${color}`,
       }}
     >
-      {initials}
+      {photo ? (
+        <img
+          src={photo}
+          alt=""
+          width={size}
+          height={size}
+          className="h-full w-full object-cover"
+          onError={() => setPhotoFailed(true)}
+        />
+      ) : (
+        initials
+      )}
     </span>
   );
 }
