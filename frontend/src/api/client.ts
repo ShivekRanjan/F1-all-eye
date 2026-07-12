@@ -140,4 +140,10 @@ export const api = {
     req<ConstructorProfile>(`/profiles/constructor/${encodeURIComponent(team)}`),
   news: (limit = 40) => req<NewsResp>(`/news?limit=${limit}`),
   calendar: (season: number) => req<CalendarResp>(`/calendar/${season}`),
+  driversMeta: () =>
+    req<{ drivers: Record<string, { name: string | null; team: string | null; country: string | null }> }>(
+      "/drivers_meta",
+    ),
+  trackLayouts: () =>
+    req<{ tracks: Record<string, { path: string; viewbox: number }> }>("/track_layouts"),
 };

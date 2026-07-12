@@ -15,6 +15,7 @@ import {
 import { api } from "../api/client";
 import { Field, Segmented, Select, Slider } from "../components/controls";
 import { Callout, Card, CardSkeleton, ErrorNote, SectionTitle, Spinner } from "../components/ui";
+import { TrackOutline } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
 import type {
@@ -177,15 +178,18 @@ function Rail(props: {
               <button
                 key={t.track}
                 onClick={() => p.setTrack(t.track)}
-                className={`block w-full rounded-lg border px-3 py-2 text-left transition ${
+                className={`flex w-full items-center gap-2.5 rounded-lg border px-3 py-2 text-left transition ${
                   active
                     ? "border-accent bg-accent/10 text-ink"
                     : "border-line-ctl bg-surface-inset text-ink-muted hover:border-line-hover"
                 }`}
               >
-                <div className="text-[13px] font-600">{shortName(t.track)}</div>
-                <div className="font-mono text-[11px] text-ink-dim">
-                  {t.total_laps} laps{!t.well_sampled && " · limited data"}
+                <TrackOutline track={t.track} size={30} className={active ? "text-accent" : "text-ink-dim"} />
+                <div>
+                  <div className="text-[13px] font-600">{shortName(t.track)}</div>
+                  <div className="font-mono text-[11px] text-ink-dim">
+                    {t.total_laps} laps{!t.well_sampled && " · limited data"}
+                  </div>
                 </div>
               </button>
             );
@@ -280,8 +284,11 @@ function RecommendationBanner({ rec, best }: { rec: RecommendResp; best: Strateg
     <Card className="overflow-hidden border-line-card">
       <div className="flex flex-wrap">
         <div className="min-w-[280px] flex-1 border-line p-5 sm:border-r">
-          <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
-            ◆ Recommended plan <span className="text-ink-dim">· {rec.track}</span>
+          <div className="flex items-center gap-2">
+            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+              ◆ Recommended plan <span className="text-ink-dim">· {rec.track}</span>
+            </div>
+            <TrackOutline track={rec.track} size={26} className="ml-auto text-accent" />
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {best.compounds.map((c, i) => (
