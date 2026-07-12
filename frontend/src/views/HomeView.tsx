@@ -1,6 +1,7 @@
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { DriverTag } from "../components/Driver";
+import { TrackOutline } from "../components/TrackOutline";
 import { pct, teamColor, timeAgo } from "../lib/format";
 import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
@@ -76,16 +77,19 @@ function Hero({
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-            Next race · Round {round.round}
-          </div>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="text-2xl font-700 text-ink">{round.event_name}</span>
-            {round.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
-          </div>
-          <div className="text-sm text-ink-muted">
-            {round.location}, {round.country}
+        <div className="flex items-start gap-3">
+          <TrackOutline track={round.event_name} size={48} className="mt-1 text-accent" />
+          <div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+              Next race · Round {round.round}
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-2xl font-700 text-ink">{round.event_name}</span>
+              {round.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
+            </div>
+            <div className="text-sm text-ink-muted">
+              {round.location}, {round.country}
+            </div>
           </div>
         </div>
         <div className="text-right">

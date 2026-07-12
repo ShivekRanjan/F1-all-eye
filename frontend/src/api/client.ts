@@ -144,4 +144,6 @@ export const api = {
     req<{ drivers: Record<string, { name: string | null; team: string | null; country: string | null }> }>(
       "/drivers_meta",
     ),
+  trackLayouts: () =>
+    req<{ tracks: Record<string, { path: string; viewbox: number }> }>("/track_layouts"),
 };
