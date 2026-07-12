@@ -10,6 +10,7 @@ export function TrackWatermark({ track, className = "" }: { track: string; class
   if (!layout) return null;
   return (
     <svg
+      key={track}
       viewBox={`0 0 ${layout.viewbox} ${layout.viewbox}`}
       className={`pointer-events-none absolute text-accent opacity-[0.05] ${className}`}
       aria-hidden="true"
@@ -21,13 +22,18 @@ export function TrackWatermark({ track, className = "" }: { track: string; class
         strokeWidth={5}
         strokeLinecap="round"
         strokeLinejoin="round"
+        pathLength={100}
+        strokeDasharray={100}
+        className="animate-trackdraw"
       />
     </svg>
   );
 }
 
 /** Circuit outline SVG (from fastest-lap telemetry) — renders nothing if the
- *  track has no committed layout yet, so callers don't need a fallback. */
+ *  track has no committed layout yet, so callers don't need a fallback.
+ *  Draws itself in on mount (and re-draws if `track` changes, via the key)
+ *  instead of appearing stamped. */
 export function TrackOutline({
   track,
   size = 40,
@@ -42,6 +48,7 @@ export function TrackOutline({
   if (!layout) return null;
   return (
     <svg
+      key={track}
       viewBox={`0 0 ${layout.viewbox} ${layout.viewbox}`}
       width={size}
       height={size}
@@ -54,6 +61,9 @@ export function TrackOutline({
         strokeWidth={7}
         strokeLinecap="round"
         strokeLinejoin="round"
+        pathLength={100}
+        strokeDasharray={100}
+        className="animate-trackdraw"
       />
     </svg>
   );

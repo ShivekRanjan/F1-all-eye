@@ -46,9 +46,10 @@ export function DataTable<R>({
           {rows.map((row, i) => (
             <tr
               key={getKey(row, i)}
-              className={`border-b border-line/60 ${
+              className={`animate-rise border-b border-line/60 ${
                 highlightFirst && i === 0 ? "bg-f1/[0.06]" : ""
               }`}
+              style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}
             >
               {columns.map((c) => (
                 <td

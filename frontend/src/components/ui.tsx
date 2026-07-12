@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { compoundColor } from "../lib/format";
+import { useLightStep } from "../lib/useLightStep";
+import { motionEnabled } from "../lib/motion";
 
 // --- Card -------------------------------------------------------------------
 export function Card({
@@ -104,10 +106,26 @@ export function Callout({
   );
 }
 
+/** F1 start lights: fill 1→5 red, hold, go dark together ("lights out"),
+ *  repeat — the loading state as an actual pre-race ritual instead of a
+ *  generic spinner. Degrades to a static gentle pulse when motion is off. */
 export function Spinner({ label }: { label?: string }) {
+  const step = useLightStep();
+  const staticMode = !motionEnabled();
   return (
-    <div className="flex items-center gap-2 text-sm text-ink-muted">
-      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line border-t-f1" />
+    <div className="flex items-center gap-2.5 text-sm text-ink-muted">
+      <div className={`flex gap-1 ${staticMode ? "animate-pulse" : ""}`}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span
+            key={i}
+            className="h-2.5 w-2.5 rounded-full transition-colors duration-150"
+            style={{
+              background: i <= step ? "#ff2b2b" : "#2a1414",
+              boxShadow: i <= step ? "0 0 6px rgba(255,43,43,0.55)" : "none",
+            }}
+          />
+        ))}
+      </div>
       {label}
     </div>
   );

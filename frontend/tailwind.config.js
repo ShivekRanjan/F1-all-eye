@@ -116,6 +116,10 @@ export default {
           "0%,100%": { boxShadow: "0 0 6px -2px currentColor" },
           "50%": { boxShadow: "0 0 18px -2px currentColor" },
         },
+        trackdraw: {
+          from: { strokeDashoffset: "100" },
+          to: { strokeDashoffset: "0" },
+        },
       },
       animation: {
         f1pulse: "f1pulse 1.7s ease-in-out infinite",
@@ -125,6 +129,7 @@ export default {
         gridmove: "gridmove 7s linear infinite",
         sweep: "sweep 5s ease-in-out infinite",
         breathe: "breathe 3.2s ease-in-out infinite",
+        trackdraw: "trackdraw 900ms ease-out both",
       },
     },
   },
