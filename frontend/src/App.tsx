@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { CursorGlow } from "./components/CursorGlow";
 import { Spinner } from "./components/ui";
 import { useSettings } from "./lib/useSettings";
 
@@ -78,6 +79,7 @@ export default function App() {
           backgroundSize: "28px 28px",
         }}
       />
+      <CursorGlow />
       {/* ---- Sidebar (desktop) — collapsible 252px/76px rail --------------- */}
       <aside
         className="sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-r border-line bg-surface-rail transition-[width] duration-200 ease-out lg:flex"

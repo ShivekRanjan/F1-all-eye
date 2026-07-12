@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { DriverTag } from "../components/Driver";
@@ -6,6 +7,7 @@ import { pct, teamColor, timeAgo } from "../lib/format";
 import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
 import { useLastVisit } from "../lib/useLastVisit";
+import { useParallax } from "../lib/useParallax";
 import type { CalendarResp, NewsResp, StandingsResp, UpcomingResp } from "../api/types";
 
 /** The OS home: what's next, what the model expects, where the title stands,
@@ -35,6 +37,8 @@ function NextRaceHero() {
     return latest ? api.calendar(latest) : null;
   }, []);
   const up = useAsync(() => api.predictUpcoming(), []);
+  // Hooks must run unconditionally — before the early returns below.
+  const { containerRef, targetRef } = useParallax<HTMLDivElement, HTMLDivElement>(7);
 
   if (cal.error) return <ErrorNote error={cal.error} />;
   if (!cal.data) return <CardSkeleton label="Finding the next race…" height={200} />;
@@ -45,9 +49,9 @@ function NextRaceHero() {
 
   return (
     <Card className="relative overflow-hidden border-l-2 border-l-accent">
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-sweep bg-gradient-to-r from-transparent via-accent/[0.06] to-transparent" />
-      <div className="relative">
-        <Hero round={round} next={next} up={up.data ?? null} upErr={!!up.error} />
+      <div ref={containerRef} className="relative">
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-sweep bg-gradient-to-r from-transparent via-accent/[0.06] to-transparent" />
+        <Hero round={round} next={next} up={up.data ?? null} upErr={!!up.error} outlineRef={targetRef} />
       </div>
     </Card>
   );
@@ -58,11 +62,13 @@ function Hero({
   next,
   up,
   upErr,
+  outlineRef,
 }: {
   round: NonNullable<CalendarResp["rounds"][number]>;
   next: NonNullable<CalendarResp["next_session"]>;
   up: UpcomingResp | null;
   upErr: boolean;
+  outlineRef: RefObject<HTMLDivElement>;
 }) {
   const now = useNow();
   const podium = up && up.next_round === round.round ? up.predictions.slice(0, 3) : null;
@@ -71,7 +77,11 @@ function Hero({
       <div className="p-4 pb-0">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <TrackOutline track={round.event_name} size={48} className="mt-1 text-accent" />
+            {/* Cursor-reactive parallax — the track drifts subtly with the
+                mouse, the hero's one intentionally "alive" element. */}
+            <div ref={outlineRef} className="mt-1 transition-transform duration-150 ease-out">
+              <TrackOutline track={round.event_name} size={48} className="text-accent" />
+            </div>
             <div>
               <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
                 Next race · Round {round.round}
