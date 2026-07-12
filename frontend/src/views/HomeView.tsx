@@ -44,7 +44,7 @@ function NextRaceHero() {
   if (!round || !next) return <SeasonOver cal={cal.data} />;
 
   return (
-    <Card className="relative overflow-hidden border-l-2 border-l-accent p-4">
+    <Card className="relative overflow-hidden border-l-2 border-l-accent">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-sweep bg-gradient-to-r from-transparent via-accent/[0.06] to-transparent" />
       <div className="relative">
         <Hero round={round} next={next} up={up.data ?? null} upErr={!!up.error} />
@@ -68,33 +68,33 @@ function Hero({
   const podium = up && up.next_round === round.round ? up.predictions.slice(0, 3) : null;
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <TrackOutline track={round.event_name} size={48} className="mt-1 text-accent" />
-          <div>
+      <div className="p-4 pb-0">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <TrackOutline track={round.event_name} size={48} className="mt-1 text-accent" />
+            <div>
+              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+                Next race · Round {round.round}
+              </div>
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-2xl font-700 text-ink">{round.event_name}</span>
+                {round.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
+              </div>
+              <div className="text-sm text-ink-muted">
+                {round.location}, {round.country}
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
             <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-              Next race · Round {round.round}
+              {next.name} in
             </div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="text-2xl font-700 text-ink">{round.event_name}</span>
-              {round.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
-            </div>
-            <div className="text-sm text-ink-muted">
-              {round.location}, {round.country}
-            </div>
+            <div className="nums font-mono text-3xl text-accent">{countdown(next.date, now)}</div>
+            <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date)}</div>
           </div>
         </div>
-        <div className="text-right">
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-            {next.name} in
-          </div>
-          <div className="nums font-mono text-3xl text-accent">{countdown(next.date, now)}</div>
-          <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date)}</div>
-        </div>
-      </div>
 
-      <div className="mt-5">
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 mt-5 flex items-center justify-between">
           <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
             🔮 Predicted podium
           </span>
@@ -107,19 +107,27 @@ function Hero({
             </a>
           </span>
         </div>
-        {podium ? (
-          <PodiumBlocks podium={podium} />
-        ) : upErr ? (
-          <span className="text-sm text-ink-muted">prediction unavailable</span>
-        ) : (
-          <Skeleton className="h-24 w-full" />
-        )}
+        {(!podium && !upErr) && <Skeleton className="h-24 w-full" />}
       </div>
+      {/* Podium riser boxes sit flush against the card's bottom edge (no
+          padding below them, by construction — not a negative-margin hack). */}
+      {podium ? (
+        <div className="px-4">
+          <PodiumBlocks podium={podium} />
+        </div>
+      ) : upErr ? (
+        <div className="px-4 pb-4">
+          <span className="text-sm text-ink-muted">prediction unavailable</span>
+        </div>
+      ) : null}
     </>
   );
 }
 
-/** P2 / P1 / P3 ceremony blocks — P1 centered and tallest, matching a real podium. */
+/** P2 / P1 / P3 ceremony blocks — P1 centered and tallest, matching a real podium.
+ *  Driver info sits in its own uniform block above the riser (not squeezed
+ *  inside it), so avatar/name/percentage stay pixel-level across all three
+ *  regardless of how tall each riser is. */
 function PodiumBlocks({
   podium,
 }: {
@@ -127,26 +135,32 @@ function PodiumBlocks({
 }) {
   const [p1, p2, p3] = podium;
   const order = [
-    { row: p2, place: 2, h: "h-16", tone: "border-line-card bg-surface-inset" },
-    { row: p1, place: 1, h: "h-24", tone: "border-accent/50 bg-accent/[0.07]" },
-    { row: p3, place: 3, h: "h-12", tone: "border-line-card bg-surface-inset" },
+    { row: p2, place: 2, riser: "h-14", tone: "border-line-card bg-surface-inset" },
+    { row: p1, place: 1, riser: "h-24", tone: "border-accent/50 bg-accent/[0.07]" },
+    { row: p3, place: 3, riser: "h-9", tone: "border-line-card bg-surface-inset" },
   ] as const;
   return (
     <div className="flex items-end gap-2">
-      {order.map(({ row, place, h, tone }, i) =>
+      {order.map(({ row, place, riser, tone }, i) =>
         row ? (
           <div
             key={row.driver}
-            className={`animate-rise flex flex-1 flex-col items-center justify-end gap-1.5 rounded-t-lg border border-b-0 px-2 pb-2 pt-3 ${h} ${tone}`}
+            className="animate-rise flex flex-1 flex-col items-center"
             style={{ animationDelay: `${i * 90}ms` }}
           >
-            <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
-            <span className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}>
-              {pct(row.podium_prob)}
-            </span>
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
-              P{place}
-            </span>
+            <div className="flex flex-col items-center gap-1.5 pb-2.5">
+              <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
+              <span className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}>
+                {pct(row.podium_prob)}
+              </span>
+            </div>
+            <div
+              className={`flex w-full items-start justify-center rounded-t-lg border border-b-0 pt-1.5 ${riser} ${tone}`}
+            >
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+                P{place}
+              </span>
+            </div>
           </div>
         ) : null,
       )}
