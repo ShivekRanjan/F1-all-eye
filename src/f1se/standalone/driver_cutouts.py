@@ -34,6 +34,7 @@ from f1se.standalone.driver_photos import (
 
 OUT_DIR = PROJECT_ROOT / "frontend" / "public" / "drivers" / "cutouts"
 MAX_HEIGHT = 640  # cap output size — these are hero-sized, not thumbnails, but no need for huge files
+CROP_RATIO = 1.2  # target height/width — normalizes bust-portrait framing across source photos
 
 
 def build_cutout(code: str, name: str) -> bool:
@@ -73,6 +74,15 @@ def build_cutout(code: str, name: str) -> bool:
     bbox = cutout.split()[-1].getbbox()
     if bbox:
         cutout = cutout.crop(bbox)
+
+    # Normalize to a consistent bust-portrait ratio, anchored from the top —
+    # source photos crop at wildly different points (some waist-up, some
+    # shoulders-up), which reads as a mismatched set once several sit side
+    # by side. Never stretches a photo that's already tighter than this.
+    w, h = cutout.size
+    target_h = round(w * CROP_RATIO)
+    if h > target_h:
+        cutout = cutout.crop((0, 0, w, target_h))
 
     w, h = cutout.size
     if h > MAX_HEIGHT:

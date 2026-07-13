@@ -107,7 +107,14 @@ export function DriverCutout({
     <img
       src={url}
       alt=""
-      style={{ height }}
+      style={{
+        height,
+        // Fade the bottom into transparency instead of a hard photo-crop
+        // edge — the crop point still varies a little per source photo, so
+        // this dissolves it rather than cutting straight through a torso.
+        WebkitMaskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
+        maskImage: "linear-gradient(to bottom, black 70%, transparent 100%)",
+      }}
       className={`w-auto object-contain ${className}`}
       onError={() => setFailed(true)}
     />
