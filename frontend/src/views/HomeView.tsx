@@ -147,9 +147,9 @@ function PodiumBlocks({
 }) {
   const [p1, p2, p3] = podium;
   const order = [
-    { row: p2, place: 2, riser: "h-14", cutoutH: 100, tone: "border-line-card bg-surface-inset" },
-    { row: p1, place: 1, riser: "h-24", cutoutH: 130, tone: "border-accent/50 bg-accent/[0.07]" },
-    { row: p3, place: 3, riser: "h-9", cutoutH: 84, tone: "border-line-card bg-surface-inset" },
+    { row: p2, place: 2, riser: "h-10", cutoutH: 80, tone: "border-line-card bg-surface-inset" },
+    { row: p1, place: 1, riser: "h-16", cutoutH: 105, tone: "border-accent/50 bg-accent/[0.07]" },
+    { row: p3, place: 3, riser: "h-7", cutoutH: 68, tone: "border-line-card bg-surface-inset" },
   ] as const;
   return (
     <div className="flex items-end gap-2">
@@ -182,7 +182,7 @@ function PodiumBlocks({
               />
             </div>
             <div
-              className={`flex w-full items-start justify-center rounded-t-lg border border-b-0 pt-1.5 ${riser} ${tone}`}
+              className={`flex w-full items-end justify-center rounded-t-lg border border-b-0 pb-1.5 ${riser} ${tone}`}
             >
               <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
                 P{place}
