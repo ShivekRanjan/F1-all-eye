@@ -294,15 +294,14 @@ function Rail(props: {
 // --------------------------------------------------------------------------- //
 /** Track-temp colour wash: 15°C reads cool blue, 55°C reads warm amber — the
  *  one place in the app where turning a slider visibly changes the world,
- *  not just a number. Deliberately low-opacity so it never fights the gold
- *  accent or dents text contrast. Direct RGB lerp, not a hue-wheel sweep —
- *  interpolating hue from blue to amber crosses green/yellow along the way
- *  (e.g. 35°C, the default, lands on pure green), which reads as a rainbow
- *  slider, not a temperature one. */
+ *  not just a number. Direct RGB lerp, not a hue-wheel sweep — interpolating
+ *  hue from blue to amber crosses green/yellow along the way (e.g. 35°C, the
+ *  default, would land on pure green), which reads as a rainbow slider, not
+ *  a temperature one. */
 function tempWashColor(tempC: number): string {
   const t = Math.max(0, Math.min(1, (tempC - 15) / 40));
-  const cool = [56, 132, 246]; // cool blue
-  const warm = [255, 140, 20]; // warm amber
+  const cool = [40, 130, 255]; // vivid blue
+  const warm = [255, 120, 20]; // vivid orange
   const [r, g, b] = cool.map((c, i) => Math.round(c + (warm[i] - c) * t));
   return `rgb(${r}, ${g}, ${b})`;
 }
@@ -321,10 +320,14 @@ function RecommendationBanner({
   const softLaps = stintLaps(best, rec.total_laps).find((s) => s.compound === "SOFT")?.laps;
   return (
     <Card className="relative overflow-hidden border-line-card">
+      {/* A full-width wash, not a corner glow — the corner is already busy
+          with the track watermark + outline icon, and a small low-opacity
+          circle there was invisible in practice. This one is meant to be
+          seen, not just technically present. */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.07] transition-[background] duration-500"
+        className="pointer-events-none absolute inset-0 opacity-[0.22] transition-[background] duration-500"
         style={{
-          background: `radial-gradient(560px circle at 100% 0%, ${tempWashColor(trackTemp)}, transparent 65%)`,
+          background: `linear-gradient(120deg, ${tempWashColor(trackTemp)}, transparent 75%)`,
         }}
       />
       <TrackWatermark track={rec.track} className="-right-16 -top-16 h-72 w-72" />
