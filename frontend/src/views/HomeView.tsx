@@ -2,7 +2,7 @@ import type { RefObject } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { AnimatedNumber } from "../components/AnimatedNumber";
-import { DriverTag } from "../components/Driver";
+import { DriverCutout, DriverTag } from "../components/Driver";
 import { TrackOutline } from "../components/TrackOutline";
 import { pct, teamColor, timeAgo } from "../lib/format";
 import { countdown, fmtSession, useNow } from "../lib/time";
@@ -146,19 +146,28 @@ function PodiumBlocks({
 }) {
   const [p1, p2, p3] = podium;
   const order = [
-    { row: p2, place: 2, riser: "h-14", tone: "border-line-card bg-surface-inset" },
-    { row: p1, place: 1, riser: "h-24", tone: "border-accent/50 bg-accent/[0.07]" },
-    { row: p3, place: 3, riser: "h-9", tone: "border-line-card bg-surface-inset" },
+    { row: p2, place: 2, riser: "h-14", cutoutH: 100, tone: "border-line-card bg-surface-inset" },
+    { row: p1, place: 1, riser: "h-24", cutoutH: 130, tone: "border-accent/50 bg-accent/[0.07]" },
+    { row: p3, place: 3, riser: "h-9", cutoutH: 84, tone: "border-line-card bg-surface-inset" },
   ] as const;
   return (
     <div className="flex items-end gap-2">
-      {order.map(({ row, place, riser, tone }, i) =>
+      {order.map(({ row, place, riser, cutoutH, tone }, i) =>
         row ? (
           <div
             key={row.driver}
             className="animate-rise flex flex-1 flex-col items-center"
             style={{ animationDelay: `${i * 90}ms` }}
           >
+            {/* A true cutout (transparent-bg photo) when we have one for this
+                driver — bleeds down into the info row below like a broadcast
+                podium graphic. Silently absent otherwise (DriverTag already
+                carries the identity), no layout gap either way. */}
+            <DriverCutout
+              code={row.driver}
+              height={cutoutH}
+              className="-mb-1 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]"
+            />
             <div className="flex flex-col items-center gap-1.5 pb-2.5">
               <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
               <AnimatedNumber

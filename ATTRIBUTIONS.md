@@ -5,6 +5,11 @@ Drivers without a free-licensed photo fall back to an initials avatar.
 Images are resized and centre-cropped to a small square for the avatar UI —
 a derivative work, permitted under all licences listed below.
 
+The podium hero (Home) additionally uses transparent-background cutouts
+(`frontend/public/drivers/cutouts/`) — background removal applied to the
+same licensed source photos listed below, for 24 of the 27 drivers. Also a
+derivative work under the same licences; no separate attribution needed.
+
 | Driver | File | Licence | Author | Source |
 |---|---|---|---|---|
 | Daniel Ricciardo (RIC) | RIC.jpg | CC BY-SA 4.0 | DaHuzyBru | https://commons.wikimedia.org/wiki/File:Daniel_Ricciardo_January_2024.jpg |

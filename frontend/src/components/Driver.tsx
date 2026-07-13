@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDrivers } from "../lib/useDrivers";
 import { teamColor } from "../lib/format";
 import { driverPhotoUrl } from "../lib/driverPhotos";
+import { driverCutoutUrl } from "../lib/driverCutouts";
 
 /** Circular avatar ringed in the driver's team colour: a licensed Wikimedia
  *  photo when we have one (see ATTRIBUTIONS.md), initials otherwise — and
@@ -83,6 +84,33 @@ export function DriverName({
         </span>
       )}
     </span>
+  );
+}
+
+/** True cutout — transparent-background portrait (real background removal,
+ *  not a cropped circle), for the few spots big enough to earn it (podium
+ *  hero, driver profile). Returns null when no cutout exists for this
+ *  driver, or on load failure, so the caller can fall back to DriverAvatar. */
+export function DriverCutout({
+  code,
+  height = 120,
+  className = "",
+}: {
+  code: string;
+  height?: number;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const url = driverCutoutUrl(code);
+  if (!url || failed) return null;
+  return (
+    <img
+      src={url}
+      alt=""
+      style={{ height }}
+      className={`w-auto object-contain ${className}`}
+      onError={() => setFailed(true)}
+    />
   );
 }
 
