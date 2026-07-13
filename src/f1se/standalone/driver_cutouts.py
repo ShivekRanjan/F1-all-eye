@@ -65,6 +65,15 @@ def build_cutout(code: str, name: str) -> bool:
     src = Image.open(io.BytesIO(resp.content)).convert("RGB")
     cutout = remove(src)
 
+    # Trim to the visible content's bounding box — background removal keeps
+    # the original photo's full canvas, just with background pixels made
+    # transparent, and how much empty headroom/footroom that leaves varies a
+    # lot per source photo. Left untrimmed, some drivers render with a
+    # noticeable gap of dead space before the name below them.
+    bbox = cutout.split()[-1].getbbox()
+    if bbox:
+        cutout = cutout.crop(bbox)
+
     w, h = cutout.size
     if h > MAX_HEIGHT:
         scale = MAX_HEIGHT / h

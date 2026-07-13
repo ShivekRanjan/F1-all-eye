@@ -167,12 +167,12 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
   const second = data.drivers[1];
   const gap = second ? leader.points - second.points : 0;
   return (
-    <Card className="relative flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden border-l-2 border-l-accent p-4">
-      <DriverCutout
-        code={leader.driver}
-        height={110}
-        className="pointer-events-none absolute bottom-0 right-3 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]"
-      />
+    <Card className="flex flex-wrap items-center gap-x-6 gap-y-3 border-l-2 border-l-accent p-4">
+      {/* A real portrait, in the flow — not a background bleed in a corner
+          (which was easy to miss and awkward to position against the stat
+          row). It's the card's visual anchor now, same way P1 anchors the
+          podium. */}
+      <DriverCutout code={leader.driver} height={92} className="drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]" />
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
           Championship leader
