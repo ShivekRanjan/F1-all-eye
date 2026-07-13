@@ -105,6 +105,12 @@ export default function App() {
         }}
       />
       <CursorGlow />
+      {/* Route-transition bar — keyed by tab so it replays on every switch,
+          a broadcast-HUD-style cue that something is loading, regardless of
+          whether the lazy chunk was already cached. */}
+      <div key={tab} className="pointer-events-none fixed left-0 top-0 z-50 h-[2.5px] w-full">
+        <div className="h-full origin-left animate-routebar bg-accent shadow-glow" />
+      </div>
       {/* ---- Sidebar (desktop) — collapsible 252px/76px rail --------------- */}
       <aside
         className="sticky top-0 z-20 hidden h-screen shrink-0 flex-col border-r border-line bg-surface-rail transition-[width] duration-200 ease-out lg:flex"

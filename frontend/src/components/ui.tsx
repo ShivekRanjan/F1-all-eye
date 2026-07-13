@@ -86,6 +86,27 @@ export function CompoundPill({ compound }: { compound: string }) {
   );
 }
 
+// --- EmptyState ---------------------------------------------------------------
+/** Full-width empty state — an icon instead of a bare line of text, for the
+ *  "no data" cases that aren't errors (no matches, nothing published yet). */
+export function EmptyState({
+  icon,
+  title,
+  hint,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed border-line-ctl px-4 py-10 text-center">
+      <span className="text-ink-fainter">{icon}</span>
+      <div className="text-sm text-ink-muted">{title}</div>
+      {hint && <div className="max-w-sm text-xs text-ink-faint">{hint}</div>}
+    </div>
+  );
+}
+
 // --- Callout ----------------------------------------------------------------
 export function Callout({
   children,

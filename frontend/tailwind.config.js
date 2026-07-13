@@ -120,6 +120,11 @@ export default {
           from: { strokeDashoffset: "100" },
           to: { strokeDashoffset: "0" },
         },
+        routebar: {
+          "0%": { transform: "scaleX(0)", opacity: "1" },
+          "70%": { transform: "scaleX(0.85)", opacity: "1" },
+          "100%": { transform: "scaleX(1)", opacity: "0" },
+        },
       },
       animation: {
         f1pulse: "f1pulse 1.7s ease-in-out infinite",
@@ -130,6 +135,7 @@ export default {
         sweep: "sweep 5s ease-in-out infinite",
         breathe: "breathe 3.2s ease-in-out infinite",
         trackdraw: "trackdraw 900ms ease-out both",
+        routebar: "routebar 600ms ease-out both",
       },
     },
   },

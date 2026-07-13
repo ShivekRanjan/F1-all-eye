@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { api } from "../api/client";
-import { Callout, Card, ErrorNote, Spinner } from "../components/ui";
+import { Card, EmptyState, ErrorNote, Spinner } from "../components/ui";
+import { NoSignalIcon } from "../components/NavIcons";
 import { timeAgo } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
 import { useLastVisit } from "../lib/useLastVisit";
@@ -33,10 +34,11 @@ function Body({ data }: { data: NewsResp }) {
 
   if (!data.items.length) {
     return (
-      <Callout tone="warn">
-        No headlines available right now — the news sources may be unreachable. They’ll appear once
-        the feeds respond.
-      </Callout>
+      <EmptyState
+        icon={<NoSignalIcon />}
+        title="No headlines available right now."
+        hint="The news sources may be unreachable — they'll appear once the feeds respond."
+      />
     );
   }
 

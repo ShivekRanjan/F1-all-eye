@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { api } from "../api/client";
-import { Callout, ErrorNote, Spinner } from "../components/ui";
+import { EmptyState, ErrorNote, Spinner } from "../components/ui";
+import { NoSignalIcon } from "../components/NavIcons";
 import { useAsync } from "../lib/useAsync";
 
 /** Tracks that have raced under 2026 regs (for default selection + the 🆕 hint). */
@@ -23,7 +24,8 @@ export function TracksGate({ children }: { children: (tracks: string[]) => React
   const s = useAsync(() => api.tracks(), []);
   if (s.loading) return <Spinner label="Loading circuits…" />;
   if (s.error) return <ErrorNote error={s.error} />;
-  if (!s.data?.tracks?.length) return <Callout>No circuits found.</Callout>;
+  if (!s.data?.tracks?.length)
+    return <EmptyState icon={<NoSignalIcon />} title="No circuits found." />;
   return <>{children(s.data.tracks)}</>;
 }
 

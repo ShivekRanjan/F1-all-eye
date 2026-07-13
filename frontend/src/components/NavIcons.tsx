@@ -135,3 +135,25 @@ export function SlidersIcon(p: IconProps) {
     </svg>
   );
 }
+
+// --- Empty-state icons (larger default size, same restrained line style) ---
+const emptyBase = { ...base, width: 28, height: 28 };
+
+export function SearchOffIcon(p: IconProps) {
+  return (
+    <svg {...emptyBase} {...p}>
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="M10.3 10.3 14 14" />
+    </svg>
+  );
+}
+
+export function NoSignalIcon(p: IconProps) {
+  return (
+    <svg {...emptyBase} {...p}>
+      <rect x="2.5" y="3.5" width="9" height="9" rx="1" />
+      <path d="M11.5 6.5h2v5.5a1.5 1.5 0 0 1-1.5 1.5h-8" />
+      <path d="M2 2l12 12" />
+    </svg>
+  );
+}

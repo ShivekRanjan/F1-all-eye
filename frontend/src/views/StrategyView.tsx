@@ -14,7 +14,8 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import { Field, Segmented, Select, Slider } from "../components/controls";
-import { Callout, Card, CardSkeleton, ErrorNote, SectionTitle, Spinner } from "../components/ui";
+import { Card, CardSkeleton, EmptyState, ErrorNote, SectionTitle, Spinner } from "../components/ui";
+import { NoSignalIcon, SearchOffIcon } from "../components/NavIcons";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
@@ -38,7 +39,8 @@ export default function StrategyView() {
   const ti = useAsync(() => api.tracksInfo(), []);
   if (ti.loading) return <Spinner label="Loading circuits…" />;
   if (ti.error) return <ErrorNote error={ti.error} />;
-  if (!ti.data?.tracks?.length) return <Callout>No circuits found.</Callout>;
+  if (!ti.data?.tracks?.length)
+    return <EmptyState icon={<NoSignalIcon />} title="No circuits found." />;
   return <Dashboard tracks={ti.data.tracks} />;
 }
 
@@ -112,7 +114,7 @@ function Dashboard({ tracks }: { tracks: TrackInfo[] }) {
             )}
             <div className={rec.loading ? "opacity-40 transition-opacity" : "transition-opacity"}>
               <div className="space-y-5">
-                <RecommendationBanner rec={rec.data} best={best} />
+                <RecommendationBanner rec={rec.data} best={best} trackTemp={trackTemp} />
                 <div className="grid gap-5 xl:grid-cols-2">
                   <DegradationCard deg={deg.data} loading={deg.loading} cliff={cliff} />
                   <OutcomeCard sim={sim.data} />
@@ -181,7 +183,10 @@ function Rail(props: {
         />
         <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
           {shown.length === 0 && (
-            <p className="px-1 py-2 text-sm text-ink-muted">No circuit matches “{circuitQ}”.</p>
+            <div className="flex items-center gap-2 px-1 py-2 text-sm text-ink-muted">
+              <SearchOffIcon width={16} height={16} className="shrink-0 text-ink-fainter" />
+              No circuit matches “{circuitQ}”.
+            </div>
           )}
           {shown.map((t) => {
             const active = t.track === p.track;
@@ -287,12 +292,41 @@ function Rail(props: {
 }
 
 // --------------------------------------------------------------------------- //
-function RecommendationBanner({ rec, best }: { rec: RecommendResp; best: StrategySummary }) {
+/** Track-temp colour wash: 15°C reads cool blue, 55°C reads warm amber — the
+ *  one place in the app where turning a slider visibly changes the world,
+ *  not just a number. Deliberately low-opacity so it never fights the gold
+ *  accent or dents text contrast. Direct RGB lerp, not a hue-wheel sweep —
+ *  interpolating hue from blue to amber crosses green/yellow along the way
+ *  (e.g. 35°C, the default, lands on pure green), which reads as a rainbow
+ *  slider, not a temperature one. */
+function tempWashColor(tempC: number): string {
+  const t = Math.max(0, Math.min(1, (tempC - 15) / 40));
+  const cool = [56, 132, 246]; // cool blue
+  const warm = [255, 140, 20]; // warm amber
+  const [r, g, b] = cool.map((c, i) => Math.round(c + (warm[i] - c) * t));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+function RecommendationBanner({
+  rec,
+  best,
+  trackTemp,
+}: {
+  rec: RecommendResp;
+  best: StrategySummary;
+  trackTemp: number;
+}) {
   const runnerUp = rec.shortlist[1]?.win_prob_vs_best ?? 0;
   const confidence = Math.round((1 - runnerUp) * 100);
   const softLaps = stintLaps(best, rec.total_laps).find((s) => s.compound === "SOFT")?.laps;
   return (
     <Card className="relative overflow-hidden border-line-card">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.07] transition-[background] duration-500"
+        style={{
+          background: `radial-gradient(560px circle at 100% 0%, ${tempWashColor(trackTemp)}, transparent 65%)`,
+        }}
+      />
       <TrackWatermark track={rec.track} className="-right-16 -top-16 h-72 w-72" />
       <div className="flex flex-wrap">
         <div className="min-w-[280px] flex-1 border-line p-5 sm:border-r">
