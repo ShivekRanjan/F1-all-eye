@@ -3,7 +3,8 @@ import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, SectionTitle } from "../components/ui";
 import { AnimatedNumber } from "../components/AnimatedNumber";
-import { DriverTag } from "../components/Driver";
+import { DriverCutout, DriverName, DriverTag } from "../components/Driver";
+import { driverCutoutUrl } from "../lib/driverCutouts";
 import { pct } from "../lib/format";
 import { teamColor } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
@@ -166,7 +167,12 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
   const second = data.drivers[1];
   const gap = second ? leader.points - second.points : 0;
   return (
-    <Card className="flex flex-wrap items-center gap-x-8 gap-y-3 border-l-2 border-l-accent p-4">
+    <Card className="relative flex flex-wrap items-center gap-x-8 gap-y-3 overflow-hidden border-l-2 border-l-accent p-4">
+      <DriverCutout
+        code={leader.driver}
+        height={110}
+        className="pointer-events-none absolute bottom-0 right-3 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]"
+      />
       <div>
         <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
           Championship leader
@@ -176,7 +182,11 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
             className="inline-block h-4 w-1 rounded-sm"
             style={{ background: teamColor(leader.team) }}
           />
-          <DriverTag code={leader.driver} team={leader.team} size={32} />
+          {driverCutoutUrl(leader.driver) ? (
+            <DriverName code={leader.driver} className="text-2xl font-700 text-ink" />
+          ) : (
+            <DriverTag code={leader.driver} team={leader.team} size={32} />
+          )}
           <span className="text-sm text-ink-muted">{leader.team}</span>
         </div>
       </div>

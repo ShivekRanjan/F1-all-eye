@@ -2,8 +2,9 @@ import type { RefObject } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { AnimatedNumber } from "../components/AnimatedNumber";
-import { DriverCutout, DriverTag } from "../components/Driver";
+import { DriverCutout, DriverName, DriverTag } from "../components/Driver";
 import { TrackOutline } from "../components/TrackOutline";
+import { driverCutoutUrl } from "../lib/driverCutouts";
 import { pct, teamColor, timeAgo } from "../lib/format";
 import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
@@ -161,15 +162,19 @@ function PodiumBlocks({
           >
             {/* A true cutout (transparent-bg photo) when we have one for this
                 driver — bleeds down into the info row below like a broadcast
-                podium graphic. Silently absent otherwise (DriverTag already
-                carries the identity), no layout gap either way. */}
+                podium graphic. When present, the small circular avatar below
+                would just be the same face twice, so swap it for name-only. */}
             <DriverCutout
               code={row.driver}
               height={cutoutH}
               className="-mb-1 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]"
             />
             <div className="flex flex-col items-center gap-1.5 pb-2.5">
-              <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
+              {driverCutoutUrl(row.driver) ? (
+                <DriverName code={row.driver} className="font-700 text-ink" />
+              ) : (
+                <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
+              )}
               <AnimatedNumber
                 value={row.podium_prob}
                 format={pct}
