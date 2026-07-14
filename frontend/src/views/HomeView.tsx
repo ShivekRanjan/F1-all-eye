@@ -169,21 +169,21 @@ function PodiumBlocks({
               height={cutoutH}
               className="-mb-1 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]"
             />
-            <div className="flex flex-col items-center gap-1.5 pb-2.5">
+            <div className="flex flex-col items-center pb-2.5">
               {driverCutoutUrl(row.driver) ? (
                 <DriverName code={row.driver} className="font-700 text-ink" />
               ) : (
                 <DriverTag code={row.driver} size={place === 1 ? 26 : 22} />
               )}
+            </div>
+            <div
+              className={`flex w-full items-end justify-center gap-1.5 rounded-t-lg border border-b-0 pb-1.5 ${riser} ${tone}`}
+            >
               <AnimatedNumber
                 value={row.podium_prob}
                 format={pct}
                 className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}
               />
-            </div>
-            <div
-              className={`flex w-full items-end justify-center rounded-t-lg border border-b-0 pb-1.5 ${riser} ${tone}`}
-            >
               <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
                 P{place}
               </span>
