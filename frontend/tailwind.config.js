@@ -125,6 +125,11 @@ export default {
           "70%": { transform: "scaleX(0.85)", opacity: "1" },
           "100%": { transform: "scaleX(1)", opacity: "0" },
         },
+        popin: {
+          "0%": { transform: "scale(0.5)", opacity: "0" },
+          "60%": { transform: "scale(1.15)", opacity: "1" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
       },
       animation: {
         f1pulse: "f1pulse 1.7s ease-in-out infinite",
@@ -136,6 +141,7 @@ export default {
         breathe: "breathe 3.2s ease-in-out infinite",
         trackdraw: "trackdraw 900ms ease-out both",
         routebar: "routebar 600ms ease-out both",
+        popin: "popin 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
       },
     },
   },

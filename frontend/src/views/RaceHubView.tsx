@@ -13,6 +13,7 @@ import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select } from "../components/controls";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton, Spinner } from "../components/ui";
+import { DriverCutout } from "../components/Driver";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, fmtPlan, pct, teamColor, trackSearchText } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
@@ -249,8 +250,9 @@ function PodiumRow({
   hit?: boolean;
 }) {
   return (
-    <li className="flex items-center gap-2 rounded-md border border-line-card bg-surface-inset px-3 py-1.5">
+    <li className="flex items-center gap-2.5 rounded-md border border-line-card bg-surface-inset px-3 py-1.5">
       <span className="font-mono text-[11px] text-ink-faint">P{place}</span>
+      <DriverCutout code={driver} height={40} className="drop-shadow-[0_3px_5px_rgba(0,0,0,0.4)]" />
       {team && (
         <span className="inline-block h-3.5 w-1 rounded-sm" style={{ background: teamColor(team) }} />
       )}
@@ -258,7 +260,14 @@ function PodiumRow({
       {team && <span className="text-xs text-ink-muted">{team}</span>}
       <span className="ml-auto flex items-center gap-2">
         {right && <span className="nums font-mono text-[12px] text-accent">{right}</span>}
-        {hit && <span title="in the model's top-3">✓</span>}
+        {hit && (
+          <span
+            title="in the model's top-3"
+            className="flex h-4 w-4 animate-popin items-center justify-center rounded-full bg-accent/20 text-[10px] text-accent shadow-glow"
+          >
+            ✓
+          </span>
+        )}
       </span>
     </li>
   );

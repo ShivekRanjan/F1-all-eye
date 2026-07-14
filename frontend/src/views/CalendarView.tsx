@@ -4,7 +4,7 @@ import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle } from "../component
 import { pct } from "../lib/format";
 import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
-import type { CalendarRound, CalendarResp } from "../api/types";
+import type { CalendarRound, CalendarResp, CalendarSession } from "../api/types";
 import { ViewIntro } from "./common";
 
 const fmtDay = (iso: string | null) =>
@@ -110,6 +110,8 @@ function NextRaceCard({
         </div>
       </div>
 
+      <SessionTimeline sessions={round.sessions} now={now} />
+
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {round.sessions.map((s) => {
           const upcoming = new Date(s.date).getTime() > now;
@@ -130,6 +132,56 @@ function NextRaceCard({
 
       <PredictedPodium round={round.round} />
     </Card>
+  );
+}
+
+/** FP1 -> Race as a broadcast-style timeline instead of just a grid of
+ *  cards — a moving "now" marker gives the weekend a sense of progress,
+ *  not just a list of times. */
+function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: number }) {
+  if (sessions.length < 2) return null;
+  const times = sessions.map((s) => new Date(s.date).getTime());
+  const start = times[0];
+  const end = times[times.length - 1];
+  const span = Math.max(1, end - start);
+  const nowPct = Math.min(100, Math.max(0, ((now - start) / span) * 100));
+
+  return (
+    <div className="relative mx-1 mt-5 mb-6 h-2">
+      <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-surface-inset2" />
+      <div
+        className="absolute top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-accent/60 transition-[width] duration-500"
+        style={{ width: `${nowPct}%` }}
+      />
+      {sessions.map((s, i) => {
+        const leftPct = ((times[i] - start) / span) * 100;
+        const passed = times[i] <= now;
+        return (
+          <div
+            key={s.name}
+            className="absolute top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+            style={{ left: `${leftPct}%` }}
+          >
+            <span
+              className={`block h-2.5 w-2.5 rounded-full border-2 ${
+                passed ? "border-accent bg-accent" : "border-line-hover bg-surface-page"
+              }`}
+            />
+            <span className="absolute top-4 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+              {s.name}
+            </span>
+          </div>
+        );
+      })}
+      {nowPct > 0.5 && nowPct < 99.5 && (
+        <div
+          className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{ left: `${nowPct}%` }}
+        >
+          <span className="block h-3.5 w-3.5 animate-f1pulse rounded-full bg-accent shadow-glow" />
+        </div>
+      )}
+    </div>
   );
 }
 

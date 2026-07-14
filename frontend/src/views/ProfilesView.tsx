@@ -12,6 +12,7 @@ import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field } from "../components/controls";
 import { Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
+import { DriverCutout } from "../components/Driver";
 import { teamColor } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
 import type {
@@ -99,6 +100,7 @@ function DriverBody({ p }: { p: DriverProfile }) {
     <div className="space-y-5">
       {/* Header */}
       <Card className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
+        <DriverCutout code={p.driver} height={92} className="drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]" />
         <span className="inline-block h-8 w-1.5 rounded-sm" style={{ background: teamColor(p.team) }} />
         <div>
           <div className="text-2xl font-700 text-ink">{p.driver}</div>
