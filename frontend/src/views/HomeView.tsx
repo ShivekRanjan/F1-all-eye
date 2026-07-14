@@ -147,9 +147,9 @@ function PodiumBlocks({
 }) {
   const [p1, p2, p3] = podium;
   const order = [
-    { row: p2, place: 2, riser: "h-10", cutoutH: 80, tone: "border-line-card bg-surface-inset" },
-    { row: p1, place: 1, riser: "h-16", cutoutH: 105, tone: "border-accent/50 bg-accent/[0.07]" },
-    { row: p3, place: 3, riser: "h-7", cutoutH: 68, tone: "border-line-card bg-surface-inset" },
+    { row: p2, place: 2, riser: "h-12", cutoutH: 80, tone: "border-line-card bg-surface-inset" },
+    { row: p1, place: 1, riser: "h-20", cutoutH: 105, tone: "border-accent/50 bg-accent/[0.07]" },
+    { row: p3, place: 3, riser: "h-9", cutoutH: 68, tone: "border-line-card bg-surface-inset" },
   ] as const;
   return (
     <div className="flex items-end gap-2">
@@ -177,7 +177,7 @@ function PodiumBlocks({
               )}
             </div>
             <div
-              className={`flex w-full items-end justify-center gap-1.5 rounded-t-lg border border-b-0 pb-1.5 ${riser} ${tone}`}
+              className={`flex w-full flex-col items-center justify-end rounded-t-lg border border-b-0 pb-1.5 leading-tight ${riser} ${tone}`}
             >
               <AnimatedNumber
                 value={row.podium_prob}
