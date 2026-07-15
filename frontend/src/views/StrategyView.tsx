@@ -518,14 +518,14 @@ function OutcomeChart({ sim }: { sim: SimulateResp }) {
           <XAxis dataKey="x" tickFormatter={(v) => v.toFixed(0)} stroke="#9a9aa6" fontSize={11} />
           <YAxis stroke="#9a9aa6" fontSize={11} />
           <Tooltip labelFormatter={(v) => `${Number(v).toFixed(1)} min`} formatter={(v) => [v, "races"]} />
-          <ReferenceLine x={sim.p50_s / 60} stroke="#e2231a" strokeWidth={1.6} />
+          <ReferenceLine x={sim.p50_s / 60} stroke="#eef1f5" strokeWidth={1.6} />
           <Bar dataKey="c" radius={[1, 1, 0, 0]}>
-            {data.map((_, i) => <Cell key={i} fill="#2dd4bf" fillOpacity={0.82} />)}
+            {data.map((_, i) => <Cell key={i} fill="rgb(var(--accent))" fillOpacity={0.82} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
       <div className="nums mt-1 font-mono text-[11px] text-ink-faint">
-        P(safety car) {Math.round(sim.p_safety_car * 100)}% · spread (p90−p10) {(sim.p90_s - sim.p10_s).toFixed(0)}s · red line = median
+        P(safety car) {Math.round(sim.p_safety_car * 100)}% · spread (p90−p10) {(sim.p90_s - sim.p10_s).toFixed(0)}s · white line = median
       </div>
     </>
   );

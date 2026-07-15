@@ -14,6 +14,8 @@ import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select, Slider } from "../components/controls";
 import { Badge, Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
+import { DriverCutout } from "../components/Driver";
+import { TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, secs, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
 import type { LapHistory, LiveRecommendation, Nowcast } from "../api/types";
@@ -131,6 +133,19 @@ function ReplayInner({
   return (
     <div className="space-y-5">
       <Card className="p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+            <span className="h-[7px] w-[7px] animate-f1pulse rounded-full bg-accent" />
+            Replay
+          </span>
+          <span className="text-sm text-ink-muted">
+            {track} · {season}
+          </span>
+          <span className="ml-auto flex items-center gap-2">
+            <DriverCutout code={driver} height={28} />
+            <span className="font-700 text-ink">{driver}</span>
+          </span>
+        </div>
         <Field label={`Current lap · drag to play the race`}>
           <Slider
             value={cur}
@@ -155,7 +170,8 @@ function ReplayInner({
           </div>
 
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
-            <Card className="p-4 lg:col-span-3">
+            <Card className="relative overflow-hidden p-4 lg:col-span-3">
+              <TrackWatermark track={track} className="-right-14 -top-14 h-60 w-60" />
               <SectionTitle>Lap pace (fuel-corrected)</SectionTitle>
               <PaceChart series={series} cur={cur} nowcast={nowcast} />
             </Card>
@@ -249,10 +265,10 @@ function PaceChart({
           labelFormatter={(v) => `lap ${v}`}
           formatter={(v: number) => [`${v.toFixed(2)} s`, "fuel-corr"]}
         />
-        <ReferenceLine x={cur} stroke="#e2231a" strokeDasharray="4 3" />
+        <ReferenceLine x={cur} stroke="rgb(var(--accent))" strokeDasharray="4 3" />
         <Line type="monotone" dataKey="t" stroke="#ecedf0" strokeWidth={1.6} dot={false} isAnimationActive={false} />
         {nowcast?.ok && (
-          <ReferenceDot x={cur + 1} y={nowcast.predicted_s!} r={4} fill="#2dd4bf" stroke="#080b11" />
+          <ReferenceDot x={cur + 1} y={nowcast.predicted_s!} r={4} fill="rgb(var(--accent))" stroke="#080b11" />
         )}
       </LineChart>
     </ResponsiveContainer>

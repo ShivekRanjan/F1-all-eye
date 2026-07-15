@@ -12,7 +12,8 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import { Combobox, Field, Select, Slider } from "../components/controls";
-import { Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
+import { Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
+import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { gapText, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
 import type { UndercutTrajectory } from "../api/types";
@@ -34,7 +35,13 @@ function Inner({ tracks }: { tracks: string[] }) {
         model of the undercut — fresh-tyre pace vs the gap and pit loss, judged at the crossover
         once both have stopped.
       </ViewIntro>
-      <Card className="p-4">
+      <Card className="overflow-hidden p-4">
+        <div className="-mx-4 -mt-4 mb-4 flex items-center justify-between border-b border-line bg-surface-inset px-4 py-2.5">
+          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+            ◆ The duel
+          </span>
+          <TrackOutline track={track} size={22} className="text-accent" />
+        </div>
         <Field label="Circuit">
           <div className="max-w-sm">
             <Combobox
@@ -108,7 +115,7 @@ function Panel({ track, total }: { track: string; total: number }) {
               <Select value={ynew} options={COMPS} onChange={setYnew} />
             </Field>
           </DriverPanel>
-          <DriverPanel title="Rival">
+          <DriverPanel title="Rival" muted>
             <Field label="Current tyre">
               <Select value={rc} options={COMPS} onChange={setRc} />
             </Field>
@@ -129,10 +136,8 @@ function Panel({ track, total }: { track: string; total: number }) {
       {!res.data && !res.error && <Spinner label="Modelling the crossover…" />}
       {res.data && (
         <>
-          <Callout tone={res.data.undercut_works ? "success" : "info"}>
-            <span className="text-base font-700">{res.data.verdict}</span>
-          </Callout>
-          {res.data.trajectory && <CrossoverChart t={res.data.trajectory} />}
+          <VerdictBanner works={res.data.undercut_works} verdict={res.data.verdict} />
+          {res.data.trajectory && <CrossoverChart t={res.data.trajectory} track={track} />}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Metric
               label="Pit now (undercut)"
@@ -162,7 +167,7 @@ function Panel({ track, total }: { track: string; total: number }) {
  *  option. Up = you ahead (people map up to winning), the zero line = the rival,
  *  and the moment a line crosses it IS the crossover — no mental simulation
  *  needed. Solid vs dashed is a second encoding on top of colour. */
-function CrossoverChart({ t }: { t: UndercutTrajectory }) {
+function CrossoverChart({ t, track }: { t: UndercutTrajectory; track: string }) {
   const data = t.laps.map((lap, i) => ({
     lap,
     // Negate so "ahead of the rival" plots upward; the axis labels say so.
@@ -170,7 +175,8 @@ function CrossoverChart({ t }: { t: UndercutTrajectory }) {
     cover: -t.cover[i],
   }));
   return (
-    <Card className="p-4">
+    <Card className="relative overflow-hidden p-4">
+      <TrackWatermark track={track} className="-right-14 -top-14 h-60 w-60" />
       <SectionTitle>The crossover, lap by lap</SectionTitle>
       <div className="relative">
         <span className="pointer-events-none absolute left-12 top-1 font-mono text-[11px] uppercase tracking-[0.1em] text-accent/80">
@@ -196,14 +202,14 @@ function CrossoverChart({ t }: { t: UndercutTrajectory }) {
             <ReferenceLine y={0} stroke="#8994a4" strokeWidth={1.5}
                            label={{ value: "rival", position: "right", fill: "#8994a4", fontSize: 11 }} />
             {/* No marker for your own stop: it's always "now" (the chart's left
-                edge) and the teal line's pit-loss dive already shows it. */}
+                edge) and the accent line's pit-loss dive already shows it. */}
             <ReferenceLine x={t.rival_pit_lap} stroke="#8994a4" strokeDasharray="2 3" strokeOpacity={0.6}
                            label={{ value: "rival pits", position: "insideTopRight", fill: "#8994a4", fontSize: 10 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Line name="Pit now (undercut)" type="monotone" dataKey="undercut"
-                  stroke="#2dd4bf" strokeWidth={2} dot={false} isAnimationActive={false} />
+                  stroke="rgb(var(--accent))" strokeWidth={2} dot={false} isAnimationActive={false} />
             <Line name="Cover (pit with rival)" type="monotone" dataKey="cover"
-                  stroke="#f6c700" strokeWidth={2} strokeDasharray="6 4" dot={false}
+                  stroke="#dbe0e8" strokeWidth={2} strokeDasharray="6 4" dot={false}
                   isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -216,11 +222,51 @@ function CrossoverChart({ t }: { t: UndercutTrajectory }) {
   );
 }
 
-function DriverPanel({ title, accent, children }: { title: string; accent?: boolean; children: React.ReactNode }) {
+/** "You" and "Rival" need to read as opposing sides at a glance, not two
+ *  identically-styled boxes with different labels — accent fill for you,
+ *  a deliberately duller neutral for the rival. */
+function DriverPanel({
+  title,
+  accent,
+  muted,
+  children,
+}: {
+  title: string;
+  accent?: boolean;
+  muted?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={`rounded-lg border border-line p-3 ${accent ? "border-l-2 border-l-f1" : ""}`}>
-      <SectionTitle>{title}</SectionTitle>
+    <div
+      className={`rounded-lg border p-3 ${
+        accent
+          ? "border-accent/40 border-l-2 border-l-accent bg-accent/[0.04]"
+          : muted
+            ? "border-line bg-surface-inset"
+            : "border-line"
+      }`}
+    >
+      <SectionTitle>
+        <span className={accent ? "text-accent" : ""}>{title}</span>
+      </SectionTitle>
       <div className="space-y-3">{children}</div>
     </div>
+  );
+}
+
+/** A broadcast-style verdict — pit-wall header language + a pulse dot,
+ *  replacing a plain callout box for the one moment this view actually
+ *  makes a call. */
+function VerdictBanner({ works, verdict }: { works: boolean; verdict: string }) {
+  return (
+    <Card className={`overflow-hidden border-l-2 p-4 ${works ? "border-l-accent" : "border-l-line-hover"}`}>
+      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+        <span
+          className={`h-[7px] w-[7px] animate-f1pulse rounded-full ${works ? "bg-accent" : "bg-ink-dim"}`}
+        />
+        {works ? "Undercut wins" : "Cover wins"}
+      </div>
+      <div className="mt-1.5 text-lg font-700 text-ink">{verdict}</div>
+    </Card>
   );
 }

@@ -474,7 +474,7 @@ function PaceTraceInner({ hist }: { hist: LapHistory }) {
           formatter={(v: number) => [`${v.toFixed(2)} s`, "fuel-corr"]}
         />
         {pits.map((p) => (
-          <ReferenceLine key={p} x={p} stroke="#2dd4bf" strokeDasharray="3 3" strokeOpacity={0.6} />
+          <ReferenceLine key={p} x={p} stroke="rgb(var(--accent))" strokeDasharray="3 3" strokeOpacity={0.6} />
         ))}
         <Line type="monotone" dataKey="t" stroke="#ecedf0" strokeWidth={1.6} dot={false} isAnimationActive={false} />
       </LineChart>

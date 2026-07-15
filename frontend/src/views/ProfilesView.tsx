@@ -355,7 +355,7 @@ function PointsBySeason({ data }: { data: { label: string; points: number }[] })
           <YAxis stroke="#9a9aa6" fontSize={11} />
           <Bar dataKey="points" radius={[3, 3, 0, 0]}>
             {data.map((_, i) => (
-              <Cell key={i} fill="#2dd4bf" />
+              <Cell key={i} fill="rgb(var(--accent))" />
             ))}
             <LabelList dataKey="points" position="top" formatter={(v: number) => v.toFixed(0)} fill="#ecedf0" fontSize={11} />
           </Bar>
