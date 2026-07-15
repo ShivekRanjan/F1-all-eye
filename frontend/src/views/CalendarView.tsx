@@ -148,28 +148,39 @@ function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: 
   const times = sessions.map((s) => new Date(s.date).getTime());
   const n = sessions.length;
 
+  // The session cards below are an n-column CSS grid — each card is
+  // centered within its own 1/n slice, not spread edge-to-edge. Dots have
+  // to land on those same centers ((i+0.5)/n) or the timeline visibly
+  // drifts out of alignment with the cards under it.
+  const posForIndex = (x: number) => ((x + 0.5) / n) * 100;
+
   let nowPct: number;
   if (now <= times[0]) {
-    nowPct = 0;
+    nowPct = posForIndex(0);
   } else if (now >= times[n - 1]) {
-    nowPct = 100;
+    nowPct = posForIndex(n - 1);
   } else {
     const i = times.findIndex((t, idx) => idx < n - 1 && now >= t && now < times[idx + 1]);
     const segStart = times[i];
     const segEnd = times[i + 1];
     const withinSeg = (now - segStart) / Math.max(1, segEnd - segStart);
-    nowPct = ((i + withinSeg) / (n - 1)) * 100;
+    nowPct = posForIndex(i + withinSeg);
   }
+  const trackStart = posForIndex(0);
+  const trackEnd = posForIndex(n - 1);
 
   return (
     <div className="relative mx-1 mt-5 mb-6 h-2">
-      <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-surface-inset2" />
+      <div
+        className="absolute top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-surface-inset2"
+        style={{ left: `${trackStart}%`, right: `${100 - trackEnd}%` }}
+      />
       <div
         className="absolute top-1/2 h-[2px] -translate-y-1/2 rounded-full bg-accent/60 transition-[width] duration-500"
-        style={{ width: `${nowPct}%` }}
+        style={{ left: `${trackStart}%`, width: `${Math.max(0, nowPct - trackStart)}%` }}
       />
       {sessions.map((s, i) => {
-        const leftPct = (i / (n - 1)) * 100;
+        const leftPct = posForIndex(i);
         const passed = times[i] <= now;
         return (
           <div
@@ -188,7 +199,7 @@ function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: 
           </div>
         );
       })}
-      {nowPct > 0.5 && nowPct < 99.5 && (
+      {nowPct > trackStart + 0.5 && nowPct < trackEnd - 0.5 && (
         <div
           className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{ left: `${nowPct}%` }}
