@@ -137,14 +137,29 @@ function NextRaceCard({
 
 /** FP1 -> Race as a broadcast-style timeline instead of just a grid of
  *  cards — a moving "now" marker gives the weekend a sense of progress,
- *  not just a list of times. */
+ *  not just a list of times. Sessions sit at EQUAL intervals (index-based),
+ *  not spaced proportionally to actual elapsed time — real gaps between
+ *  sessions vary wildly (3.5h practice-to-practice vs. ~23h to race day),
+ *  so proportional spacing clustered sessions together and read as broken.
+ *  The "now" marker still interpolates using real time, just within
+ *  whichever equal-width segment "now" currently falls in. */
 function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: number }) {
   if (sessions.length < 2) return null;
   const times = sessions.map((s) => new Date(s.date).getTime());
-  const start = times[0];
-  const end = times[times.length - 1];
-  const span = Math.max(1, end - start);
-  const nowPct = Math.min(100, Math.max(0, ((now - start) / span) * 100));
+  const n = sessions.length;
+
+  let nowPct: number;
+  if (now <= times[0]) {
+    nowPct = 0;
+  } else if (now >= times[n - 1]) {
+    nowPct = 100;
+  } else {
+    const i = times.findIndex((t, idx) => idx < n - 1 && now >= t && now < times[idx + 1]);
+    const segStart = times[i];
+    const segEnd = times[i + 1];
+    const withinSeg = (now - segStart) / Math.max(1, segEnd - segStart);
+    nowPct = ((i + withinSeg) / (n - 1)) * 100;
+  }
 
   return (
     <div className="relative mx-1 mt-5 mb-6 h-2">
@@ -154,7 +169,7 @@ function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: 
         style={{ width: `${nowPct}%` }}
       />
       {sessions.map((s, i) => {
-        const leftPct = ((times[i] - start) / span) * 100;
+        const leftPct = (i / (n - 1)) * 100;
         const passed = times[i] <= now;
         return (
           <div
