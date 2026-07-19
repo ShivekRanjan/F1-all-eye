@@ -8,16 +8,21 @@ export interface Column<R> {
   className?: string;
 }
 
-/** Minimal, dark-themed table. Highlights the first row (rank 1 / our pick). */
+/** Minimal, dark-themed table. Highlights the first row (rank 1 / our pick),
+ *  and optionally a specific row (e.g. the user's favourite driver) via
+ *  `isHighlighted` — a distinct accent-left-border treatment so it doesn't
+ *  get confused with the "our pick" tint. */
 export function DataTable<R>({
   columns,
   rows,
   highlightFirst = false,
+  isHighlighted,
   getKey,
 }: {
   columns: Column<R>[];
   rows: R[];
   highlightFirst?: boolean;
+  isHighlighted?: (row: R) => boolean;
   getKey: (row: R, i: number) => string | number;
 }) {
   const alignCls = { left: "text-left", right: "text-right", center: "text-center" };
@@ -48,7 +53,7 @@ export function DataTable<R>({
               key={getKey(row, i)}
               className={`animate-rise border-b border-line/60 ${
                 highlightFirst && i === 0 ? "bg-f1/[0.06]" : ""
-              }`}
+              } ${isHighlighted?.(row) ? "border-l-2 border-l-accent bg-accent/[0.05]" : ""}`}
               style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}
             >
               {columns.map((c) => (

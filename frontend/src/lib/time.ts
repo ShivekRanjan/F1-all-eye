@@ -25,9 +25,10 @@ export function countdown(target: string, now: number): string {
   return `${m}m ${sec}s`;
 }
 
-export const fmtSession = (iso: string) =>
+export const fmtSession = (iso: string, hour12: boolean = false) =>
   new Date(iso).toLocaleString(undefined, {
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
+    hour12,
   });

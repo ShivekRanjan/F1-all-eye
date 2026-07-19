@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle } from "../components/ui";
 import { pct } from "../lib/format";
+import { pickSeason } from "../lib/season";
 import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
+import { useSettings } from "../lib/useSettings";
 import type { CalendarRound, CalendarResp, CalendarSession } from "../api/types";
 import { ViewIntro } from "./common";
 
@@ -11,10 +13,13 @@ const fmtDay = (iso: string | null) =>
   iso ? new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
 
 export default function CalendarView() {
+  const [settings] = useSettings();
   const seasons = useAsync(() => api.allSeasons(), []);
   const [season, setSeason] = useState<number | null>(null);
   useEffect(() => {
-    if (seasons.data?.seasons?.length) setSeason(seasons.data.seasons.at(-1)!);
+    if (seasons.data?.seasons?.length) {
+      setSeason((prev) => prev ?? pickSeason(seasons.data!.seasons, settings.defaultSeason));
+    }
   }, [seasons.data]);
 
   const cal = useAsync(
@@ -85,6 +90,8 @@ function NextRaceCard({
   nextSessionName: string;
 }) {
   const now = useNow(true);
+  const [settings] = useSettings();
+  const hour12 = settings.timeFormat === "12h";
   const isSprint = round.format?.includes("sprint");
   return (
     <Card className="border-l-2 border-l-accent p-4">
@@ -106,7 +113,7 @@ function NextRaceCard({
             {nextSessionName} in
           </div>
           <div className="nums font-mono text-3xl text-accent">{countdown(nextSessionIso, now)}</div>
-          <div className="font-mono text-[11px] text-ink-muted">{fmtSession(nextSessionIso)}</div>
+          <div className="font-mono text-[11px] text-ink-muted">{fmtSession(nextSessionIso, hour12)}</div>
         </div>
       </div>
 
@@ -123,7 +130,7 @@ function NextRaceCard({
               }`}
             >
               <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">{s.name}</div>
-              <div className="text-sm text-ink">{fmtSession(s.date)}</div>
+              <div className="text-sm text-ink">{fmtSession(s.date, hour12)}</div>
               {upcoming && <div className="font-mono text-[11px] text-accent">in {countdown(s.date, now)}</div>}
             </div>
           );

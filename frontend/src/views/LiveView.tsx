@@ -17,7 +17,9 @@ import { Badge, Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "
 import { DriverCutout } from "../components/Driver";
 import { TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, secs, trackSearchText } from "../lib/format";
+import { pickSeason } from "../lib/season";
 import { useAsync, useDebounced } from "../lib/useAsync";
+import { useSettings } from "../lib/useSettings";
 import type { LapHistory, LiveRecommendation, Nowcast } from "../api/types";
 import { TracksGate, ViewIntro, pickDefaultTrack } from "./common";
 
@@ -26,6 +28,7 @@ export default function LiveView() {
 }
 
 function Inner({ tracks: _tracks }: { tracks: string[] }) {
+  const [settings] = useSettings();
   // Season-first navigation: pick a season, then only that season's circuits show.
   const [season, setSeason] = useState<number | null>(null);
   const [track, setTrack] = useState<string | null>(null);
@@ -33,7 +36,7 @@ function Inner({ tracks: _tracks }: { tracks: string[] }) {
 
   const seasons = useAsync(() => api.allSeasons(), []);
   useEffect(() => {
-    if (seasons.data?.seasons?.length) setSeason(seasons.data.seasons.at(-1)!);
+    if (seasons.data?.seasons?.length) setSeason(pickSeason(seasons.data.seasons, settings.defaultSeason));
   }, [seasons.data]);
 
   const circuits = useAsync(
@@ -52,7 +55,9 @@ function Inner({ tracks: _tracks }: { tracks: string[] }) {
   );
   useEffect(() => {
     const ds = drivers.data?.drivers;
-    if (ds?.length) setDriver(ds.includes("VER") ? "VER" : ds[0]);
+    if (!ds?.length) return;
+    const fav = settings.favoriteDriver;
+    setDriver(fav && ds.includes(fav) ? fav : ds.includes("VER") ? "VER" : ds[0]);
   }, [drivers.data]);
 
   return (

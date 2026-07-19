@@ -8,11 +8,15 @@ import { driverCutoutUrl } from "../lib/driverCutouts";
 import { pct } from "../lib/format";
 import { teamColor } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
+import { useSettings } from "../lib/useSettings";
 import type { ConstructorStanding, DriverStanding, StandingsResp } from "../api/types";
 import { ViewIntro } from "./common";
 
 export default function StandingsView() {
-  const [season, setSeason] = useState<number | null>(null);
+  const [settings] = useSettings();
+  // null keeps today's behaviour (API defaults to latest); a saved default
+  // season seeds the initial fetch directly so it doesn't flash-then-switch.
+  const [season, setSeason] = useState<number | null>(settings.defaultSeason);
   const s = useAsync(() => api.standings(season ?? undefined), [season]);
 
   // A manual "refresh" overlay: pull the live standings (committed data topped
@@ -237,6 +241,7 @@ function TeamCell({ team }: { team: string }) {
 
 // --- Drivers standings ------------------------------------------------------
 function DriversCard({ data }: { data: StandingsResp }) {
+  const [settings] = useSettings();
   const maxProb = Math.max(0.01, ...data.drivers.map((d) => d.win_prob ?? 0));
   const cols: Column<DriverStanding>[] = [
     { key: "pos", header: "#", align: "right", render: (d) => <span className="text-ink-muted">{d.pos}</span> },
@@ -268,7 +273,13 @@ function DriversCard({ data }: { data: StandingsResp }) {
   return (
     <Card className="p-4">
       <SectionTitle>Drivers’ championship — {data.season}</SectionTitle>
-      <DataTable columns={cols} rows={data.drivers} getKey={(d) => d.driver} highlightFirst />
+      <DataTable
+        columns={cols}
+        rows={data.drivers}
+        getKey={(d) => d.driver}
+        highlightFirst
+        isHighlighted={(d) => d.driver === settings.favoriteDriver}
+      />
       {data.ongoing && (
         <Callout>
           Title odds run <strong>{data.total_races - data.races_done}</strong> remaining races

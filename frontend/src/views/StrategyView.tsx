@@ -18,7 +18,9 @@ import { Card, CardSkeleton, EmptyState, ErrorNote, SectionTitle, Spinner } from
 import { NoSignalIcon, SearchOffIcon } from "../components/NavIcons";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, trackSearchText } from "../lib/format";
+import { pickSeason } from "../lib/season";
 import { useAsync, useDebounced } from "../lib/useAsync";
+import { useSettings } from "../lib/useSettings";
 import type {
   DegradationResp,
   RecommendResp,
@@ -45,6 +47,7 @@ export default function StrategyView() {
 }
 
 function Dashboard({ tracks }: { tracks: TrackInfo[] }) {
+  const [settings] = useSettings();
   const [track, setTrack] = useState(() => pickDefaultTrack(tracks.map((t) => t.track)));
   const [season, setSeason] = useState<number | null>(null);
   const [objective, setObjective] = useState("mean");
@@ -55,7 +58,7 @@ function Dashboard({ tracks }: { tracks: TrackInfo[] }) {
 
   const seasons = useAsync(() => api.seasons(track), [track]);
   useEffect(() => {
-    if (seasons.data?.seasons?.length) setSeason(seasons.data.seasons.at(-1)!);
+    if (seasons.data?.seasons?.length) setSeason(pickSeason(seasons.data.seasons, settings.defaultSeason));
   }, [seasons.data]);
 
   const stops = useDebounced(maxStops, 200);

@@ -17,6 +17,7 @@ import { DriverCutout } from "../components/Driver";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, fmtPlan, pct, teamColor, trackSearchText } from "../lib/format";
 import { useAsync } from "../lib/useAsync";
+import { useSettings } from "../lib/useSettings";
 import type {
   DegradationResp,
   LapHistory,
@@ -275,6 +276,7 @@ function PodiumRow({
 
 // --- Full finishing order ---------------------------------------------------
 function ResultTable({ card }: { card: RaceCardResp }) {
+  const [settings] = useSettings();
   const cols: Column<RaceCardResp["result"][number]>[] = [
     {
       key: "pos",
@@ -314,7 +316,13 @@ function ResultTable({ card }: { card: RaceCardResp }) {
     <Card className="p-4">
       <SectionTitle>Finishing order</SectionTitle>
       <div className="max-h-96 overflow-y-auto">
-        <DataTable columns={cols} rows={card.result} getKey={(r) => r.driver} highlightFirst />
+        <DataTable
+          columns={cols}
+          rows={card.result}
+          getKey={(r) => r.driver}
+          highlightFirst
+          isHighlighted={(r) => r.driver === settings.favoriteDriver}
+        />
       </div>
     </Card>
   );

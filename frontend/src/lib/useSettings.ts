@@ -8,17 +8,33 @@ import { useEffect, useState } from "react";
 
 export type Accent = "gold" | "cyan" | "violet";
 export type Density = "comfortable" | "compact";
+export type TimeFormat = "12h" | "24h";
 
 export interface Settings {
   accent: Accent;
   motion: boolean;
   density: Density;
+  /** Driver code, e.g. "VER" — null means no favourite picked. Highlighted
+   *  in standings/results across the app once set. */
+  favoriteDriver: string | null;
+  timeFormat: TimeFormat;
+  /** null = always default to the latest season (today's behaviour). */
+  defaultSeason: number | null;
+  sidebarCollapsed: boolean;
 }
 
 const KEY = "f1se:settings";
 const EVT = "f1se:settings-changed";
 
-const DEFAULTS: Settings = { accent: "gold", motion: true, density: "comfortable" };
+const DEFAULTS: Settings = {
+  accent: "gold",
+  motion: true,
+  density: "comfortable",
+  favoriteDriver: null,
+  timeFormat: "24h",
+  defaultSeason: null,
+  sidebarCollapsed: false,
+};
 
 function load(): Settings {
   try {
@@ -60,4 +76,17 @@ export function useSettings(): [Settings, (patch: Partial<Settings>) => void] {
   };
 
   return [settings, update];
+}
+
+/** Wipes persisted settings back to defaults — used by Settings' System
+ *  section. Not part of the hook's own API since it's a one-shot action,
+ *  not something a component reads reactively. */
+export function resetSettings() {
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    /* private mode — nothing to clear */
+  }
+  applyToDom(DEFAULTS);
+  window.dispatchEvent(new Event(EVT));
 }

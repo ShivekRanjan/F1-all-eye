@@ -147,3 +147,19 @@ export const api = {
   trackLayouts: () =>
     req<{ tracks: Record<string, { path: string; viewbox: number }> }>("/track_layouts"),
 };
+
+/** A quick, non-retrying ping for Settings' System section — the normal
+ *  `req()` retries network failures for up to ~17s (right for data fetches,
+ *  wrong for a "is the API up" indicator that should answer in a couple of
+ *  seconds either way). */
+export async function checkHealth(): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(`${BASE}/health`, { signal: controller.signal });
+    clearTimeout(timer);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

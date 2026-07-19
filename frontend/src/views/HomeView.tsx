@@ -10,6 +10,7 @@ import { countdown, fmtSession, useNow } from "../lib/time";
 import { useAsync } from "../lib/useAsync";
 import { useLastVisit } from "../lib/useLastVisit";
 import { useParallax } from "../lib/useParallax";
+import { useSettings } from "../lib/useSettings";
 import type { CalendarResp, NewsResp, StandingsResp, UpcomingResp } from "../api/types";
 
 /** The OS home: what's next, what the model expects, where the title stands,
@@ -73,6 +74,8 @@ function Hero({
   outlineRef: RefObject<HTMLDivElement>;
 }) {
   const now = useNow();
+  const [settings] = useSettings();
+  const hour12 = settings.timeFormat === "12h";
   const podium = up && up.next_round === round.round ? up.predictions.slice(0, 3) : null;
   return (
     <>
@@ -102,7 +105,7 @@ function Hero({
               {next.name} in
             </div>
             <div className="nums font-mono text-3xl text-accent">{countdown(next.date, now)}</div>
-            <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date)}</div>
+            <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date, hour12)}</div>
           </div>
         </div>
 
@@ -217,6 +220,7 @@ function TitleRace() {
 }
 
 function TitleRaceBody({ data }: { data: StandingsResp }) {
+  const [settings] = useSettings();
   const top = data.drivers.slice(0, 8);
   const maxPts = Math.max(1, ...top.map((d) => d.points));
   return (
@@ -236,7 +240,12 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
       </div>
       <div className="space-y-2">
         {top.map((d) => (
-          <div key={d.driver} className="flex items-center gap-3">
+          <div
+            key={d.driver}
+            className={`flex items-center gap-3 rounded-md px-1.5 -mx-1.5 ${
+              d.driver === settings.favoriteDriver ? "bg-accent/[0.06] ring-1 ring-inset ring-accent/30" : ""
+            }`}
+          >
             <span className="w-5 text-right font-mono text-[12px] text-ink-faint">{d.pos}</span>
             <span className="inline-block h-3.5 w-1 rounded-sm" style={{ background: teamColor(d.team) }} />
             <DriverTag code={d.driver} team={d.team} size={22} />

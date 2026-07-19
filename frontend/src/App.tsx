@@ -1,4 +1,5 @@
-import { Suspense, forwardRef, lazy, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, forwardRef, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { CommandPalette, ShortcutsHelp } from "./components/CommandPalette";
 import { CursorGlow } from "./components/CursorGlow";
 import {
   BarsIcon,
@@ -75,8 +76,9 @@ function useHashTab(): [TabId, (id: TabId) => void] {
 
 export default function App() {
   const [tab, setTab] = useHashTab();
-  const [collapsed, setCollapsed] = useState(false);
-  useSettings(); // ensures <html data-accent/motion> stays applied + reactive
+  const [settings, updateSettings] = useSettings();
+  const collapsed = settings.sidebarCollapsed;
+  const setCollapsed = (v: boolean) => updateSettings({ sidebarCollapsed: v });
   const active = TABS.find((t) => t.id === tab)!;
 
   // Sliding indicator that tracks the active nav item — measured off the
@@ -89,6 +91,35 @@ export default function App() {
     const btn = itemRefs.current[tab];
     if (btn) setIndicator({ top: btn.offsetTop, height: btn.offsetHeight, ready: true });
   }, [tab, collapsed]);
+
+  // Ctrl/Cmd+K -> command palette; "?" -> shortcuts cheat sheet (only
+  // outside text inputs, so it doesn't hijack typing a literal "?").
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = ["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName);
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      } else if (e.key === "?" && !typing) {
+        e.preventDefault();
+        setHelpOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const paletteItems = useMemo(
+    () =>
+      TABS.map((t) => ({
+        id: t.id,
+        label: t.label,
+        group: t.group === "_pinned" ? "System" : t.group,
+        icon: <t.Icon />,
+      })),
+    [],
+  );
 
   return (
     <div className="lg:flex">
@@ -164,6 +195,25 @@ export default function App() {
 
         {/* Settings pinned at the bottom, above the footer divider */}
         <div className="border-t border-line px-3 py-2">
+          <button
+            onClick={() => setPaletteOpen(true)}
+            title="Jump to (Ctrl+K)"
+            className={`mb-1 flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[13px] text-ink-dim transition hover:bg-surface-inset/70 hover:text-ink-soft ${
+              collapsed ? "justify-center px-0" : ""
+            }`}
+          >
+            <span className="shrink-0 text-accent" aria-hidden>
+              ◆
+            </span>
+            {!collapsed && (
+              <>
+                <span className="flex-1 truncate">Jump to…</span>
+                <kbd className="rounded border border-line-ctl px-1.5 py-0.5 font-mono text-[10px] text-ink-faint">
+                  ⌘K
+                </kbd>
+              </>
+            )}
+          </button>
           <NavItem
             label="Settings"
             icon={<SlidersIcon />}
@@ -224,6 +274,13 @@ export default function App() {
           </div>
         </main>
       </div>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        items={paletteItems}
+        onSelect={(id) => setTab(id as TabId)}
+      />
+      <ShortcutsHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }
