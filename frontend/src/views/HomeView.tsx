@@ -77,8 +77,30 @@ function Hero({
   const [settings] = useSettings();
   const hour12 = settings.timeFormat === "12h";
   const podium = up && up.next_round === round.round ? up.predictions.slice(0, 3) : null;
+
+  // Race-day mode: as a session comes inside ~2h (or is under way), the hero
+  // drops its week-out calm and gets urgent — pulsing ribbon, enlarged
+  // countdown, "final call" language. Purely presentational; same data.
+  const msToNext = new Date(next.date).getTime() - now;
+  const live = msToNext <= 0;
+  const soon = msToNext > 0 && msToNext <= 2 * 3600 * 1000;
+  const raceMode = live || soon;
+  const isRace = /race/i.test(next.name);
+
   return (
     <>
+      {raceMode && (
+        <div className="flex items-center gap-2 border-b border-accent/30 bg-accent/[0.08] px-4 py-1.5">
+          <span className="h-2 w-2 animate-f1pulse rounded-full bg-accent" />
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+            {live
+              ? `${next.name} under way`
+              : isRace
+                ? "Lights out soon"
+                : `${next.name} starts soon`}
+          </span>
+        </div>
+      )}
       <div className="p-4 pb-0">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
@@ -104,14 +126,20 @@ function Hero({
             <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
               {next.name} in
             </div>
-            <div className="nums font-mono text-3xl text-accent">{countdown(next.date, now)}</div>
+            <div
+              className={`nums font-mono text-accent ${
+                raceMode ? "animate-f1pulse text-4xl font-700" : "text-3xl"
+              }`}
+            >
+              {countdown(next.date, now)}
+            </div>
             <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date, hour12)}</div>
           </div>
         </div>
 
         <div className="mb-2 mt-5 flex items-center justify-between">
           <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-            🔮 Predicted podium
+            {raceMode && isRace ? "🏁 Final podium call" : "🔮 Predicted podium"}
           </span>
           <span className="flex gap-3">
             <a href="#/outcome" className="font-mono text-[11px] text-accent hover:opacity-80">
