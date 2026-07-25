@@ -182,10 +182,15 @@ export interface UpcomingPred {
   grid: number;
   podium_prob: number;
 }
+/** Where the start positions behind a prediction came from: the real
+ *  qualifying classification, each driver's qualifying form (pre-quali), or a
+ *  grid the user set by hand. Surfaced in the UI — a call off the real grid is
+ *  a stronger claim than one off projected form. */
+export type GridSource = "qualifying" | "form" | "custom";
 export interface UpcomingResp {
   season: number;
   next_round: number;
-  grid_source: string;
+  grid_source: GridSource;
   predictions: UpcomingPred[];
 }
 

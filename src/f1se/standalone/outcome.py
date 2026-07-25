@@ -7,6 +7,7 @@ Kept here, not in the API layer, so it's reusable and tested in one place.
 
 from __future__ import annotations
 
+import time
 from functools import lru_cache
 from pathlib import Path
 
@@ -147,23 +148,111 @@ def _upcoming_context() -> dict | None:
     }
 
 
-def predict_upcoming(grid: dict[str, int] | None = None) -> dict | None:
+def _qualifying_grid(season: int, rnd: int) -> dict[str, int] | None:
+    """The round's actual starting order, from FastF1's qualifying classification.
+
+    Best-effort and network-bound: returns ``None`` when qualifying hasn't run
+    yet (the normal case for most of a race week) or FastF1 is unreachable, so
+    the caller falls back to form. Qualifying classification is the best
+    *pre-race* proxy for the grid — it can't know about post-qualifying grid
+    penalties or pit-lane starts, which the UI states rather than glosses over.
+    """
+    try:
+        from f1se.config import enable_cache
+
+        enable_cache()
+        import fastf1
+
+        s = fastf1.get_session(int(season), int(rnd), "Q")
+        # laps + race-control messages are both required: for a session this
+        # recent, Ergast has nothing, so FastF1 derives the classification from
+        # lap times — and it refuses to do that without the messages that say
+        # which laps were deleted. The lighter load used elsewhere returns an
+        # entry list with an all-NaN Position column, which looks like success.
+        s.load(laps=True, telemetry=False, weather=False, messages=True)
+        res = s.results
+    except Exception:  # pragma: no cover - network / qualifying not run yet
+        return None
+    if res is None or len(res) == 0:
+        return None
+    out: dict[str, int] = {}
+    for row in res.itertuples(index=False):
+        code = str(getattr(row, "Abbreviation", "") or "").strip()
+        pos = pd.to_numeric(getattr(row, "Position", None), errors="coerce")
+        if code and pd.notna(pos):
+            out[code] = int(pos)
+    return out or None
+
+
+# TTL cache, not lru_cache: qualifying *happens* partway through a race week, so
+# caching the pre-quali miss forever would defeat the whole point. Misses are
+# deliberately not cached (retry on the next call, like schedule.py); only a
+# real classification is held, and only for 15 minutes so a post-quali penalty
+# correction lands promptly.
+_QGRID_TTL_S = 900
+_QGRID_CACHE: dict[tuple[int, int], tuple[float, dict[str, int]]] = {}
+
+
+def _cached_qualifying_grid(season: int, rnd: int) -> dict[str, int] | None:
+    key = (int(season), int(rnd))
+    hit = _QGRID_CACHE.get(key)
+    if hit is not None and time.time() - hit[0] < _QGRID_TTL_S:
+        return hit[1]
+    grid = _qualifying_grid(season, rnd)
+    if grid:  # don't cache a miss — quali may run minutes from now
+        _QGRID_CACHE[key] = (time.time(), grid)
+    return grid
+
+
+def _merge_qualifying(form_grid: dict[str, int], quali: dict[str, int]) -> dict[str, int] | None:
+    """Real qualifying positions for drivers we have season form for.
+
+    A driver with no qualifying classification (DNS, or an entry absent from the
+    results dataset) keeps their form ranking but lines up behind the whole
+    qualified field — the honest placement for "we don't know where they start".
+    """
+    known = {d: p for d, p in quali.items() if d in form_grid}
+    if not known:
+        return None
+    tail = max(known.values())
+    rest = sorted((d for d in form_grid if d not in known), key=lambda d: form_grid[d])
+    out = dict(known)
+    for i, d in enumerate(rest):
+        out[d] = tail + 1 + i
+    return out
+
+
+def predict_upcoming(
+    grid: dict[str, int] | None = None, *, use_qualifying: bool = True
+) -> dict | None:
     """Predict the next round's podium probabilities from current form.
 
-    ``grid`` optionally overrides start positions (``{driver: grid_pos}``); any
-    driver not listed keeps the form-based default. Returns drivers best-first.
+    The baseline grid is the real qualifying order once FastF1 has it, and each
+    driver's qualifying *form* before that — so the call sharpens by itself as
+    the weekend progresses, with no manual step. ``grid`` overrides start
+    positions on top of that baseline (``{driver: grid_pos}``); any driver not
+    listed keeps the baseline. Returns drivers best-first.
+
+    ``use_qualifying=False`` keeps it purely offline (used by the no-network
+    tests, and available if you deliberately want the pre-quali projection).
     """
     ctx = _upcoming_context()
     if ctx is None:
         return None
-    used = {**ctx["default_grid"], **{str(k): int(v) for k, v in (grid or {}).items()}}
+    baseline, source = dict(ctx["default_grid"]), "form"
+    if use_qualifying:
+        real = _cached_qualifying_grid(ctx["season"], ctx["next_round"])
+        merged = _merge_qualifying(baseline, real) if real else None
+        if merged:
+            baseline, source = merged, "qualifying"
+    used = {**baseline, **{str(k): int(v) for k, v in (grid or {}).items()}}
     rows = ctx["rows"].copy()
     rows["grid"] = rows["driver"].map(lambda d: float(used.get(str(d), 20)))
     rows["podium_prob"] = ctx["clf"].predict_proba(rows[ctx["feature_cols"]])[:, 1]
     rows = rows.sort_values("podium_prob", ascending=False)
     return {
         "season": ctx["season"], "next_round": ctx["next_round"],
-        "grid_source": "custom" if grid else "form",
+        "grid_source": "custom" if grid else source,
         "predictions": [
             {"driver": str(r.driver), "team": str(r.team), "grid": int(r.grid),
              "podium_prob": _f(r.podium_prob)}

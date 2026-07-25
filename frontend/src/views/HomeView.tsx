@@ -11,7 +11,7 @@ import { useAsync } from "../lib/useAsync";
 import { useLastVisit } from "../lib/useLastVisit";
 import { useParallax } from "../lib/useParallax";
 import { useSettings } from "../lib/useSettings";
-import type { CalendarResp, NewsResp, StandingsResp, UpcomingResp } from "../api/types";
+import type { CalendarResp, GridSource, NewsResp, StandingsResp, UpcomingResp } from "../api/types";
 
 /** The OS home: what's next, what the model expects, where the title stands,
  *  and what the paddock is talking about — each block deep-links to its section. */
@@ -138,8 +138,11 @@ function Hero({
         </div>
 
         <div className="mb-2 mt-5 flex items-center justify-between">
-          <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-            {raceMode && isRace ? "🏁 Final podium call" : "🔮 Predicted podium"}
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+              {raceMode && isRace ? "🏁 Final podium call" : "🔮 Predicted podium"}
+            </span>
+            {podium && <GridSourceChip source={up!.grid_source} />}
           </span>
           <span className="flex gap-3">
             <a href="#/outcome" className="font-mono text-[11px] text-accent hover:opacity-80">
@@ -164,6 +167,37 @@ function Hero({
         </div>
       ) : null}
     </>
+  );
+}
+
+/** Says what the call is actually standing on. Once qualifying has run the
+ *  engine feeds the real starting order in by itself, and that's a stronger
+ *  claim than a projection off season-average qualifying form — so the two
+ *  don't get to look identical. */
+function GridSourceChip({ source }: { source: GridSource }) {
+  const label =
+    source === "qualifying"
+      ? "off the real grid"
+      : source === "custom"
+        ? "your grid"
+        : "projected from form";
+  const title =
+    source === "qualifying"
+      ? "Start positions are this weekend's actual qualifying classification (before any grid penalties)."
+      : source === "custom"
+        ? "Start positions you set by hand in the Outcome view."
+        : "Qualifying hasn't run yet — start positions are each driver's season-average qualifying position.";
+  return (
+    <span
+      title={title}
+      className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${
+        source === "form"
+          ? "border-line-ctl text-ink-faint"
+          : "border-accent/40 bg-accent/10 text-accent"
+      }`}
+    >
+      {label}
+    </span>
   );
 }
 
