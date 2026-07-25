@@ -94,7 +94,7 @@ function UpcomingRace() {
   return (
     <Card className="border-l-2 border-l-accent p-4">
       <SectionTitle>
-        🔮 Next race — predicted podium{" "}
+        Next race — predicted podium{" "}
         {up.data && <Badge tone="red">round {up.data.next_round} · not yet raced</Badge>}
       </SectionTitle>
       {up.error && <ErrorNote error={up.error} />}
@@ -190,7 +190,7 @@ function PodiumSection({ o }: { o: OutcomeResp }) {
     { key: "team", header: "Team", render: (p) => <span className="text-ink-muted">{p.team}</span> },
     { key: "grid", header: "Grid", align: "right", render: (p) => p.grid },
     { key: "prob", header: "Podium prob", align: "right", render: (p) => pct(p.podium_prob) },
-    { key: "actual", header: "Result", align: "center", render: (p) => (p.actual ? "🏆" : "") },
+    { key: "actual", header: "Result", align: "center", render: (p) => (p.actual ? "✓" : "") },
   ];
 
   return (

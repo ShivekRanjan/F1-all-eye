@@ -4,7 +4,7 @@ import { EmptyState, ErrorNote, Spinner } from "../components/ui";
 import { NoSignalIcon } from "../components/NavIcons";
 import { useAsync } from "../lib/useAsync";
 
-/** Tracks that have raced under 2026 regs (for default selection + the 🆕 hint). */
+/** Tracks that have raced under 2026 regs (for default selection + the "new" hint). */
 const PREFERRED_2026 = [
   "Japanese Grand Prix",
   "Miami Grand Prix",

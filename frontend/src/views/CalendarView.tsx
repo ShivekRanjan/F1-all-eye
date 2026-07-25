@@ -230,7 +230,7 @@ function PredictedPodium({ round }: { round: number }) {
     <div className="mt-4 border-t border-line pt-3">
       <div className="mb-2 flex items-baseline justify-between">
         <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-          🔮 Model's predicted podium
+          Model's predicted podium
         </span>
         <a href="#/outcome" className="font-mono text-[11px] text-accent transition hover:opacity-80">
           tune the grid in Outcome →

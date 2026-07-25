@@ -165,7 +165,7 @@ function Hero({
         <div className="mb-2 mt-5 flex items-center justify-between">
           <span className="flex items-center gap-2">
             <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
-              {raceMode && isRace ? "🏁 Final podium call" : "🔮 Predicted podium"}
+              {raceMode && isRace ? "Final podium call" : "Predicted podium"}
             </span>
             {podium && <GridSourceChip source={up!.grid_source} />}
           </span>

@@ -195,10 +195,10 @@ happened (winner **RUS**, from a medium → hard → hard 2-stop).
 
 | Check | Result |
 |---|---|
-| **Strategy — race shape** | ✅ engine got 71 laps and a **2-stop** (15 of 19 finishers 2-stopped) |
-| **Strategy — compound pick** | ❌ engine's compounds differed from the winner's |
-| **LSTM nowcast** | ✅ **+18.2%** vs persistence (0.31 vs 0.38 s) — *better* than its 2025 holdout |
-| **Podium model** | ✅ **2/3** correct (RUS, ANT) vs the grid baseline's **1/3** |
+| **Strategy — race shape** | **hit** — engine got 71 laps and a **2-stop** (15 of 19 finishers 2-stopped) |
+| **Strategy — compound pick** | **miss** — engine's compounds differed from the winner's |
+| **LSTM nowcast** | **hit** — **+18.2%** vs persistence (0.31 vs 0.38 s) — *better* than its 2025 holdout |
+| **Podium model** | **hit** — **2/3** correct (RUS, ANT) vs the grid baseline's **1/3** |
 | **Degradation** | ~ right ballpark, but slopes ran gentle (model MEDIUM 0.081 vs actual 0.097 s/lap) |
 
 The strategy compound miss traced straight to the degradation under-estimate:

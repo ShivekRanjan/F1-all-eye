@@ -1,4 +1,4 @@
-# 🏎️ F1SE / F1 OS — the F1 Strategy Engine
+# F1SE / F1 OS — the F1 Strategy Engine
 
 [![CI](https://github.com/ShivekRanjan/f1-strategy-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/ShivekRanjan/f1-strategy-engine/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue)](pyproject.toml)
@@ -44,15 +44,15 @@ sections in a grouped sidebar:
 
 | | Section | What it does |
 |---|---|---|
-| **Strategy** | 🏁 Strategy | Searches ~1,000+ pit strategies per race via Monte Carlo (stochastic safety cars, calibrated per circuit) and recommends the best plan — with the honest spread: *typical* vs *bad-luck* race, a track-temperature control (thermal prior), and whether the call is clear-cut or a coin-flip |
-| | 🆚 Undercut | The two-car question: with a rival *N* seconds ahead, pit now to undercut or hold and cover? Models the cumulative-time crossover and returns the verdict with the seconds gained |
-| **Race weekend** | 📅 Calendar | The full season schedule with a live countdown to the next session; sprint weekends badged |
-| | 🎯 Race Hub | One race, the whole story: the podium model's **pre-race prediction vs the actual result** (a genuine forward test, scored hit@3), full finishing order, the engine's optimal strategy call, tyre-degradation curves, and a lap-pace trace |
-| | 🔴 Live Race | Replays any race lap-by-lap and **re-optimises the remaining strategy from the current state** each lap — plus a **next-lap pace nowcast** from the LSTM |
-| **Championship** | 🏆 Standings | Drivers' & constructors' tables for any season — with a live **Monte-Carlo title-win probability** per driver while the season runs |
-| | 👤 Drivers & Teams | Per-season records and the classic **teammate head-to-head** (who out-qualified and out-raced whom) |
-| | 🔮 Outcome | Podium probabilities (forward-tested, never a shuffled split), a live **next-race prediction** with an editable grid, and a championship projection that **bootstraps driver-strength uncertainty** so a 6-race leader doesn't show a dishonest 100% |
-| **Paddock** | 📰 News | Headlines aggregated from The Race, Autosport, Motorsport.com, RaceFans and Formula1.com — link-out only |
+| **Strategy** | Strategy | Searches ~1,000+ pit strategies per race via Monte Carlo (stochastic safety cars, calibrated per circuit) and recommends the best plan — with the honest spread: *typical* vs *bad-luck* race, a track-temperature control (thermal prior), and whether the call is clear-cut or a coin-flip |
+| | Undercut | The two-car question: with a rival *N* seconds ahead, pit now to undercut or hold and cover? Models the cumulative-time crossover and returns the verdict with the seconds gained |
+| **Race weekend** | Calendar | The full season schedule with a live countdown to the next session; sprint weekends badged |
+| | Race Hub | One race, the whole story: the podium model's **pre-race prediction vs the actual result** (a genuine forward test, scored hit@3), full finishing order, the engine's optimal strategy call, tyre-degradation curves, and a lap-pace trace |
+| | Live Race | Replays any race lap-by-lap and **re-optimises the remaining strategy from the current state** each lap — plus a **next-lap pace nowcast** from the LSTM |
+| **Championship** | Standings | Drivers' & constructors' tables for any season — with a live **Monte-Carlo title-win probability** per driver while the season runs |
+| | Drivers & Teams | Per-season records and the classic **teammate head-to-head** (who out-qualified and out-raced whom) |
+| | Outcome | Podium probabilities (forward-tested, never a shuffled split), a live **next-race prediction** with an editable grid, and a championship projection that **bootstraps driver-strength uncertainty** so a 6-race leader doesn't show a dishonest 100% |
+| **Paddock** | News | Headlines aggregated from The Race, Autosport, Motorsport.com, RaceFans and Formula1.com — link-out only |
 
 ## The models I built, tested, and kept the receipts for
 

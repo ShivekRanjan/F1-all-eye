@@ -226,7 +226,7 @@ function NowcastCard({ nowcast }: { nowcast: Nowcast | null }) {
   if (!nowcast) return null;
   return (
     <Card className="p-4">
-      <SectionTitle>🔮 Next-lap nowcast · LSTM</SectionTitle>
+      <SectionTitle>Next-lap nowcast · LSTM</SectionTitle>
       {!nowcast.ok ? (
         <p className="text-sm text-ink-muted">{nowcast.reason}</p>
       ) : (
@@ -238,7 +238,7 @@ function NowcastCard({ nowcast }: { nowcast: Nowcast | null }) {
               sub={`${nowcast.delta_s! >= 0 ? "+" : ""}${nowcast.delta_s!.toFixed(2)} s vs last lap`}
             />
             <Badge tone={nowcast.delta_s! > 0.05 ? "red" : nowcast.delta_s! < -0.05 ? "green" : "neutral"}>
-              {nowcast.delta_s! > 0.05 ? "🔻 fading" : nowcast.delta_s! < -0.05 ? "🔺 improving" : "➡ steady"}
+              {nowcast.delta_s! > 0.05 ? "fading" : nowcast.delta_s! < -0.05 ? "improving" : "steady"}
             </Badge>
           </div>
           <p className="mt-2 text-xs text-ink-muted">
