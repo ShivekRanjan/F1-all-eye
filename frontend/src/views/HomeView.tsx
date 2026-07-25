@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { useState, type RefObject } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { AnimatedNumber } from "../components/AnimatedNumber";
@@ -42,6 +42,10 @@ function NextRaceHero() {
   const up = useAsync(() => api.predictUpcoming(), []);
   // Hooks must run unconditionally — before the early returns below.
   const { containerRef, targetRef } = useParallax<HTMLDivElement, HTMLDivElement>(7);
+  // Race-day mode is only true for ~2h of a race week, so without a way to ask
+  // for it nobody would ever see it. Deliberately not persisted — a preview
+  // should not outlive the visit and start looking like the real thing.
+  const [preview, setPreview] = useState(false);
 
   if (cal.error) return <ErrorNote error={cal.error} />;
   if (!cal.data) return <CardSkeleton label="Finding the next race…" height={200} />;
@@ -54,7 +58,15 @@ function NextRaceHero() {
     <Card className="relative overflow-hidden border-l-2 border-l-accent">
       <div ref={containerRef} className="relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-sweep bg-gradient-to-r from-transparent via-accent/[0.06] to-transparent" />
-        <Hero round={round} next={next} up={up.data ?? null} upErr={!!up.error} outlineRef={targetRef} />
+        <Hero
+          round={round}
+          next={next}
+          up={up.data ?? null}
+          upErr={!!up.error}
+          outlineRef={targetRef}
+          preview={preview}
+          onPreview={setPreview}
+        />
       </div>
     </Card>
   );
@@ -66,12 +78,16 @@ function Hero({
   up,
   upErr,
   outlineRef,
+  preview,
+  onPreview,
 }: {
   round: NonNullable<CalendarResp["rounds"][number]>;
   next: NonNullable<CalendarResp["next_session"]>;
   up: UpcomingResp | null;
   upErr: boolean;
   outlineRef: RefObject<HTMLDivElement>;
+  preview: boolean;
+  onPreview: (v: boolean) => void;
 }) {
   const now = useNow();
   const [settings] = useSettings();
@@ -82,10 +98,14 @@ function Hero({
   // drops its week-out calm and gets urgent — pulsing ribbon, enlarged
   // countdown, "final call" language. Purely presentational; same data.
   const msToNext = new Date(next.date).getTime() - now;
-  const live = msToNext <= 0;
+  const live = msToNext <= 0 && !preview;
   const soon = msToNext > 0 && msToNext <= 2 * 3600 * 1000;
-  const raceMode = live || soon;
+  const raceMode = live || soon || preview;
   const isRace = /race/i.test(next.name);
+  // Real race day vs. a preview of it: the countdown below stays truthful in
+  // both, so a previewed ribbon sits next to an honest "3d 5h" and can't be
+  // mistaken for the session actually being imminent.
+  const previewOnly = preview && !live && !soon;
 
   return (
     <>
@@ -99,6 +119,11 @@ function Hero({
                 ? "Lights out soon"
                 : `${next.name} starts soon`}
           </span>
+          {previewOnly && (
+            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+              · preview
+            </span>
+          )}
         </div>
       )}
       <div className="p-4 pb-0">
@@ -144,7 +169,25 @@ function Hero({
             </span>
             {podium && <GridSourceChip source={up!.grid_source} />}
           </span>
-          <span className="flex gap-3">
+          <span className="flex items-center gap-3">
+            {/* Only offered when it isn't genuinely race day — during the real
+                thing there is nothing to preview. */}
+            {!live && !soon && (
+              <button
+                onClick={() => onPreview(!preview)}
+                aria-pressed={preview}
+                title={
+                  preview
+                    ? "Back to the normal next-race card"
+                    : "See how this card looks in the last 2 hours before a session"
+                }
+                className={`font-mono text-[11px] transition hover:opacity-80 ${
+                  preview ? "text-accent" : "text-ink-faint hover:text-ink-soft"
+                }`}
+              >
+                {preview ? "✕ exit preview" : "▸ preview race day"}
+              </button>
+            )}
             <a href="#/outcome" className="font-mono text-[11px] text-accent hover:opacity-80">
               tune the grid →
             </a>
