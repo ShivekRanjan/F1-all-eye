@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle } from "../components/ui";
+import { PodiumIcon } from "../components/NavIcons";
 import { pct } from "../lib/format";
 import { pickSeason } from "../lib/season";
 import { countdown, fmtSession, useNow } from "../lib/time";
@@ -229,7 +230,8 @@ function PredictedPodium({ round }: { round: number }) {
   return (
     <div className="mt-4 border-t border-line pt-3">
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+        <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+          <PodiumIcon width={13} height={13} />
           Model's predicted podium
         </span>
         <a href="#/outcome" className="font-mono text-[11px] text-accent transition hover:opacity-80">

@@ -3,6 +3,7 @@ import { api } from "../api/client";
 import { Badge, Card, CardSkeleton, ErrorNote, SectionTitle, Skeleton } from "../components/ui";
 import { AnimatedNumber } from "../components/AnimatedNumber";
 import { DriverCutout, DriverName, DriverTag } from "../components/Driver";
+import { ChequeredFlagIcon, PodiumIcon } from "../components/NavIcons";
 import { TrackOutline } from "../components/TrackOutline";
 import { driverCutoutUrl } from "../lib/driverCutouts";
 import { pct, teamColor, timeAgo } from "../lib/format";
@@ -164,7 +165,12 @@ function Hero({
 
         <div className="mb-2 mt-5 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <span className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+            <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+              {raceMode && isRace ? (
+                <ChequeredFlagIcon width={13} height={13} className="text-accent" />
+              ) : (
+                <PodiumIcon width={13} height={13} />
+              )}
               {raceMode && isRace ? "Final podium call" : "Predicted podium"}
             </span>
             {podium && <GridSourceChip source={up!.grid_source} />}

@@ -15,6 +15,7 @@ import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select, Slider } from "../components/controls";
 import { Badge, Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
 import { DriverCutout } from "../components/Driver";
+import { ForecastIcon } from "../components/NavIcons";
 import { TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, secs, trackSearchText } from "../lib/format";
 import { pickSeason } from "../lib/season";
@@ -226,7 +227,12 @@ function NowcastCard({ nowcast }: { nowcast: Nowcast | null }) {
   if (!nowcast) return null;
   return (
     <Card className="p-4">
-      <SectionTitle>Next-lap nowcast · LSTM</SectionTitle>
+      <SectionTitle>
+        <span className="flex items-center gap-1.5">
+          <ForecastIcon width={13} height={13} />
+          Next-lap nowcast · LSTM
+        </span>
+      </SectionTitle>
       {!nowcast.ok ? (
         <p className="text-sm text-ink-muted">{nowcast.reason}</p>
       ) : (

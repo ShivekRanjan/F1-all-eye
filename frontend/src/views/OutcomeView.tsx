@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
+import { PodiumIcon } from "../components/NavIcons";
 import { Field, Slider } from "../components/controls";
 import { Badge, Callout, Card, CardSkeleton, ErrorNote, Metric, SectionTitle, Skeleton, Spinner } from "../components/ui";
 import { pct } from "../lib/format";
@@ -94,8 +95,11 @@ function UpcomingRace() {
   return (
     <Card className="border-l-2 border-l-accent p-4">
       <SectionTitle>
-        Next race — predicted podium{" "}
-        {up.data && <Badge tone="red">round {up.data.next_round} · not yet raced</Badge>}
+        <span className="flex items-center gap-1.5">
+          <PodiumIcon width={13} height={13} />
+          Next race — predicted podium{" "}
+          {up.data && <Badge tone="red">round {up.data.next_round} · not yet raced</Badge>}
+        </span>
       </SectionTitle>
       {up.error && <ErrorNote error={up.error} />}
       {!up.data && !up.error && (

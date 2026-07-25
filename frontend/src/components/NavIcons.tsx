@@ -136,6 +136,44 @@ export function SlidersIcon(p: IconProps) {
   );
 }
 
+// --- Section-heading icons -------------------------------------------------
+// Used where a decorative emoji used to sit. Same 16px geometric language, so
+// they read as part of the type rather than as stickers on top of it.
+
+/** Three risers, P2/P1/P3 — the same shape the podium blocks make on Home. */
+export function PodiumIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <rect x="1.5" y="9" width="4" height="5" rx="0.5" />
+      <rect x="6" y="5.5" width="4" height="8.5" rx="0.5" />
+      <rect x="10.5" y="10.5" width="4" height="3.5" rx="0.5" />
+    </svg>
+  );
+}
+
+/** Chequered flag — two filled quadrants, which is as much checker as survives
+ *  at 16px before it turns to mud. */
+export function ChequeredFlagIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M4 14V2.5" />
+      <rect x="4" y="3" width="9" height="6" rx="0.5" />
+      <path d="M4 3h4.5v3H4zM8.5 6H13v3H8.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** A trace that goes dashed where it stops being measured and starts being
+ *  predicted — the nowcast's whole idea in one mark. */
+export function ForecastIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M2 12l3.5-3.5 2.5 2.5" />
+      <path d="M8 11l2.5-4L14 5" strokeDasharray="2 1.6" />
+    </svg>
+  );
+}
+
 // --- Empty-state icons (larger default size, same restrained line style) ---
 const emptyBase = { ...base, width: 28, height: 28 };
 
