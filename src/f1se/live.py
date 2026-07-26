@@ -29,13 +29,19 @@ def state_from_laps(driver_laps: pd.DataFrame, total_laps: int) -> RaceState:
         raise ValueError("no laps to derive state from")
     laps = driver_laps.sort_values("lap_number")
     last = laps.iloc[-1]
-    used = tuple(pd.unique(laps["compound"].dropna().astype(str)))
+    comps = laps["compound"].dropna().astype(str)
+    used = tuple(pd.unique(comps))
+    # Full stint sequence, so tyre *sets* can be counted: pd.unique collapses a
+    # second run on the same compound, which is exactly the information the set
+    # allowance needs. A stint boundary is a change in the compound run.
+    stints = tuple(comps[comps.ne(comps.shift())].tolist())
     return RaceState(
         total_laps=int(total_laps),
         current_lap=int(last["lap_number"]),
         current_compound=str(last["compound"]),
         tyre_age=int(last["tyre_life"]),
         compounds_used=used,
+        stints_used=stints,
     )
 
 

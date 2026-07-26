@@ -292,6 +292,7 @@ class StrategyEngine:
         tyre_age: int,
         *,
         compounds_used: tuple[str, ...] = (),
+        stints_used: tuple[str, ...] = (),
         objective: str = "mean",
         use_cliff: bool = True,
         n_runs: int = 2000,
@@ -306,11 +307,16 @@ class StrategyEngine:
         pace_fn = self._pace_fn(track, total_laps, use_cliff, season)
         pit_loss = self._pit_loss(track)
         used = tuple(compounds_used) or (current_compound,)
-        state = RaceState(total_laps, current_lap, current_compound, tyre_age, used)
+        # compounds_used is the distinct set (two-compound rule). Without a real
+        # stint history we can't count sets, so stints_used stays empty and the
+        # set allowance is left unenforced rather than applied to a wrong count.
+        state = RaceState(total_laps, current_lap, current_compound, tyre_age, used,
+                          stints_used=tuple(stints_used or ()))
         rec = recommend_remaining(
             state, pace_fn, sc_model=self._sc_model(track), objective=objective,
             n_runs=n_runs, top_k=top_k, seed=seed,
             max_stint=self._stint_limits_for(track, season),
+            max_sets=self.set_limits or None,
             pit_loss_s=pit_loss, pit_loss_sc_s=round(pit_loss * 0.5, 1),
         )
         return {
@@ -355,6 +361,10 @@ class StrategyEngine:
             rival_compound=rival_compound, rival_age=rival_age,
             rival_new_compound=rival_new_compound, rival_pit_lap=rival_pit_lap,
             pit_loss_s=self._pit_loss(track), n_runs=n_runs,
+            # A neutralisation during the duel window can hand the rival a cheap
+            # stop and wipe out an undercut that was working. The duel used to
+            # model none, so it answered a strictly green-flag question.
+            sc_model=self._sc_model(track),
         )
 
     def simulate(

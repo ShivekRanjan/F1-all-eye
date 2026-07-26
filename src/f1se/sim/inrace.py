@@ -29,6 +29,13 @@ class RaceState:
     current_compound: str
     tyre_age: int                          # age of the tyres currently fitted
     compounds_used: tuple[str, ...] = ()   # distinct compounds used so far (incl. current)
+    # One entry per stint actually run, in order, including the current one —
+    # so ("MEDIUM", "HARD", "MEDIUM") means two MEDIUM *sets* are gone.
+    # ``compounds_used`` is deliberately the distinct set (it answers the
+    # two-compound rule); counting tyre sets needs the repeats, which that
+    # throws away. Empty means "unknown", and set limits are then not enforced
+    # rather than silently enforced against a wrong count.
+    stints_used: tuple[str, ...] = ()
 
     @property
     def laps_remaining(self) -> int:
@@ -70,14 +77,33 @@ def enumerate_remaining(
     pit_grid_step: int = 2,
     min_stint: int = 6,
     max_stint: dict[str, int] | None = None,
+    max_sets: dict[str, int] | None = None,
 ) -> list[RemainingPlan]:
     """Generate legal remaining plans from the current state.
 
     Enforces: future stints within [min_stint, max_stint[compound]]; the ongoing
-    stint's total length capped too; and the dry-race rule that >=2 distinct
-    compounds are used across the *whole* race (counting what's already been run).
+    stint's total length capped too; the dry-race rule that >=2 distinct
+    compounds are used across the *whole* race (counting what's already been
+    run); and, when ``state.stints_used`` is known, that the plan doesn't call
+    for more sets of a compound than remain — sets already burned earlier in
+    *this* race count against the allowance, which is what makes the mid-race
+    version stricter than the pre-race one.
     """
     used = set(state.compounds_used) | {state.current_compound}
+    # Sets already consumed. Without a stint history we can't count them, so the
+    # limit is left unenforced rather than applied to a number we know is wrong.
+    spent: dict[str, int] = {}
+    if max_sets is not None and state.stints_used:
+        for c in state.stints_used:
+            spent[c] = spent.get(c, 0) + 1
+
+    def sets_ok(seq) -> bool:
+        if max_sets is None or not state.stints_used:
+            return True
+        need = dict(spent)
+        for c in seq:
+            need[c] = need.get(c, 0) + 1
+        return all(n <= max_sets.get(c, 10**9) for c, n in need.items())
     cur, total = state.current_lap, state.total_laps
     # First pit can be as early as next lap once the *ongoing* stint has already
     # reached min_stint (it's been running tyre_age laps). min_stint only gates
@@ -113,6 +139,8 @@ def enumerate_remaining(
                 continue
             for seq in seqs:
                 if len(used | set(seq)) < 2:           # whole-race 2-compound rule
+                    continue
+                if not sets_ok(seq):                   # enough fresh sets left?
                     continue
                 if stints_ok(pits, seq):
                     plans.append(RemainingPlan(tuple(pits), tuple(seq)))
