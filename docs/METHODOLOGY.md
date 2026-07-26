@@ -351,15 +351,52 @@ winner's green-flag strategy shape matches the engine's call. Honest boundary,
 same as ever: the engine optimises the plan you can commit to before the
 lights; it cannot — and should not — pre-book a safety car.
 
+## 12. Letting the model train on the season it predicts — rejected, and a tie admitted
+
+By round 11 the 2026 book held 220 result rows, so an obvious question opened
+up: the live next-race call trains on `year < 2026` and has therefore **never
+seen a 2026 race**. After a regulation reset, those are the only rows drawn from
+the current regime. Surely using them helps?
+
+Two jobs were separated to test it. *Reporting* must never see the season it is
+scored on, or the advertised AUC is worthless — that stays. *Deployment* only
+has to predict the next race, and could legitimately learn from rounds already
+run. The test is walk-forward, which is what deployment actually looks like: to
+predict round *r*, train on pre-2026 **plus 2026 rounds < r**, never on *r* or
+anything after it.
+
+| Model (11 races, mean hit@3 of 3) | Score |
+|---|---|
+| Reporting — never sees 2026 | **1.73** |
+| Deployment — walk-forward on 2026 | 1.64 |
+| Naive grid baseline | **1.73** |
+
+Pooled ROC-AUC was identical to four decimals (0.9295 vs 0.9294). Per race the
+deployment model was better in **0**, worse in **1**, and identical in **10**.
+**Rejected** — 220 rows of a new regime don't outweigh 1,398 rows of learned
+grid→podium structure, and that structure transfers better across the reset than
+base pace does (§7), because it encodes *how much starting position matters*
+rather than *who is fast*.
+
+The same table forces a second admission. Over 2026 the podium model's
+precision@3 is **0.5758** — and the naive grid baseline's is **0.5758**. Exactly
+equal. The model ranks the full field well (AUC 0.93, and it beat the grid on
+2024–25), but **on this season it adds nothing to picking the top three**. The
+2026 grid has been unusually predictive; a season where the front row converts
+is a season where "read the grid" is hard to beat. Both numbers are published
+rather than the flattering one alone.
+
+*Reproduce: `analysis/phase_2026_deployment_model.py`*
+
 ---
 
 ### The pattern
 
-Five times the sophisticated option (boosted trees, a fitted cliff, a
+Six times the sophisticated option (boosted trees, a fitted cliff, a
 recalibrated fuel coefficient, an evolution decomposition, trusting six races of
-2026 form) was built, evaluated honestly, and **rejected in favour of a simpler,
-better-validated alternative**. The sixth time — the sequence model — complexity
-**earned its place** on the identical leakage-safe footing. That's the whole
-point: the framework isn't biased toward simple *or* complex; it's biased toward
-what the held-out data supports. Parsimony plus domain knowledge, verified at
-every step.
+2026 form, training the deployed model on the season it predicts) was built,
+evaluated honestly, and **rejected in favour of a simpler, better-validated
+alternative**. Once — the sequence model — complexity **earned its place** on
+the identical leakage-safe footing. That's the whole point: the framework isn't
+biased toward simple *or* complex; it's biased toward what the held-out data
+supports. Parsimony plus domain knowledge, verified at every step.
