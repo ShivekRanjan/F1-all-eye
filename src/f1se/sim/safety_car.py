@@ -28,7 +28,14 @@ VSC_CODES = ("6", "7")  # virtual safety car: 6 = deployed, 7 = ending
 # cheaper than green but dearer than under SC (~15-18 s). Treating the two as one
 # state — which this engine did until the VSC was found to be uncounted entirely
 # — either ignores a real cheap-stop window or over-credits it.
-VSC_PIT_LOSS_S = 16.0   # midpoint of the observed 15-18 s band
+# Expressed as a *fraction* of the track's own green-flag pit loss, not an
+# absolute: pit loss ranges 19.5 s (Spa) to 28.5 s (Imola) across the calendar and
+# the SC discount already scales with it, so a fixed VSC constant would be a
+# proportionally different discount at every circuit — and would invert the
+# ordering entirely at a track quick enough in the pit lane.
+# Reported bands: green 20-25 s, VSC 15-18 s, SC 12-14 s -> ~0.73 and ~0.55.
+VSC_PIT_LOSS_FRACTION = 0.73
+VSC_PIT_LOSS_S = 16.0   # fallback when no track pit loss is known (~0.73 * 22)
 VSC_LAP_FACTOR = 1.35   # VSC delta is marginally quicker than following the SC
 
 RED_CODE = "5"          # race suspended

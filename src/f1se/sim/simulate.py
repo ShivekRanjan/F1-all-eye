@@ -23,7 +23,7 @@ from f1se.sim.safety_car import (
     RED_LAP_FACTOR,
     RED_PIT_LOSS_S,
     VSC_LAP_FACTOR,
-    VSC_PIT_LOSS_S,
+    VSC_PIT_LOSS_FRACTION,
     SafetyCarModel,
 )
 
@@ -139,7 +139,7 @@ def race_totals(
     pit_loss_s: float = 21.0,
     pit_loss_sc_s: float = 11.0,
     sc_lap_factor: float = 1.4,
-    pit_loss_vsc_s: float = VSC_PIT_LOSS_S,
+    pit_loss_vsc_s: float | None = None,
     vsc_lap_factor: float = VSC_LAP_FACTOR,
 ) -> np.ndarray:
     """Total race time per sampled race, given deterministic pace + shared draws.
@@ -152,6 +152,11 @@ def race_totals(
     """
     states = sc_mask.astype(np.int8) * 2 if sc_mask.dtype == bool else sc_mask
     neutralised = states > 0
+    # Derive VSC pit loss from *this track's* green loss so the discount scales
+    # the way the SC one does, instead of being a constant that means something
+    # different at Spa (19.5 s) than at Imola (28.5 s).
+    if pit_loss_vsc_s is None:
+        pit_loss_vsc_s = pit_loss_s * VSC_PIT_LOSS_FRACTION
 
     factor = np.select([states == 3, states == 2, states == 1],
                        [RED_LAP_FACTOR, sc_lap_factor, vsc_lap_factor], 1.0)

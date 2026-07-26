@@ -16,7 +16,7 @@ import pytest
 
 from f1se.sim.safety_car import (
     VSC_LAP_FACTOR,
-    VSC_PIT_LOSS_S,
+    VSC_PIT_LOSS_FRACTION,
     SafetyCarModel,
     vsc_laps_in_race,
 )
@@ -75,13 +75,31 @@ def test_pit_loss_tiers_are_ordered_green_vsc_sc():
         without = race_totals(green, np.zeros(laps, dtype=bool), states, noise)[0]
         return float(with_pit - without)
 
-    assert VSC_PIT_LOSS_S < 21.0, "a VSC stop must beat a green stop"
-    assert VSC_PIT_LOSS_S > 11.0, "a VSC stop must not be as cheap as a full SC"
+    assert 0.5 < VSC_PIT_LOSS_FRACTION < 1.0, "VSC: cheaper than green, dearer than SC"
     assert 1.0 < VSC_LAP_FACTOR < 1.4, "a VSC lap: slower than green, quicker than SC"
     assert pit_cost(0) > pit_cost(1) > pit_cost(2)
     assert pit_cost(0) == pytest.approx(21.0)
-    assert pit_cost(1) == pytest.approx(VSC_PIT_LOSS_S)
+    assert pit_cost(1) == pytest.approx(21.0 * VSC_PIT_LOSS_FRACTION)
     assert pit_cost(2) == pytest.approx(11.0)
+
+
+def test_vsc_pit_loss_scales_with_the_track():
+    """The bug this replaced: a fixed 16 s VSC constant meant a proportionally
+    different discount at Spa (19.5 s green) than at Imola (28.5 s), while the
+    SC discount scaled with the track all along."""
+    laps, green, noise = 6, np.full((1, 6), 90.0), np.zeros((1, 6))
+    pit = np.zeros(laps, dtype=bool); pit[2] = True
+    states = np.zeros((1, laps), dtype=np.int8); states[0, 2] = 1
+
+    def cost(green_pit_loss: float) -> float:
+        with_pit = race_totals(green, pit, states, noise, pit_loss_s=green_pit_loss)[0]
+        without = race_totals(green, np.zeros(laps, dtype=bool), states, noise,
+                              pit_loss_s=green_pit_loss)[0]
+        return float(with_pit - without)
+
+    assert cost(19.5) == pytest.approx(19.5 * VSC_PIT_LOSS_FRACTION)
+    assert cost(28.5) == pytest.approx(28.5 * VSC_PIT_LOSS_FRACTION)
+    assert cost(19.5) < cost(28.5), "a slower pit lane must cost more under VSC too"
 
 
 def test_boolean_mask_still_accepted():
