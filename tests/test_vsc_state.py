@@ -103,3 +103,42 @@ def test_lap_time_factor_per_state(state, factor):
     states = np.full((1, 4), state, dtype=np.int8)
     out = race_totals(green, np.zeros(4, dtype=bool), states, np.zeros((1, 4)))
     assert out[0] == pytest.approx(4 * 100.0 * factor)
+
+
+# --- red flag (state 3) -------------------------------------------------------
+def test_red_flag_makes_the_stop_free():
+    """Sporting Regs Art. 57: tyres may be changed on a car stopped in the pit
+    lane during a suspension, so the stop costs essentially nothing."""
+    from f1se.sim.safety_car import RED_PIT_LOSS_S
+
+    laps = 10
+    green = np.full((1, laps), 90.0)
+    noise = np.zeros((1, laps))
+    pit = np.zeros(laps, dtype=bool)
+    pit[5] = True
+
+    def pit_cost(state_val: int) -> float:
+        states = np.zeros((1, laps), dtype=np.int8)
+        states[0, 5] = state_val
+        return float(race_totals(green, pit, states, noise)[0]
+                     - race_totals(green, np.zeros(laps, dtype=bool), states, noise)[0])
+
+    assert pit_cost(3) == pytest.approx(RED_PIT_LOSS_S)
+    assert pit_cost(3) < pit_cost(2) < pit_cost(1) < pit_cost(0)
+
+
+def test_red_flag_lap_is_not_charged_as_a_slow_lap():
+    """A suspension is dead time every strategy serves equally, so it must not
+    be modelled as a slower lap — only the free tyre change is asymmetric."""
+    green = np.full((1, 4), 100.0)
+    states = np.full((1, 4), 3, dtype=np.int8)
+    out = race_totals(green, np.zeros(4, dtype=bool), states, np.zeros((1, 4)))
+    assert out[0] == pytest.approx(400.0)
+
+
+def test_red_flag_outranks_sc_in_state_resolution():
+    m = SafetyCarModel(prob_per_lap=0.9, mean_duration=2,
+                       vsc_prob_per_lap=0.9, vsc_mean_duration=2,
+                       red_prob_per_lap=0.9, red_mean_duration=2)
+    states = m.sample_states(30, 50, np.random.default_rng(3))
+    assert (states == 3).mean() > 0.5, "red flag must win when all three fire"

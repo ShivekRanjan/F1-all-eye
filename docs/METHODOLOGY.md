@@ -558,6 +558,36 @@ revolution in the recommendations.
 Found by a reader asking, reasonably, whether "6 safety cars in 11 races" had
 counted virtual ones. It had not.
 
+### And the red flag, which is the biggest discount in the sport
+
+The same audit, run against the Sporting Regulations rather than the code, found
+a second missing state. Track status `5` — race suspended — appeared in the data
+and was modelled nowhere.
+
+It matters more than its rarity suggests. **Article 57** permits work on a car
+stopped in the pit lane during a suspension, explicitly including *"changing
+wheels and tyres"*. A red-flag tyre change is therefore **free** — it skips the
+entire ~21 s pit loss, the largest single discount available in a race. It can
+also satisfy the two-compound requirement outright: at Monaco, drivers who
+changed under a lap-one red flag never needed a later stop at all.
+
+Measured over 81 races: **8 had a red flag** (~1 race in 10), a per-lap hazard of
+0.00205. Modelled as a fourth state with `pit_loss = 0` and, deliberately, a lap
+factor of **1.0** — a suspension is dead time every strategy serves equally, so
+it cancels in a between-strategy comparison, whereas the free tyre change does
+not. Charging it as a slow lap would invent a penalty that isn't there.
+
+State resolution is by severity — red flag > full SC > VSC — so an incident that
+escalates counts once. Calibration check: the model produces a red flag in 11.5%
+of simulated 60-lap races against 9.9% observed.
+
+| State | Lap factor | Pit loss |
+|---|---|---|
+| Green | 1.00 | ~21 s |
+| VSC | 1.35 | 16 s |
+| Full SC | 1.40 | 11 s |
+| **Red flag** | **1.00** (dead time) | **0 s** (Art. 57) |
+
 One incidental catch: `SafetyCarModel`'s default `prob_per_lap = 0.013` sits
 above **both** measured rates. It is only ever reached when
 `track_status.parquet` is missing — the engine otherwise calibrates per track

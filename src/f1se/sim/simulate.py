@@ -19,7 +19,13 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from f1se.sim.safety_car import VSC_LAP_FACTOR, VSC_PIT_LOSS_S, SafetyCarModel
+from f1se.sim.safety_car import (
+    RED_LAP_FACTOR,
+    RED_PIT_LOSS_S,
+    VSC_LAP_FACTOR,
+    VSC_PIT_LOSS_S,
+    SafetyCarModel,
+)
 
 PaceFn = Callable[[str, int, int], float]
 
@@ -147,9 +153,10 @@ def race_totals(
     states = sc_mask.astype(np.int8) * 2 if sc_mask.dtype == bool else sc_mask
     neutralised = states > 0
 
-    factor = np.select([states == 2, states == 1], [sc_lap_factor, vsc_lap_factor], 1.0)
-    pit_price = np.select([states == 2, states == 1],
-                          [pit_loss_sc_s, pit_loss_vsc_s], pit_loss_s)
+    factor = np.select([states == 3, states == 2, states == 1],
+                       [RED_LAP_FACTOR, sc_lap_factor, vsc_lap_factor], 1.0)
+    pit_price = np.select([states == 3, states == 2, states == 1],
+                          [RED_PIT_LOSS_S, pit_loss_sc_s, pit_loss_vsc_s], pit_loss_s)
 
     # Pace noise is a green-running effect; under any neutralisation the field is
     # speed-limited and lap-to-lap scatter largely disappears.
@@ -190,7 +197,10 @@ def simulate_race(
                                     pace_noise_s=pace_noise_s, seed=seed)
     totals = race_totals(green_det, pit_mask, sc_mask, noise, pit_loss_s=pit_loss_s,
                          pit_loss_sc_s=pit_loss_sc_s, sc_lap_factor=sc_lap_factor)
-    p_sc = float(np.mean(sc_mask.any(axis=1))) if sc_model is not None else 0.0
+    # Keep this meaning "a full safety car or red flag" (states >= 2) rather than
+    # any neutralisation — with int8 states a bare .any() would silently start
+    # counting VSC laps too and inflate a number the UI displays.
+    p_sc = float(np.mean((sc_mask >= 2).any(axis=1))) if sc_model is not None else 0.0
     return SimResult(samples=totals, strategy=strategy, p_safety_car=p_sc)
 
 
