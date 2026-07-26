@@ -492,6 +492,43 @@ Worth stating plainly, because it is the weaker kind of result: this is a
 is wide enough to accommodate a real ±40% shift. It should be re-run at
 season's end, when 24 races will roughly halve that interval.
 
+### The bigger hole this uncovered: the VSC is invisible
+
+The table above counts what the engine counts, and the engine counts track
+status `4` — a **full** safety car — and nothing else. A *virtual* safety car
+(`6`/`7`) also neutralises a race and also makes a stop cheaper, and it turns
+out to be at least as common:
+
+| 2026 | Periods | Per-lap hazard |
+|---|---|---|
+| Safety car only — what the engine models | 6 | 0.00892 |
+| **Safety car + VSC — what actually neutralises a race** | **20** | **0.02972** |
+
+**The engine sees 6 of 20 neutralisations — 30%.** Worse, **5 of the 11 races
+had no full SC but did have a VSC**, so the simulator treats them as completely
+event-free when in fact a cheap-stop window opened. Pre-2026 the same gap exists
+but is milder (46 → 73, +59%), which means it is not even a constant bias — it
+has grown under the new regulations.
+
+Re-running the transferability test on the VSC-inclusive rate keeps the same
+verdict, but far more marginally: 2026 at 0.02972 [0.02102, 0.04032] against
+pre-2026's 0.01733 [0.01351, 0.02135] — a **+71.5%** point difference with
+intervals that barely touch. The conclusion above survives; it is much thinner
+than the safety-car-only numbers make it look.
+
+**Why this is not fixed by widening the match to `4|6|7`.** The simulator prices
+a stop under neutralisation at `pit_loss_sc_s = 11.0` against a full green-flag
+loss — roughly half. That discount is earned by the field *bunching* behind a
+safety car. Under a VSC everyone is slowed proportionally and the pack never
+closes up, so a VSC stop saves real time but distinctly less. Lumping the two
+together would trade a known under-count for an unknown over-credit, which is a
+worse trade than the bug. The correct fix is a **third track state** — its own
+hazard and its own `pit_loss_vsc_s` between the green and SC values — and that
+is a modelling change, not a constant change. Logged here rather than rushed.
+
+Found by a reader asking, reasonably, whether "6 safety cars in 11 races" had
+counted virtual ones. It had not.
+
 One incidental catch: `SafetyCarModel`'s default `prob_per_lap = 0.013` sits
 above **both** measured rates. It is only ever reached when
 `track_status.parquet` is missing — the engine otherwise calibrates per track
