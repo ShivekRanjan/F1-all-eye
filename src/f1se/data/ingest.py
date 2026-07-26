@@ -13,6 +13,7 @@ raw API responses, so even a fresh parse is cheap the second time.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import pandas as pd
 
@@ -33,13 +34,42 @@ def season_rounds(year: int) -> list[int]:
     return [int(r) for r in sched["RoundNumber"] if int(r) >= 1]
 
 
+def combine_cached_races(by_race_dir=None) -> pd.DataFrame:
+    """Every race cached under ``by_race/``, concatenated into one dataset.
+
+    The per-race parquets are the real store; the combined file is a derived
+    artifact. Rebuilding it from *all* of them is what keeps ingesting one
+    season from throwing away every other season (see ``build_dry_dataset``).
+    """
+    d = BY_RACE if by_race_dir is None else Path(by_race_dir)
+    files = sorted(d.glob("*.parquet"))
+    if not files:
+        raise RuntimeError(f"no cached races under {d}")
+    return pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+
+
 def build_dry_dataset(
     years: list[int],
     *,
     session: str = "R",
     out_name: str = "dry_laps.parquet",
+    rebuild: bool = False,
 ) -> pd.DataFrame:
-    """Pull + clean every race of ``years`` into one dry-only lap dataset."""
+    """Pull + clean every race of ``years``, and rewrite the combined dataset.
+
+    ``years`` selects what gets *pulled*. The combined file is then rebuilt from
+    every race cached under ``by_race/`` — so ingesting one season **adds** to
+    the dataset instead of replacing it.
+
+    This is deliberate. The obvious reading of ``ingest 2026`` is "add 2026",
+    and the previous behaviour instead wrote a file containing 2026 alone,
+    silently dropping the pre-2026 laps that the era-shrinkage prior is built
+    on. The per-race parquets survived, so it was recoverable — but only
+    because the combined artifact happened to be committed.
+
+    ``rebuild=True`` restores the narrow behaviour: write only ``years``. Use it
+    when you genuinely want a subset, and note that it will shrink the file.
+    """
     BY_RACE.mkdir(parents=True, exist_ok=True)
     frames: list[pd.DataFrame] = []
     pulled = skipped = failed = 0
@@ -74,12 +104,33 @@ def build_dry_dataset(
     if not frames:
         raise RuntimeError("no races ingested")
 
-    full = pd.concat(frames, ignore_index=True)
+    # Newly-pulled races were written to by_race/ above, so recombining from
+    # the cache picks them up along with every previously-ingested season.
+    full = pd.concat(frames, ignore_index=True) if rebuild else combine_cached_races()
+
+    out_fp = PROCESSED / out_name
+    if out_fp.exists():
+        try:
+            prev = len(pd.read_parquet(out_fp))
+        except Exception:  # pragma: no cover - unreadable/corrupt previous file
+            prev = 0
+        if len(full) < prev:
+            # Never silently shrink the dataset — that is the failure this
+            # function used to have, and it is invisible until a model that
+            # needs the missing seasons quietly gets worse.
+            msg = (f"refusing to shrink {out_name}: {prev} laps on disk, "
+                   f"{len(full)} in the new build")
+            if not rebuild:
+                raise RuntimeError(msg + " (this should not happen — cache may be incomplete)")
+            print(f"  !! {msg} — writing anyway because rebuild=True", flush=True)
+
     PROCESSED.mkdir(parents=True, exist_ok=True)
-    full.to_parquet(PROCESSED / out_name)
-    print(f"\nDONE: {len(full)} laps from {len(frames)} races "
+    full.to_parquet(out_fp)
+    seasons = sorted(int(y) for y in full["year"].unique()) if "year" in full else []
+    print(f"\nDONE: {len(full)} laps from {full.groupby(['year', 'round']).ngroups} races "
           f"(pulled {pulled}, cached {skipped}, failed {failed})", flush=True)
-    print(f"Saved -> {PROCESSED / out_name}", flush=True)
+    print(f"      seasons in dataset: {seasons}", flush=True)
+    print(f"Saved -> {out_fp}", flush=True)
     return full
 
 
@@ -202,4 +253,6 @@ if __name__ == "__main__":
     elif cmd == "racelaps":
         build_race_laps_dataset([int(a) for a in args[1:]] or [2023, 2024])
     else:
-        build_dry_dataset([int(a) for a in args] or [2023, 2024])
+        rebuild = "--rebuild" in args
+        yrs = [int(a) for a in args if not a.startswith("-")]
+        build_dry_dataset(yrs or [2023, 2024], rebuild=rebuild)
