@@ -588,6 +588,39 @@ of simulated 60-lap races against 9.9% observed.
 | Full SC | 1.40 | 11 s |
 | **Red flag** | **1.00** (dead time) | **0 s** (Art. 57) |
 
+### Tyre sets are finite — a guard that (currently) guards nothing
+
+The third gap the regulations audit turned up: every stint needs a *fresh set*,
+and the weekend allocation is 13 sets (12 on a sprint weekend), most of which
+practice and qualifying consume. The optimiser knew stint *length* limits but had
+no notion of set *count*, so nothing stopped it proposing a plan requiring more
+sets of a compound than a team could field.
+
+Rather than build an allocation model, the limit is read off what teams actually
+managed — the observed distinct stints per driver-race-compound already
+encodes whatever sets they had. Over 2023–26: 1 stint typical, 2 common, **3 rare
+(1.4%)**, 4 essentially unheard of (**0.07%**, two cases in 3,030). Taking a
+0.999 quantile gives HARD 3, MEDIUM 3, SOFT 4.
+
+And then the honest part, which is why this is documented rather than
+advertised:
+
+| `max_stops` | Candidates | With set limits | Removed |
+|---|---|---|---|
+| 2 | 1,668 | 1,668 | **0.0%** |
+| 3 | 4,398 | 4,398 | **0.0%** |
+| 4 | 7,998 | 7,698 | 3.8% |
+
+**At the engine's default settings it removes nothing.** With at most four
+stints, the two-compound rule already forbids every plan the set limits would
+have. It only bites at `max_stops=4`, which the engine doesn't use.
+
+It is kept anyway, because a constraint that is currently slack is still the
+difference between "this plan is feasible" being *true* and being *accidentally
+true*. Tightening the quantile to 0.99 would make it bind — and would also throw
+out 43 strategies teams genuinely ran. That would be fitting the constraint to
+make it look useful, which is the opposite of the point.
+
 One incidental catch: `SafetyCarModel`'s default `prob_per_lap = 0.013` sits
 above **both** measured rates. It is only ever reached when
 `track_status.parquet` is missing — the engine otherwise calibrates per track

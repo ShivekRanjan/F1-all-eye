@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 from f1se.config import PROJECT_ROOT
-from f1se.eda import compound_stint_limits, estimate_pit_loss
+from f1se.eda import compound_set_limits, compound_stint_limits, estimate_pit_loss
 from f1se.models.censoring import AvoidancePrior
 from f1se.models.cliff import CliffPrior
 from f1se.models.degradation import DegradationModel, fit_linear_baseline
@@ -44,6 +44,8 @@ class StrategyEngine:
     sc_models: dict[str, SafetyCarModel] = field(default_factory=dict)
     pit_loss_by_track: dict[str, float] = field(default_factory=dict)
     stint_limits: dict[str, int] = field(default_factory=dict)
+    # Max stints per compound a team could actually field (finite tyre sets).
+    set_limits: dict[str, int] = field(default_factory=dict)
     global_sc: SafetyCarModel = field(default_factory=SafetyCarModel)
     global_pit_loss: float = DEFAULT_PIT_LOSS_S
     well_sampled_tracks: set = field(default_factory=set)
@@ -102,6 +104,7 @@ class StrategyEngine:
                 dry, target_min_year=2026, recency_halflife=4.0)
         total_laps = dry.groupby("event_name", observed=True)["lap_number"].max().astype(int).to_dict()
         limits = compound_stint_limits(dry)
+        set_limits = compound_set_limits(dry)
 
         sc_models: dict[str, SafetyCarModel] = {}
         global_sc = SafetyCarModel()
@@ -161,6 +164,7 @@ class StrategyEngine:
             sc_models=sc_models,
             pit_loss_by_track=pit_by_track,
             stint_limits=limits,
+            set_limits=set_limits,
             global_sc=global_sc,
             global_pit_loss=float(global_pit),
             well_sampled_tracks=well_sampled,
@@ -267,6 +271,7 @@ class StrategyEngine:
             sc_model=self._sc_model(track, sc_scale), objective=objective,
             n_runs=n_runs, top_k=top_k, seed=seed,
             max_stops=max_stops, max_stint=self._stint_limits_for(track, season),
+            max_sets=self.set_limits or None,
             pit_loss_s=pit_loss, pit_loss_sc_s=round(pit_loss * 0.5, 1),
             stop_penalty_s=self.overtaking.penalty_per_stop(track) if use_overtaking else 0.0,
         )

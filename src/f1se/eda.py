@@ -143,6 +143,29 @@ def compound_stint_limits(clean: pd.DataFrame, *, quantile: float = 0.9) -> dict
     }
 
 
+def compound_set_limits(clean: pd.DataFrame, *, quantile: float = 0.999) -> dict[str, int]:
+    """How many stints of one compound a driver can actually run in a race.
+
+    A strategy needs a *fresh set* per stint, and the weekend allocation is
+    finite — 13 sets (12 on a sprint weekend), of which practice and qualifying
+    consume most before the race. The optimiser otherwise has no notion of this
+    and can propose a plan requiring more sets of a compound than a team could
+    physically have left.
+
+    Rather than invent an allocation model, this reads the constraint off what
+    teams actually managed: the observed count of distinct stints per
+    driver-race-compound already reflects whatever sets they had. Over 2023-26,
+    1 stint is typical, 2 common, 3 rare (~1.4%) and 4 all but unheard of
+    (~0.07%), so a high quantile is the right cut — this is a feasibility guard
+    against absurd plans, not a tuning knob.
+    """
+    per = clean.groupby(["year", "round", "driver", "compound"], observed=True)["stint"].nunique()
+    return {
+        str(c): max(1, int(np.ceil(g.quantile(quantile))))
+        for c, g in per.groupby("compound", observed=True)
+    }
+
+
 def fit_stint_slopes(clean: pd.DataFrame, *, min_laps: int = 6) -> pd.DataFrame:
     """Fit a linear degradation slope per stint on fuel-corrected pace.
 

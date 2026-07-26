@@ -68,6 +68,7 @@ def enumerate_strategies(
     pit_grid_step: int = 3,
     min_stint: int = 8,
     max_stint: dict[str, int] | None = None,
+    max_sets: dict[str, int] | None = None,
 ) -> list[Strategy]:
     """Generate candidate strategies, honouring the realistic constraints.
 
@@ -77,6 +78,11 @@ def enumerate_strategies(
       * each stint at most ``max_stint[compound]`` laps if given (keeps the
         optimiser inside the tyre-age range the degradation model has data for —
         see :func:`f1se.eda.compound_stint_limits`);
+      * at most ``max_sets[compound]`` stints on any one compound if given — a
+        stint needs a fresh set and the weekend allocation is finite, so a plan
+        that reuses a compound more often than teams ever manage isn't a
+        strategy the team could actually field (see
+        :func:`f1se.eda.compound_set_limits`);
       * pit laps on a ``pit_grid_step`` grid;
       * at least two distinct compounds used (the dry-race rule).
     """
@@ -89,6 +95,9 @@ def enumerate_strategies(
         step = pit_grid_step if n_stops < 3 else pit_grid_step + 2
         grid = list(range(min_stint, total_laps - min_stint + 1, step))
         seqs = [c for c in product(compounds, repeat=n_stops + 1) if len(set(c)) >= 2]
+        if max_sets is not None:
+            seqs = [c for c in seqs
+                    if all(c.count(comp) <= max_sets.get(comp, 10**9) for comp in set(c))]
         for pit_laps in combinations(grid, n_stops):
             bounds = [0, *pit_laps, total_laps]
             lengths = [bounds[i + 1] - bounds[i] for i in range(len(bounds) - 1)]
