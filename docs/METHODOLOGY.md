@@ -516,15 +516,44 @@ pre-2026's 0.01733 [0.01351, 0.02135] — a **+71.5%** point difference with
 intervals that barely touch. The conclusion above survives; it is much thinner
 than the safety-car-only numbers make it look.
 
-**Why this is not fixed by widening the match to `4|6|7`.** The simulator prices
-a stop under neutralisation at `pit_loss_sc_s = 11.0` against a full green-flag
-loss — roughly half. That discount is earned by the field *bunching* behind a
-safety car. Under a VSC everyone is slowed proportionally and the pack never
-closes up, so a VSC stop saves real time but distinctly less. Lumping the two
-together would trade a known under-count for an unknown over-credit, which is a
-worse trade than the bug. The correct fix is a **third track state** — its own
-hazard and its own `pit_loss_vsc_s` between the green and SC values — and that
-is a modelling change, not a constant change. Logged here rather than rushed.
+**Why widening the match to `4|6|7` would be the wrong fix.** The simulator
+prices a stop under neutralisation at `pit_loss_sc_s = 11.0` against a full
+green-flag loss — roughly half. That discount is earned by the field *bunching*
+behind a safety car. Under a VSC everyone is slowed against a delta and the pack
+never closes up, so a VSC stop saves real time but distinctly less. Lumping them
+would trade a known under-count for an unknown over-credit.
+
+### The three-state fix
+
+The engine now models **green / VSC / full SC** as distinct states, with tiers
+taken from the regulations and reported practice rather than invented:
+
+| State | Lap-time factor | Pit loss | Why |
+|---|---|---|---|
+| Green | 1.00 | ~21 s (measured per track) | — |
+| **VSC** | **1.35** | **16 s** | field slowed, never bunches (reported 15–18 s) |
+| Full SC | 1.40 | 11 s | field bunches behind the pace car (12–14 s) |
+
+`SafetyCarModel` carries a second hazard calibrated from VSC-only laps (SC laps
+excluded, so a race escalating VSC → SC isn't double-counted), and
+`sample_states` returns `0/1/2` with the full SC winning any overlap. Both
+hazards are shrunk per circuit on the same footing — that mattered, because the
+engine uses the *per-track* models, so calibrating only the global one would
+have confined the fix to a fallback path.
+
+Measured on all 81 races: SC 0.01064/lap, VSC 0.00901/lap — a **+85%**
+neutralisation hazard. Across 20,000 simulated 60-lap races the share containing
+at least one neutralised lap rises from **47% to 69%**. At Silverstone, Las
+Vegas, Miami and the Hungaroring the VSC hazard now *exceeds* the SC hazard.
+
+**How much does it change the actual call?** Less than the hazard change
+suggests, and that is worth saying plainly. On a Silverstone 1-stop vs 2-stop
+A/B the 2-stop's win probability moves 92.8% → 91.5% — the preference doesn't
+flip. Modelling more neutralisation makes every race slower *and* every stop
+cheaper, and those partly cancel for a decision that was already clear-cut. The
+fix matters most where a call is marginal, which is exactly where the engine
+reports a coin-flip anyway. It is the right model either way; it is not a
+revolution in the recommendations.
 
 Found by a reader asking, reasonably, whether "6 safety cars in 11 races" had
 counted virtual ones. It had not.

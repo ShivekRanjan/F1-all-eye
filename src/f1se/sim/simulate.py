@@ -19,7 +19,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from f1se.sim.safety_car import SafetyCarModel
+from f1se.sim.safety_car import VSC_LAP_FACTOR, VSC_PIT_LOSS_S, SafetyCarModel
 
 PaceFn = Callable[[str, int, int], float]
 
@@ -107,9 +107,11 @@ def draw_scenarios(
     """
     rng = np.random.default_rng(seed)
     if sc_model is None:
-        sc_mask = np.zeros((n_runs, total_laps), dtype=bool)
+        sc_mask = np.zeros((n_runs, total_laps), dtype=np.int8)
     else:
-        sc_mask = sc_model.sample_mask(total_laps, n_runs, rng)
+        # Three-state: 0 green, 1 VSC, 2 full SC. Falls back to SC-only when the
+        # model carries no VSC hazard, so an uncalibrated model behaves as before.
+        sc_mask = sc_model.sample_states(total_laps, n_runs, rng)
     noise = rng.normal(0.0, pace_noise_s, size=(n_runs, total_laps))
     return sc_mask, noise
 
@@ -131,12 +133,28 @@ def race_totals(
     pit_loss_s: float = 21.0,
     pit_loss_sc_s: float = 11.0,
     sc_lap_factor: float = 1.4,
+    pit_loss_vsc_s: float = VSC_PIT_LOSS_S,
+    vsc_lap_factor: float = VSC_LAP_FACTOR,
 ) -> np.ndarray:
-    """Total race time per sampled race, given deterministic pace + shared draws."""
-    sc_det = green_det * sc_lap_factor
-    lap_times = np.where(sc_mask, sc_det, green_det) + np.where(sc_mask, 0.0, noise)
-    pit_cost = np.where(sc_mask, pit_loss_sc_s, pit_loss_s) * pit_mask
-    return (lap_times + pit_cost).sum(axis=1)
+    """Total race time per sampled race, given deterministic pace + shared draws.
+
+    ``sc_mask`` may be a boolean SC mask (legacy two-state) or an int8 state
+    array from :meth:`SafetyCarModel.sample_states` — 0 green, 1 VSC, 2 full SC.
+    A VSC lap is slower than green but quicker than trailing the safety car, and
+    a stop taken under one is cheaper than green but dearer than under a full SC,
+    because the field never bunches up.
+    """
+    states = sc_mask.astype(np.int8) * 2 if sc_mask.dtype == bool else sc_mask
+    neutralised = states > 0
+
+    factor = np.select([states == 2, states == 1], [sc_lap_factor, vsc_lap_factor], 1.0)
+    pit_price = np.select([states == 2, states == 1],
+                          [pit_loss_sc_s, pit_loss_vsc_s], pit_loss_s)
+
+    # Pace noise is a green-running effect; under any neutralisation the field is
+    # speed-limited and lap-to-lap scatter largely disappears.
+    lap_times = green_det * factor + np.where(neutralised, 0.0, noise)
+    return (lap_times + pit_price * pit_mask).sum(axis=1)
 
 
 def simulate_race(

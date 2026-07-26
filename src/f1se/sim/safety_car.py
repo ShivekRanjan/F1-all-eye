@@ -18,8 +18,18 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-# FastF1 track-status code for a full safety car (codes can concatenate per lap).
-SC_CODE = "4"
+# FastF1 track-status codes (they can concatenate within one lap's string).
+SC_CODE = "4"           # full safety car — field bunches behind the pace car
+VSC_CODES = ("6", "7")  # virtual safety car: 6 = deployed, 7 = ending
+
+# Regulation-derived pit-loss tiers. Under a *full* SC the field bunches, so the
+# time surrendered by pitting collapses (~12-14 s vs ~20-25 s green). A VSC slows
+# every car against a delta but never closes the pack up, so a stop there is
+# cheaper than green but dearer than under SC (~15-18 s). Treating the two as one
+# state — which this engine did until the VSC was found to be uncounted entirely
+# — either ignores a real cheap-stop window or over-credits it.
+VSC_PIT_LOSS_S = 16.0   # midpoint of the observed 15-18 s band
+VSC_LAP_FACTOR = 1.35   # VSC delta is marginally quicker than following the SC
 
 
 @dataclass(frozen=True)
@@ -36,6 +46,11 @@ class SafetyCarModel:
 
     prob_per_lap: float = 0.013
     mean_duration: int = 4
+    # Virtual safety car, modelled as its own state rather than folded into the
+    # SC hazard. Zero keeps the old two-state behaviour for callers that predate
+    # this (and for the deterministic no-SC path).
+    vsc_prob_per_lap: float = 0.0
+    vsc_mean_duration: int = 3
 
     @classmethod
     def from_rate(cls, sc_periods_per_race: float, total_laps: int, mean_duration: int = 4):
@@ -44,16 +59,53 @@ class SafetyCarModel:
 
     @classmethod
     def from_track_status(cls, status: pd.DataFrame) -> SafetyCarModel:
-        """Calibrate the hazard from observed per-lap ``track_status`` data.
+        """Calibrate both hazards from observed per-lap ``track_status`` data.
 
         ``status`` needs columns ``year, round, lap_number, track_status`` (one
         row per driver-lap, unfiltered). Replaces the literature default with the
-        measured per-lap trigger rate and mean SC duration; see
+        measured per-lap trigger rate and mean duration; see
         :func:`safety_car_summary` for the diagnostics behind it.
+
+        The VSC rate is measured separately and from *VSC-only* laps, so a race
+        that ran both doesn't get double-counted.
         """
         summary = safety_car_summary(status)
         prob = summary["n_periods"] / summary["total_race_laps"]
-        return cls(prob_per_lap=float(prob), mean_duration=int(round(summary["mean_duration"])))
+        vsc = vsc_summary(status)
+        return cls(
+            prob_per_lap=float(prob),
+            mean_duration=int(round(summary["mean_duration"])),
+            vsc_prob_per_lap=float(vsc["n_periods"] / vsc["total_race_laps"])
+            if vsc["total_race_laps"] else 0.0,
+            vsc_mean_duration=max(1, int(round(vsc["mean_duration"] or 3))),
+        )
+
+    def _active(self, prob: float, duration: int, total_laps: int,
+                n_runs: int, rng: np.random.Generator) -> np.ndarray:
+        triggers = rng.random((n_runs, total_laps)) < prob
+        D = max(1, int(duration))
+        csum = np.cumsum(triggers.astype(np.int32), axis=1)
+        shifted = np.zeros_like(csum)
+        if D < total_laps:
+            shifted[:, D:] = csum[:, :-D]
+        return (csum - shifted) > 0
+
+    def sample_states(self, total_laps: int, n_runs: int,
+                      rng: np.random.Generator) -> np.ndarray:
+        """``(n_runs, total_laps)`` int8 array: 0 green, 1 VSC, 2 full SC.
+
+        The two hazards are drawn independently and the SC wins any overlap — a
+        VSC that escalates to a full safety car is one neutralisation, not two,
+        and the full SC governs both lap time and pit loss while it is out.
+        """
+        sc = self._active(self.prob_per_lap, self.mean_duration, total_laps, n_runs, rng)
+        states = np.zeros((n_runs, total_laps), dtype=np.int8)
+        if self.vsc_prob_per_lap > 0:
+            vsc = self._active(self.vsc_prob_per_lap, self.vsc_mean_duration,
+                               total_laps, n_runs, rng)
+            states[vsc] = 1
+        states[sc] = 2
+        return states
 
     def sample_mask(self, total_laps: int, n_runs: int, rng: np.random.Generator) -> np.ndarray:
         """Return a boolean ``(n_runs, total_laps)`` mask of laps run under SC.
@@ -85,6 +137,12 @@ def calibrate_per_track(
     glob = safety_car_summary(status)
     global_prob = glob["n_periods"] / glob["total_race_laps"] if glob["total_race_laps"] else 0.0
     global_dur = glob["mean_duration"] or 4.0
+    # The VSC hazard is shrunk on exactly the same footing — these are the models
+    # the engine actually uses per circuit, so leaving VSC out here would have
+    # confined the fix to the global fallback path.
+    gv = vsc_summary(status)
+    global_vprob = gv["n_periods"] / gv["total_race_laps"] if gv["total_race_laps"] else 0.0
+    global_vdur = gv["mean_duration"] or 3.0
 
     out: dict[str, SafetyCarModel] = {}
     for event, g in status.groupby("event_name"):
@@ -92,7 +150,13 @@ def calibrate_per_track(
         laps = s["total_race_laps"]
         prob = (s["n_periods"] + shrinkage_laps * global_prob) / (laps + shrinkage_laps)
         dur = s["mean_duration"] if s["n_periods"] > 0 else global_dur
-        out[str(event)] = SafetyCarModel(prob_per_lap=float(prob), mean_duration=int(round(dur)))
+        v = vsc_summary(g)
+        vprob = (v["n_periods"] + shrinkage_laps * global_vprob) / (laps + shrinkage_laps)
+        vdur = v["mean_duration"] if v["n_periods"] > 0 else global_vdur
+        out[str(event)] = SafetyCarModel(
+            prob_per_lap=float(prob), mean_duration=int(round(dur)),
+            vsc_prob_per_lap=float(vprob), vsc_mean_duration=max(1, int(round(vdur))),
+        )
     return out
 
 
@@ -127,6 +191,43 @@ def sc_period_durations(sc_laps: list[int]) -> list[int]:
             start = prev = lap
     durations.append(prev - start + 1)
     return durations
+
+
+def vsc_laps_in_race(race_status: pd.DataFrame, *, exclude_sc: bool = True) -> list[int]:
+    """Race laps run under a virtual safety car.
+
+    ``exclude_sc`` drops laps that were already under a full SC, so the two
+    hazards are calibrated from disjoint evidence and a race that escalated
+    VSC → SC isn't counted twice.
+    """
+    by_lap = race_status.groupby("lap_number")["track_status"].apply(
+        lambda s: s.astype("string").str.contains("|".join(VSC_CODES), na=False).mean()
+    )
+    laps = {int(lap) for lap, frac in by_lap.items() if frac > 0.5}
+    if exclude_sc:
+        laps -= set(sc_laps_in_race(race_status))
+    return sorted(laps)
+
+
+def vsc_summary(status: pd.DataFrame) -> dict:
+    """Same aggregate as :func:`safety_car_summary`, for VSC-only laps."""
+    n_periods = 0
+    all_durations: list[int] = []
+    total_race_laps = 0
+    n_races = 0
+    for _, race in status.groupby(["year", "round"]):
+        n_races += 1
+        total_race_laps += int(race["lap_number"].max())
+        durations = sc_period_durations(vsc_laps_in_race(race))
+        n_periods += len(durations)
+        all_durations.extend(durations)
+    return {
+        "n_races": n_races,
+        "n_periods": n_periods,
+        "periods_per_race": n_periods / n_races if n_races else 0.0,
+        "mean_duration": float(np.mean(all_durations)) if all_durations else 0.0,
+        "total_race_laps": total_race_laps,
+    }
 
 
 def safety_car_summary(status: pd.DataFrame) -> dict:
