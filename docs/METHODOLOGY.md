@@ -124,20 +124,44 @@ a textbook bias–variance trade resolved component-wise:
   estimator**: each per-group slope is a precision-weighted blend of the 2026
   estimate and the pre-2026 prior, converging to 2026 truth as races accumulate.
 
-Measured on real 2026 laps, the regime shift is large and the fix works:
+Measured on real 2026 laps (11 races), the regime shift is large and the fix
+works — but by much less than this table originally claimed:
 
 | Degradation model | Pace-loss MAE on 2026 laps | vs naive |
 |---|---|---|
-| Naive (no degradation) | 0.590 s | — |
-| Pre-2026 (old cars) | 0.573 s | **+3%** — barely useful |
-| **Shrunk (2026-aware)** | **0.495 s** | **+16%** |
+| Naive (no degradation) | 0.573 s | — |
+| Pre-2026 (old cars) | 0.495 s | **+13.6%** |
+| Shrunk — *scored on races it was fitted on* | 0.432 s | +24.6% ✗ |
+| **Shrunk — leave-one-race-out** | **0.490 s** | **+14.4%** |
+
+**The correction.** The first version of this section reported the third row as
+the result. It is in-sample: `fit_era_shrunk_degradation` was fitted on the full
+lap set — 2026 races included — and then scored on those same 2026 laps, while
+the prior it was compared against saw none of them. An in-sample model against
+an out-of-sample baseline is not a fair fight, and §1 of this document exists to
+prevent exactly that. Caught at round 11 while re-running the numbers on more
+data; the sweep in §13 is what exposed it.
+
+Re-scored leave-one-race-out — fit on every 2026 race except the one being
+measured — the in-sample figure is **13.5% optimistic**, and shrinkage's real
+margin over simply using the old-car prior is **+1.0%** on the mean. That mean
+is dragged by one bad race (round 2, where the prior is much better); shrinkage
+is the better model in **8 of 11** races. So the honest summary is *consistently
+but modestly better*, not the step-change originally advertised.
+
+The regime shift itself is unaffected and remains the real finding: 2026 slopes
+differ sharply from pre-2026 (HARD roughly doubles, +0.034 → +0.059 s/lap), so a
+2026-aware model is still the right call — the argument for it is that it tracks
+a genuinely different regime, not that it posts a big MAE win.
 
 The championship projection applies the same humility: with only a handful of
 2026 rounds, each simulation **bootstraps driver strength** from the races seen
 so far, so a dominant leader shows ~99% — not a dishonest 100% — and close form
 yields genuinely open odds.
 
-*Reproduce: `analysis/phase_2026_validation.py`*
+*Reproduce: `analysis/phase_2026_shrinkage_honest.py` (the fair comparison);
+`analysis/phase_2026_validation.py` prints the in-sample figure and now labels it
+as such.*
 
 ## 8. The one time complexity won — a sequence model for next-lap pace
 
@@ -387,6 +411,37 @@ is a season where "read the grid" is hard to beat. Both numbers are published
 rather than the flattering one alone.
 
 *Reproduce: `analysis/phase_2026_deployment_model.py`*
+
+## 13. Tuning the shrinkage constant — and what the flat curve gave away
+
+`k` (`shrinkage_laps = 150`) sets how hard each 2026 slope is pulled toward the
+pre-2026 prior: `(n·est + k·prior)/(n + k)`. It was a prior-strength *guess* made
+when 2026 had two races and there was no honest way to tune it. Eleven races is
+enough to stop guessing, so it was swept leave-one-race-out.
+
+| k | LORO MAE | | k | LORO MAE |
+|---|---|---|---|---|
+| 0 (2026 only) | 0.4907 | | 250 | 0.4898 |
+| 25 | 0.4906 | | 400 | 0.4895 |
+| 50 | 0.4905 | | 800 | 0.4887 |
+| 100 | 0.4903 | | 2000 (ignore 2026) | **0.4879** |
+| **150 (current)** | **0.4901** | | | |
+
+Two results, and the second matters more than the first.
+
+**The curve is flat.** Across a range where `k=0` trusts 2026 alone and `k=2000`
+effectively ignores it, MAE moves 0.57% end to end. `k` is not a lever worth
+tuning — **left at 150**, since re-tuning to chase 0.45% would be fitting noise,
+and the whole grid is inside the spread between individual races.
+
+**It also slopes the wrong way.** If shrinkage were adding real signal, error
+should rise as `k` grows and 2026 data is discounted. It falls, monotonically.
+That is what prompted the check in §7 — and confirmed the published gain was
+in-sample. A flat curve pointing the wrong direction is a smell worth chasing;
+had `k` been re-tuned to 2000 on this table alone, the leak would have been
+quietly buried under a "tuned hyperparameter" instead of found.
+
+*Reproduce: `analysis/phase_2026_shrinkage_sweep.py`*
 
 ---
 

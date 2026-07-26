@@ -40,8 +40,14 @@ def main() -> None:
     old = shape_mae(linear_shape(prior, d26), d26)
     new = shape_mae(linear_shape(shrunk, d26), d26)
     print(f"  naive (no degradation) : {base:.4f}")
-    print(f"  pre-2026 (old cars)    : {old:.4f}   ({100*(base-old)/base:+.0f}% vs naive)")
-    print(f"  shrunk (2026-aware)    : {new:.4f}   ({100*(base-new)/base:+.0f}% vs naive)")
+    print(f"  pre-2026 (old cars)    : {old:.4f}   ({100*(base-old)/base:+.0f}% vs naive)"
+          "   [out-of-sample]")
+    print(f"  shrunk (2026-aware)    : {new:.4f}   ({100*(base-new)/base:+.0f}% vs naive)"
+          "   [IN-SAMPLE — see below]")
+    print("\n  !! The shrunk model above was fitted on these same 2026 laps, so that")
+    print("     figure is optimistic and is NOT comparable to the out-of-sample prior.")
+    print("     For the fair leave-one-race-out comparison, which is what METHODOLOGY 7")
+    print("     now reports, run: analysis/phase_2026_shrinkage_honest.py")
     print("\nReading: the old-car model barely beats 'no degradation' on 2026 (regime shift);")
     print("the shrinkage model recovers most of the signal by blending in 2026 data.")
 
