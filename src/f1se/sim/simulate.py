@@ -60,6 +60,11 @@ class SimResult:
     samples: np.ndarray
     strategy: Strategy
     p_safety_car: float
+    # P(at least one lap neutralised by anything — VSC, full SC or red flag).
+    # Kept separate from p_safety_car rather than folded into it: the two answer
+    # different questions, and quietly widening p_safety_car would have changed
+    # a number already on screen without telling anyone.
+    p_neutralised: float = 0.0
 
     @property
     def mean(self) -> float:
@@ -80,6 +85,7 @@ class SimResult:
             "p50_s": self.quantile(0.50),
             "p90_s": self.quantile(0.90),
             "p_safety_car": self.p_safety_car,
+            "p_neutralised": self.p_neutralised,
             "n_stops": self.strategy.n_stops,
         }
 
@@ -206,7 +212,9 @@ def simulate_race(
     # any neutralisation — with int8 states a bare .any() would silently start
     # counting VSC laps too and inflate a number the UI displays.
     p_sc = float(np.mean((sc_mask >= 2).any(axis=1))) if sc_model is not None else 0.0
-    return SimResult(samples=totals, strategy=strategy, p_safety_car=p_sc)
+    p_any = float(np.mean((sc_mask > 0).any(axis=1))) if sc_model is not None else 0.0
+    return SimResult(samples=totals, strategy=strategy, p_safety_car=p_sc,
+                     p_neutralised=p_any)
 
 
 def pace_fn_from_model(deg_model, track: str, total_laps: int, *, sec_per_kg=0.03,

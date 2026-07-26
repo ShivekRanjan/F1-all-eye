@@ -27,6 +27,12 @@ export interface RaceInfo {
   total_laps: number;
   sc_prob_per_lap: number;
   sc_mean_duration: number;
+  /** Virtual safety car and red flag also neutralise a race and also discount a
+   *  stop. Exposing only the full-SC hazard understated the chance of a
+   *  cheap-stop window by roughly half. */
+  vsc_prob_per_lap: number;
+  vsc_mean_duration: number;
+  red_prob_per_lap: number;
   pit_loss_s: number;
   stint_limits: Record<string, number>;
   well_sampled: boolean;
@@ -64,6 +70,9 @@ export interface SimulateResp {
   p50_s: number;
   p90_s: number;
   p_safety_car: number;
+  /** Any neutralisation (VSC, full SC or red flag) — p_safety_car counts only
+   *  a full SC or red flag, so the two legitimately differ. */
+  p_neutralised: number;
   hist_counts: number[];
   hist_edges: number[];
 }

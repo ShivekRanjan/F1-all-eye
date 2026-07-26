@@ -215,8 +215,11 @@ function CrossoverChart({ t, track }: { t: UndercutTrajectory; track: string }) 
         </ResponsiveContainer>
       </div>
       <p className="mt-1 text-xs text-ink-muted">
-        Mean paths from the same pace model the simulator uses. Free-air caveat: this is the
-        <em> clock</em> crossover — it doesn't model whether you can physically pass.
+        Mean paths from the same pace model the simulator uses. The verdict prices a possible
+        neutralisation — a safety car, VSC or red flag hands whoever hasn't stopped yet a
+        discounted stop, which is how an undercut that was working gets wiped out. Free-air
+        caveat: this is the <em>clock</em> crossover — it doesn't model whether you can
+        physically pass.
       </p>
     </Card>
   );

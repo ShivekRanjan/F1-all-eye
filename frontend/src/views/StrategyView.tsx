@@ -153,7 +153,14 @@ function Rail(props: {
   info: RecommendResp | null | undefined;
 }) {
   const p = props;
-  const pSC = p.info ? 1 - (1 - p.info.sc_prob_per_lap) ** p.info.total_laps : null;
+  // Chance of *any* neutralisation over the race — the thing that actually
+  // opens a cheap-stop window. Using the full-SC hazard alone (as this did)
+  // understated it by roughly half, because a VSC is about as frequent and the
+  // engine models all three states.
+  const hazard = p.info
+    ? p.info.sc_prob_per_lap + (p.info.vsc_prob_per_lap ?? 0) + (p.info.red_prob_per_lap ?? 0)
+    : null;
+  const pSC = hazard != null && p.info ? 1 - (1 - hazard) ** p.info.total_laps : null;
   // Filter the circuit list as you type — 24+ circuits is too many to scroll.
   const [circuitQ, setCircuitQ] = useState("");
   const q = circuitQ.trim().toLowerCase();
@@ -282,7 +289,11 @@ function Rail(props: {
             {p.info && (
               <div className="space-y-1 font-mono text-[11px] text-ink-faint">
                 <div>pit loss · {p.info.pit_loss_s.toFixed(1)}s (measured)</div>
-                <div>P(safety car) · {pSC != null ? Math.round(pSC * 100) : "–"}%</div>
+                <div
+                  title="Chance of at least one neutralised lap — virtual safety car, full safety car or red flag. Each opens a discounted pit stop."
+                >
+                  P(neutralisation) · {pSC != null ? Math.round(pSC * 100) : "–"}%
+                </div>
                 <div>searched {p.info.n_evaluated} strategies</div>
               </div>
             )}
@@ -528,7 +539,8 @@ function OutcomeChart({ sim }: { sim: SimulateResp }) {
         </BarChart>
       </ResponsiveContainer>
       <div className="nums mt-1 font-mono text-[11px] text-ink-faint">
-        P(safety car) {Math.round(sim.p_safety_car * 100)}% · spread (p90−p10) {(sim.p90_s - sim.p10_s).toFixed(0)}s · white line = median
+        P(neutralisation) {Math.round((sim.p_neutralised ?? sim.p_safety_car) * 100)}% · of which full SC/red{" "}
+        {Math.round(sim.p_safety_car * 100)}% · spread (p90−p10) {(sim.p90_s - sim.p10_s).toFixed(0)}s · white line = median
       </div>
     </>
   );

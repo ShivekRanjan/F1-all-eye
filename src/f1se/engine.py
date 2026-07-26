@@ -220,6 +220,12 @@ class StrategyEngine:
             "total_laps": self._total_laps(track),
             "sc_prob_per_lap": round(sc.prob_per_lap, 4),
             "sc_mean_duration": sc.mean_duration,
+            # The simulator models three neutralisation states; exposing only the
+            # full-SC hazard understated the chance of a cheap-stop window by
+            # roughly half, which is precisely the number a strategist acts on.
+            "vsc_prob_per_lap": round(sc.vsc_prob_per_lap, 4),
+            "vsc_mean_duration": sc.vsc_mean_duration,
+            "red_prob_per_lap": round(sc.red_prob_per_lap, 4),
             "pit_loss_s": round(self._pit_loss(track), 1),
             "stint_limits": self.stint_limits,
             "well_sampled": self.is_well_sampled(track),
