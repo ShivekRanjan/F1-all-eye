@@ -154,5 +154,24 @@
       "podium_prob": 0.0068
     }
   ],
-  "scored": false
+  "scored": true,
+  "result": {
+    "actual_podium": [
+      "NOR",
+      "VER",
+      "ANT"
+    ],
+    "hit_at_3": 1,
+    "grid_baseline_podium": [
+      "NOR",
+      "LEC",
+      "PIA"
+    ],
+    "grid_baseline_hit_at_3": 1,
+    "called_finished": {
+      "HAM": 5,
+      "LEC": 4,
+      "ANT": 3
+    }
+  }
 }
