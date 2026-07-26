@@ -22,9 +22,9 @@ predictions, standings, race analysis, the calendar, and the news.
 
 | Model | Scored against reality |
 |---|---|
-| Strategy engine (stop count) | **8/9** races match the field's dominant strategy, **7/9** the winner's (leave-one-race-out, 2026) |
+| Strategy engine (stop count) | **10/11** races match the field's dominant strategy, **8/11** the winner's (leave-one-race-out, 2026) |
 | Podium model | ROC-AUC **0.93** forward-tested on 2026 — but precision@3 **ties** the naive grid baseline this season (0.576 each), and the pre-registered Hungary call went **1/3**. Both published, [§12](docs/METHODOLOGY.md) |
-| Degradation model | **0.069 s/lap** MAE on races the model never saw; on 2026 the 2026-aware model beats the old-car prior in **8 of 11** races (a leakage correction cut this claim down — [§7](docs/METHODOLOGY.md)) |
+| Degradation model | **0.060 s/lap** MAE on races the model never saw (leave-one-race-out, 11 races); on 2026 the 2026-aware model beats the old-car prior in **8 of 11** races (a leakage correction cut this claim down — [§7](docs/METHODOLOGY.md)) |
 | LSTM next-lap forecast | **+8.5%** vs persistence (held-out 2025); **+18%** on a fully unseen race |
 
 **Why this isn't another F1 dashboard:**

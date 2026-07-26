@@ -443,6 +443,41 @@ quietly buried under a "tuned hyperparameter" instead of found.
 
 *Reproduce: `analysis/phase_2026_shrinkage_sweep.py`*
 
+## 14. The "transferable" half of §7, finally measured
+
+§7 splits the engine in two: regime-sensitive components get shrinkage,
+transferable ones (pit loss, SC hazard, fuel physics) pool every season. The
+argument for pooling the safety car is that it belongs to circuits and
+marshalling rather than to cars. Reasonable — and, until now, **assumed**. It is
+also not a harmless assumption: SC probability sets when the simulator expects a
+cheap stop, so it moves the strategy call directly.
+
+Eleven races of 2026 track status is enough to check. Whole races are
+bootstrapped (10,000 resamples) so "different" has to clear small-sample noise:
+
+| | SC periods | Laps | Per-lap hazard | 95% CI |
+|---|---|---|---|---|
+| pre-2026 (70 races) | 46 | 4,213 | 0.01092 | [0.00797, 0.01405] |
+| 2026 (11 races) | 6 | 673 | 0.00892 | [0.00416, 0.01445] |
+
+2026 runs 18% lower as a point estimate — 0.55 SC periods per race against 0.66
+— but the intervals overlap almost entirely. Six SC periods simply cannot
+separate themselves from the pooled rate. **The assumption holds**: pooling the
+hazard across the reset is now supported by data rather than by argument.
+
+Worth stating plainly, because it is the weaker kind of result: this is a
+*failure to detect a difference*, not proof of no difference. The 2026 interval
+is wide enough to accommodate a real ±40% shift. It should be re-run at
+season's end, when 24 races will roughly halve that interval.
+
+One incidental catch: `SafetyCarModel`'s default `prob_per_lap = 0.013` sits
+above **both** measured rates. It is only ever reached when
+`track_status.parquet` is missing — the engine otherwise calibrates per track
+from the data — so it never biases a real call, but the default is a fossil of
+an early guess rather than a measurement.
+
+*Reproduce: `analysis/phase_2026_sc_hazard.py`*
+
 ---
 
 ### The pattern
