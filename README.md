@@ -25,7 +25,7 @@ predictions, standings, race analysis, the calendar, and the news.
 | Strategy engine (stop count) | **10/11** races match the field's dominant strategy, **8/11** the winner's (leave-one-race-out, 2026) |
 | Podium model | ROC-AUC **0.93** forward-tested on 2026 — but precision@3 **ties** the naive grid baseline this season (0.576 each), and the pre-registered Hungary call went **1/3**. Both published, [§12](docs/METHODOLOGY.md) |
 | Degradation model | **0.060 s/lap** MAE on races the model never saw (leave-one-race-out, 11 races); on 2026 the 2026-aware model beats the old-car prior in **8 of 11** races (a leakage correction cut this claim down — [§7](docs/METHODOLOGY.md)) |
-| LSTM next-lap forecast | **+8.5%** vs persistence (held-out 2025); **+18%** on a fully unseen race |
+| LSTM next-lap forecast | **+13.4%** vs persistence averaged over **11 fully unseen 2026 races — winning all 11** (+8.5% on the held-out 2025 split) |
 
 **Why this isn't another F1 dashboard:**
 
@@ -69,7 +69,7 @@ documented rather than deleted; one did, and it's here too:
 | **Validation is leakage-safe by construction** — laps within a race are near-duplicates, so splits are GroupKFold-by-race plus a forward-in-time holdout; a shuffled split would inflate every score | `f1se/validation.py`, tested |
 | **2026's regulation reset breaks old models** — a pre-2026 degradation model barely beats "no degradation" on 2026 laps (+3%); blending 2026 data with the old prior via shrinkage recovers the signal (+16%) | `analysis/phase_2026_validation.py` |
 | **An LSTM *did* earn its place** — for next-lap pace forecasting it beats persistence by ~8.5% (0.306 vs 0.335s MAE on held-out 2025) by damping per-lap noise and anticipating tyre warm-up. The one case where complexity won, on the same footing — and it's live in the app (exported torch-free to a 28 KB numpy artifact) | `analysis/phase2_5_sequence.py` |
-| **Validated on a race the models never saw** (Austrian GP 2026, in no training data) — LSTM nowcast **+18%** vs persistence, podium model **2/3** vs the grid's 1/3; a strategy miss surfaced (and fixed) a real degradation gap, and the model even flagged the underused softs a driver called out post-race | `analysis/backtest_austria_2026.py` |
+| **Validated on a race the models never saw** (Austrian GP 2026, in no training data) — LSTM nowcast **+18%** vs persistence (since re-measured over all 11 unseen races: that was the best of them, mean **+13.4%**, 11/11 wins), podium model **2/3** vs the grid's 1/3; a strategy miss surfaced (and fixed) a real degradation gap, and the model even flagged the underused softs a driver called out post-race | `analysis/backtest_austria_2026.py` |
 | **A season-wide backtest exposed over-stopping — the root cause was weather, not track position** — the pooled degradation model assumed average track temp, over-predicting wear on cool days. A track-position prior (the first hypothesis) washed out 4/8; a **thermal prior** (temp-shifted degradation slope) lifted the leave-one-race-out stop-count match to **7/8** and is a live control in the UI | `analysis/backtest_2026_season.py`, METHODOLOGY §9 |
 
 Full receipts — figures, numbers, and how to reproduce each one — in

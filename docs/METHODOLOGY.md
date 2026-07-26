@@ -182,6 +182,28 @@ Forward-in-time, train ≤2024, test on 2025 (2026 excluded — regime reset):
 | **LSTM (sequence → delta)** | **0.306 s** (±0.001 over 3 seeds) |
 
 The LSTM beats the dumb baseline by **~8.5%** — small but real and reproducible.
+
+**Restated on eleven unseen races.** The model never sees 2026 at all, so every
+2026 race is a genuine unseen test. Round 11 made it eleven of them, which is
+enough to replace a single number with a distribution:
+
+| Improvement vs persistence, 2026 | |
+|---|---|
+| Mean / median | **+13.4% / +13.3%** |
+| Spread (sd 3.7) | +8.0% … +18.6% |
+| **Races beaten** | **11 / 11** |
+| vs rolling-slope baseline | +25.0%, also **11 / 11** |
+| Pooled over 7,352 windows | +13.6% |
+
+This corrects the advertised figure in both directions at once. The **+18%**
+this document previously quoted from the Austrian GP (§9) turns out to be the
+**best of the eleven**, not a typical one — a single race was always going to be
+whatever it was, and it happened to flatter. The honest headline is **+13.4%**.
+
+But the claim gets *stronger* where it counts: winning 11 of 11 unseen races
+with a 3.7-point spread is a far better argument than one impressive race,
+because it can't be luck. This is the difference between "the model beat a
+baseline once" and "the model beats the baseline."
 Two honest readings come with it. First, the *rolling-slope* baseline is **worse
 than persistence**: at a one-lap horizon, fuel-corrected pace is close to a random
 walk, so naively projecting a 5-lap slope just amplifies per-lap noise — a useful
@@ -221,7 +243,7 @@ happened (winner **RUS**, from a medium → hard → hard 2-stop).
 |---|---|
 | **Strategy — race shape** | **hit** — engine got 71 laps and a **2-stop** (15 of 19 finishers 2-stopped) |
 | **Strategy — compound pick** | **miss** — engine's compounds differed from the winner's |
-| **LSTM nowcast** | **hit** — **+18.2%** vs persistence (0.31 vs 0.38 s) — *better* than its 2025 holdout |
+| **LSTM nowcast** | **hit** — **+18.2%** vs persistence (0.31 vs 0.38 s). Re-measured across all 11 unseen 2026 races (§8), this is the **best** of the eleven, not a typical one; the mean is +13.4% |
 | **Podium model** | **hit** — **2/3** correct (RUS, ANT) vs the grid baseline's **1/3** |
 | **Degradation** | ~ right ballpark, but slopes ran gentle (model MEDIUM 0.081 vs actual 0.097 s/lap) |
 
