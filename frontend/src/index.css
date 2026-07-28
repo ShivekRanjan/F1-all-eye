@@ -18,19 +18,42 @@
 }
 
 /* --- Ambient-motion gate ----------------------------------------------------
-   The decorative loops (grid drift, sweep, breathe) obey BOTH the user's OS
-   preference and the in-app Settings toggle (html[data-motion="off"]).
-   Entrance animations and functional feedback stay. */
+   Every decorative animation obeys BOTH the user's OS preference and the
+   in-app Settings toggle (html[data-motion="off"]).
+
+   f1pulse was the notable omission: it loops *infinitely* and is the most-used
+   animation in the app (status dots, the live chip, the race-day ribbon), so
+   leaving it out meant the Settings toggle promised something it didn't
+   deliver and a reduced-motion user still got ten pulsing elements.
+
+   Entrance animations are included too — a one-shot movement is still movement,
+   and WCAG's reduced-motion intent covers non-essential transitions. Purely
+   functional feedback (loading spinners) is deliberately untouched: removing it
+   would cost comprehension rather than protect anyone. */
 @media (prefers-reduced-motion: reduce) {
   .animate-gridmove,
   .animate-sweep,
-  .animate-breathe {
+  .animate-breathe,
+  .animate-f1pulse,
+  .animate-rise,
+  .animate-popin,
+  .animate-streak,
+  .animate-fadein,
+  .animate-trackdraw,
+  .animate-routebar {
     animation: none !important;
   }
 }
 [data-motion="off"] .animate-gridmove,
 [data-motion="off"] .animate-sweep,
-[data-motion="off"] .animate-breathe {
+[data-motion="off"] .animate-breathe,
+[data-motion="off"] .animate-f1pulse,
+[data-motion="off"] .animate-rise,
+[data-motion="off"] .animate-popin,
+[data-motion="off"] .animate-streak,
+[data-motion="off"] .animate-fadein,
+[data-motion="off"] .animate-trackdraw,
+[data-motion="off"] .animate-routebar {
   animation: none !important;
 }
 
@@ -116,7 +139,12 @@
 /* Keyboard affordance: a visible focus ring for keyboard users only
    (focus-visible), in the brand accent — never suppressed. */
 :focus-visible {
-  outline: 2px solid rgb(var(--accent) / 0.65);
+  /* 0.9, not 0.65: at 0.65 the violet accent lands at 2.69:1 against the card
+     surface and fails WCAG 1.4.11 (3:1 for focus indicators). Gold and cyan
+     passed either way; the runtime-accent feature is what introduced a theme
+     where the ring was too faint to see. At 0.9 the worst case (violet on the
+     lightest inset) is 3.98:1. */
+  outline: 2px solid rgb(var(--accent) / 0.9);
   outline-offset: 2px;
   border-radius: 4px;
 }

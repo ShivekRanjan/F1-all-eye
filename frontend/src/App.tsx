@@ -123,6 +123,17 @@ export default function App() {
 
   return (
     <div className="lg:flex">
+      {/* Skip link (WCAG 2.4.1, Level A). The sidebar is 12 nav items, so a
+          keyboard or screen-reader user otherwise tabs through all of them on
+          every single view before reaching content. Visually hidden until it
+          takes focus, at which point it must be plainly visible — a skip link
+          nobody can see when focused is no skip link at all. */}
+      <a
+        href="#main-content"
+        className="sr-only z-[200] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:rounded-lg focus:border focus:border-accent focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-600 focus:text-ink"
+      >
+        Skip to content
+      </a>
       {/* ---- Ambient grid drift — page-wide, behind every screen (not just
           Home's hero card). Shows through the page's negative space; opaque
           card backgrounds naturally occlude it, so it reads as texture, not
@@ -263,7 +274,7 @@ export default function App() {
             <span className="text-ink-faint">2023–26 · CRN</span>
           </div>
         </div>
-        <main className="mx-auto max-w-[1600px] px-5 py-6">
+        <main id="main-content" tabIndex={-1} className="mx-auto max-w-[1600px] px-5 py-6">
           {/* Screen-reader page title — the visible breadcrumb above conveys
               this visually on desktop, but nothing does on mobile, and
               without an h1 the document has no top-level heading at all. */}

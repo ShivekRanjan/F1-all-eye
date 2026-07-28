@@ -25,6 +25,7 @@ export function CommandPalette({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -32,12 +33,21 @@ export function CommandPalette({
     return items.filter((it) => it.label.toLowerCase().includes(q) || it.group.toLowerCase().includes(q));
   }, [items, query]);
 
+  const restoreRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
     if (!open) return;
     setQuery("");
     setActive(0);
+    // Remember what had focus so it can be handed back on close — otherwise
+    // focus falls to the top of the document and a keyboard user loses their
+    // place in the page they opened the palette from.
+    restoreRef.current = document.activeElement as HTMLElement | null;
     const raf = requestAnimationFrame(() => inputRef.current?.focus());
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      restoreRef.current?.focus?.();
+    };
   }, [open]);
 
   useEffect(() => {
@@ -47,7 +57,24 @@ export function CommandPalette({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === "Tab") {
+        // Focus trap: without it, Tab walks straight out of the open dialog
+        // into the 26 controls behind it, which are visually obscured — the
+        // user is then typing into a page they cannot see.
+        const f = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'input, button, [href], [tabindex]:not([tabindex="-1"])',
+        );
+        if (!f?.length) return;
+        const first = f[0];
+        const last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      } else if (e.key === "Escape") {
         onClose();
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -76,6 +103,10 @@ export function CommandPalette({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Jump to a section"
         className="w-full max-w-lg overflow-hidden rounded-xl2 border border-line-card bg-carbon-800 shadow-card animate-fadein"
         onClick={(e) => e.stopPropagation()}
       >
@@ -146,6 +177,9 @@ export function ShortcutsHelp({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Keyboard shortcuts"
         className="w-full max-w-sm overflow-hidden rounded-xl2 border border-line-card bg-carbon-800 p-5 shadow-card animate-fadein"
         onClick={(e) => e.stopPropagation()}
       >
