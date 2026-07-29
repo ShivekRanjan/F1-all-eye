@@ -75,7 +75,7 @@ export default function AboutView() {
             href={REPO}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-line-ctl px-3 py-1.5 font-mono text-[12px] text-ink-dim transition hover:border-line-hover hover:text-ink-soft"
+            className="rounded-md border border-line-ctl px-3 py-1.5 font-mono text-data text-ink-dim transition hover:border-line-hover hover:text-ink-soft"
           >
             Source on GitHub ↗
           </a>
@@ -83,7 +83,7 @@ export default function AboutView() {
             href={`${REPO}/blob/main/docs/METHODOLOGY.md`}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md border border-line-ctl px-3 py-1.5 font-mono text-[12px] text-ink-dim transition hover:border-line-hover hover:text-ink-soft"
+            className="rounded-md border border-line-ctl px-3 py-1.5 font-mono text-data text-ink-dim transition hover:border-line-hover hover:text-ink-soft"
           >
             Full methodology — the receipts ↗
           </a>

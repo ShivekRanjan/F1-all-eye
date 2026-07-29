@@ -19,7 +19,7 @@ import type { CalendarResp, GridSource, NewsResp, StandingsResp, UpcomingResp } 
  *  recommended strategy, title odds — so that seeing gold means "this is a
  *  claim the engine is making", not "this is a link". */
 const SECONDARY_LINK =
-  "font-mono text-[11px] text-ink-dim transition hover:text-ink-soft";
+  "font-mono text-mini text-ink-dim transition hover:text-ink-soft";
 
 /** The OS home: what's next, what the model expects, where the title stands,
  *  and what the paddock is talking about — each block deep-links to its section. */
@@ -120,7 +120,7 @@ function Hero({
       {raceMode && (
         <div className="flex items-center gap-2 border-b border-accent/30 bg-accent/[0.08] px-4 py-1.5">
           <span className="h-2 w-2 animate-f1pulse rounded-full bg-accent" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+          <span className="font-mono text-mini uppercase tracking-[0.16em] text-accent">
             {live
               ? `${next.name} under way`
               : isRace
@@ -128,7 +128,7 @@ function Hero({
                 : `${next.name} starts soon`}
           </span>
           {previewOnly && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+            <span className="font-mono text-micro uppercase tracking-[0.12em] text-ink-faint">
               · preview
             </span>
           )}
@@ -143,7 +143,7 @@ function Hero({
               <TrackOutline track={round.event_name} size={48} className="text-accent" />
             </div>
             <div>
-              <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+              <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
                 Next race · Round {round.round}
               </div>
               <div className="mt-1 flex items-center gap-2">
@@ -161,7 +161,7 @@ function Hero({
             </div>
           </div>
           <div className="text-right">
-            <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+            <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
               {next.name} in
             </div>
             {/* Supporting by default, promoted on race day. Gold is reserved
@@ -178,13 +178,13 @@ function Hero({
             >
               {countdown(next.date, now)}
             </div>
-            <div className="font-mono text-[11px] text-ink-muted">{fmtSession(next.date, hour12)}</div>
+            <div className="font-mono text-mini text-ink-muted">{fmtSession(next.date, hour12)}</div>
           </div>
         </div>
 
         <div className="mb-2 mt-5 flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+            <span className="flex items-center gap-1.5 font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
               {raceMode && isRace ? (
                 <ChequeredFlagIcon width={13} height={13} className="text-accent" />
               ) : (
@@ -206,7 +206,7 @@ function Hero({
                     ? "Back to the normal next-race card"
                     : "See how this card looks in the last 2 hours before a session"
                 }
-                className={`font-mono text-[11px] transition hover:opacity-80 ${
+                className={`font-mono text-mini transition hover:opacity-80 ${
                   preview ? "text-accent" : "text-ink-faint hover:text-ink-soft"
                 }`}
               >
@@ -262,7 +262,7 @@ function GridSourceChip({ source }: { source: GridSource }) {
   return (
     <span
       title={title}
-      className={`rounded-full border px-2 py-0.5 font-mono text-[10px] ${
+      className={`rounded-full border px-2 py-0.5 font-mono text-micro ${
         source === "form"
           ? "border-line-ctl text-ink-faint"
           : "border-accent/40 bg-accent/10 text-accent"
@@ -319,9 +319,9 @@ function PodiumBlocks({
               <AnimatedNumber
                 value={row.podium_prob}
                 format={pct}
-                className={`nums font-mono text-[11px] ${place === 1 ? "text-accent" : "text-ink-muted"}`}
+                className={`nums font-mono text-mini ${place === 1 ? "text-accent" : "text-ink-muted"}`}
               />
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+              <span className="font-mono text-micro uppercase tracking-[0.12em] text-ink-faint">
                 P{place}
               </span>
             </div>
@@ -380,7 +380,7 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
               d.driver === settings.favoriteDriver ? "bg-accent/[0.06] ring-1 ring-inset ring-accent/30" : ""
             }`}
           >
-            <span className="w-5 text-right font-mono text-[12px] text-ink-faint">{d.pos}</span>
+            <span className="w-5 text-right font-mono text-data text-ink-faint">{d.pos}</span>
             <span className="inline-block h-3.5 w-1 rounded-sm" style={{ background: teamColor(d.team) }} />
             <DriverTag code={d.driver} team={d.team} size={22} />
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-inset">
@@ -389,9 +389,9 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
                 style={{ width: `${(d.points / maxPts) * 100}%` }}
               />
             </div>
-            <AnimatedNumber value={d.points} className="nums w-12 text-right font-mono text-[12px] text-ink" />
+            <AnimatedNumber value={d.points} className="nums w-12 text-right font-mono text-data text-ink" />
             {data.ongoing && (
-              <span className="nums w-12 text-right font-mono text-[12px] text-accent">
+              <span className="nums w-12 text-right font-mono text-data text-accent">
                 {d.win_prob != null ? <AnimatedNumber value={d.win_prob} format={pct} /> : "—"}
               </span>
             )}
@@ -399,7 +399,7 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
         ))}
       </div>
       {data.ongoing && (
-        <p className="mt-2 text-right font-mono text-[11px] text-ink-faint">points · title odds</p>
+        <p className="mt-2 text-right font-mono text-mini text-ink-faint">points · title odds</p>
       )}
     </Card>
   );
@@ -433,7 +433,7 @@ function HeadlinesBody({ data }: { data: NewsResp }) {
             rel="noreferrer noopener"
             className="group block py-2"
           >
-            <div className="flex items-center gap-2 font-mono text-[11px]">
+            <div className="flex items-center gap-2 font-mono text-mini">
               <span className="text-accent">{it.source}</span>
               <span className="text-ink-faint">{timeAgo(it.ts)}</span>
               {!!lastVisit && !!it.ts && it.ts > lastVisit && (
@@ -483,7 +483,7 @@ function ExploreStrip() {
             honest spread. Monte-Carlo over 1,000+ pit plans.
           </span>
         </span>
-        <span className="hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-accent/70 sm:block">
+        <span className="hidden shrink-0 font-mono text-micro uppercase tracking-[0.16em] text-accent/70 sm:block">
           start here
         </span>
       </a>

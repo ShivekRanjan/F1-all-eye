@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Combobox, Field, Select, Slider } from "../components/controls";
 import { Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
@@ -37,7 +38,7 @@ function Inner({ tracks }: { tracks: string[] }) {
       </ViewIntro>
       <Card className="overflow-hidden p-4">
         <div className="-mx-4 -mt-4 mb-4 flex items-center justify-between border-b border-line bg-surface-inset px-4 py-2.5">
-          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+          <span className="font-mono text-mini uppercase tracking-[0.18em] text-accent">
             ◆ The duel
           </span>
           <TrackOutline track={track} size={22} className="text-accent" />
@@ -179,18 +180,18 @@ function CrossoverChart({ t, track }: { t: UndercutTrajectory; track: string }) 
       <TrackWatermark track={track} className="-right-14 -top-14 h-60 w-60" />
       <SectionTitle>The crossover, lap by lap</SectionTitle>
       <div className="relative">
-        <span className="pointer-events-none absolute left-12 top-1 font-mono text-[11px] uppercase tracking-[0.1em] text-accent/80">
+        <span className="pointer-events-none absolute left-12 top-1 font-mono text-mini uppercase tracking-[0.1em] text-accent/80">
           ▲ you ahead
         </span>
-        <span className="pointer-events-none absolute bottom-8 left-12 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+        <span className="pointer-events-none absolute bottom-8 left-12 font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
           ▼ rival ahead
         </span>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={data} margin={{ top: 14, right: 42, bottom: 4, left: -8 }}>
-            <CartesianGrid stroke="#1a212b" vertical={false} />
-            <XAxis dataKey="lap" stroke="#9a9aa6" fontSize={11} type="number"
+            <CartesianGrid stroke={CHART.grid} vertical={false} />
+            <XAxis dataKey="lap" stroke={CHART.axis} fontSize={11} type="number"
                    domain={["dataMin", "dataMax"]} tickCount={8} />
-            <YAxis stroke="#9a9aa6" fontSize={11} width={44}
+            <YAxis stroke={CHART.axis} fontSize={11} width={44}
                    tickFormatter={(v: number) => `${v > 0 ? "+" : ""}${v.toFixed(0)}s`} />
             <Tooltip
               labelFormatter={(v) => `lap ${v}`}
@@ -199,17 +200,17 @@ function CrossoverChart({ t, track }: { t: UndercutTrajectory; track: string }) 
                 name,
               ]}
             />
-            <ReferenceLine y={0} stroke="#8994a4" strokeWidth={1.5}
-                           label={{ value: "rival", position: "right", fill: "#8994a4", fontSize: 11 }} />
+            <ReferenceLine y={0} stroke={CHART.axis} strokeWidth={1.5}
+                           label={{ value: "rival", position: "right", fill: CHART.axis, fontSize: 11 }} />
             {/* No marker for your own stop: it's always "now" (the chart's left
                 edge) and the accent line's pit-loss dive already shows it. */}
-            <ReferenceLine x={t.rival_pit_lap} stroke="#8994a4" strokeDasharray="2 3" strokeOpacity={0.6}
-                           label={{ value: "rival pits", position: "insideTopRight", fill: "#8994a4", fontSize: 10 }} />
+            <ReferenceLine x={t.rival_pit_lap} stroke={CHART.axis} strokeDasharray="2 3" strokeOpacity={0.6}
+                           label={{ value: "rival pits", position: "insideTopRight", fill: CHART.axis, fontSize: 10 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             <Line name="Pit now (undercut)" type="monotone" dataKey="undercut"
                   stroke="rgb(var(--accent))" strokeWidth={2} dot={false} isAnimationActive={false} />
             <Line name="Cover (pit with rival)" type="monotone" dataKey="cover"
-                  stroke="#dbe0e8" strokeWidth={2} strokeDasharray="6 4" dot={false}
+                  stroke={CHART.inkSoft} strokeWidth={2} strokeDasharray="6 4" dot={false}
                   isAnimationActive={false} />
           </LineChart>
         </ResponsiveContainer>
@@ -263,7 +264,7 @@ function DriverPanel({
 function VerdictBanner({ works, verdict }: { works: boolean; verdict: string }) {
   return (
     <Card className={`overflow-hidden border-l-2 p-4 ${works ? "border-l-accent" : "border-l-line-hover"}`}>
-      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+      <div className="flex items-center gap-2 font-mono text-mini uppercase tracking-[0.16em] text-ink-faint">
         <span
           className={`h-[7px] w-[7px] animate-f1pulse rounded-full ${works ? "bg-accent" : "bg-ink-dim"}`}
         />

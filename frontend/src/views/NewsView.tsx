@@ -54,7 +54,7 @@ function Body({ data }: { data: NewsResp }) {
             {s}
           </Chip>
         ))}
-        <span className="ml-auto font-mono text-[11px] text-ink-faint">
+        <span className="ml-auto font-mono text-mini text-ink-faint">
           updated {timeAgo(data.fetched_at)}
         </span>
       </div>
@@ -76,13 +76,13 @@ function NewsRow({ it, isNew = false }: { it: NewsItem; isNew?: boolean }) {
       rel="noreferrer noopener"
       className="group block px-4 py-3 transition hover:bg-surface-inset/60"
     >
-      <div className="mb-1 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em]">
+      <div className="mb-1 flex items-center gap-2 font-mono text-mini uppercase tracking-[0.12em]">
         <span className="rounded-full bg-accent/12 px-2 py-0.5 text-accent">{it.source}</span>
         <span className="text-ink-faint">{timeAgo(it.ts)}</span>
         {isNew && (
           /* "New since your last visit" — the interface remembers so you
              don't have to re-scan for what you've already read. */
-          <span className="rounded-full bg-soft/15 px-1.5 py-0.5 text-[10.5px] font-600 normal-case tracking-normal text-soft">
+          <span className="rounded-full bg-soft/15 px-1.5 py-0.5 text-micro font-600 normal-case tracking-normal text-soft">
             new
           </span>
         )}
@@ -108,7 +108,7 @@ function Chip({
   return (
     <button
       onClick={onClick}
-      className={`rounded-md border px-3 py-1 font-mono text-[11px] transition ${
+      className={`rounded-md border px-3 py-1 font-mono text-mini transition ${
         active
           ? "border-accent/60 bg-accent/10 text-accent"
           : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"

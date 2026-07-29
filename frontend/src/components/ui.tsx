@@ -29,28 +29,47 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 }
 
 // --- Metric -----------------------------------------------------------------
+/** A labelled number.
+ *
+ *  `card` stands alone; `cell` sits inside a bordered grid and drops the card
+ *  chrome. The cell variant exists because StrategyView had grown its own
+ *  `KpiCell` — same label/value/accent structure, differing only in wrapper and
+ *  a 22px value where this used 24px. That is a missing variant, not a second
+ *  component, and the 2px gap is exactly the drift that follows from copying. */
 export function Metric({
   label,
   value,
   sub,
   accent = false,
   title,
+  variant = "card",
 }: {
   label: string;
   value: ReactNode;
   sub?: ReactNode;
   accent?: boolean;
   title?: string;
+  variant?: "card" | "cell";
 }) {
-  return (
-    <Card className={`p-4 ${accent ? "border-l-2 border-l-accent" : ""}`}>
-      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint" title={title}>
+  const body = (
+    <>
+      <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint" title={title}>
         {label}
       </div>
-      <div className={`nums mt-1 font-mono text-2xl ${accent ? "text-accent" : "text-ink"}`}>{value}</div>
-      {sub != null && <div className="nums mt-1 font-mono text-[11px] text-ink-muted">{sub}</div>}
-    </Card>
+      <div
+        className={`nums mt-1 font-mono ${variant === "cell" ? "text-xl" : "text-2xl"} ${
+          accent ? "text-accent" : "text-ink"
+        }`}
+      >
+        {value}
+      </div>
+      {sub != null && <div className="nums mt-1 font-mono text-mini text-ink-muted">{sub}</div>}
+    </>
   );
+  if (variant === "cell") {
+    return <div className="border-b border-l border-line p-4">{body}</div>;
+  }
+  return <Card className={`p-4 ${accent ? "border-l-2 border-l-accent" : ""}`}>{body}</Card>;
 }
 
 // --- Badge / CompoundPill ---------------------------------------------------
@@ -68,7 +87,7 @@ export function Badge({
     amber: "bg-amber-400/15 text-amber-300",
   };
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-600 ${tones[tone]}`}>
+    <span className={`rounded-full px-2 py-0.5 text-mini font-600 ${tones[tone]}`}>
       {children}
     </span>
   );
@@ -182,7 +201,7 @@ export function ErrorNote({ error }: { error: string }) {
     <Card className="relative overflow-hidden border-l-2 border-l-amber-400 p-4">
       {/* Same status-header language as the rest of the broadcast UI — an
           error is a pit-wall status, not a browser alert. */}
-      <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-amber-300">
+      <div className="flex items-center gap-2 font-mono text-mini uppercase tracking-[0.16em] text-amber-300">
         <span className="h-[7px] w-[7px] animate-f1pulse rounded-full bg-amber-400" />
         {isNetwork ? "Engine offline" : "Engine error"}
       </div>
@@ -194,7 +213,7 @@ export function ErrorNote({ error }: { error: string }) {
           <div className="mt-1.5 text-xs text-ink-muted">
             The API may be waking from sleep (free hosting takes ~30–60s) — refresh in a moment.
             Running locally?{" "}
-            <code className="rounded bg-surface-inset2 px-1.5 py-0.5 font-mono text-[11px] text-ink">
+            <code className="rounded bg-surface-inset2 px-1.5 py-0.5 font-mono text-mini text-ink">
               uvicorn f1se.api:app
             </code>
           </div>

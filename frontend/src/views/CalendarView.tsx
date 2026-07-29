@@ -38,12 +38,12 @@ export default function CalendarView() {
 
       {(seasons.data?.seasons?.length ?? 0) > 1 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="mr-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">Season</span>
+          <span className="mr-1 font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">Season</span>
           {seasons.data!.seasons.slice().reverse().map((y) => (
             <button
               key={y}
               onClick={() => setSeason(y)}
-              className={`rounded-md border px-3 py-1.5 font-mono text-[12px] transition ${
+              className={`rounded-md border px-3 py-1.5 font-mono text-data transition ${
                 y === season
                   ? "border-accent/60 bg-accent/10 text-accent"
                   : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
@@ -98,7 +98,7 @@ function NextRaceCard({
     <Card className="border-l-2 border-l-accent p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+          <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
             Next up · Round {round.round}
           </div>
           <div className="mt-1 flex items-center gap-2">
@@ -110,11 +110,11 @@ function NextRaceCard({
           </div>
         </div>
         <div className="text-right">
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+          <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
             {nextSessionName} in
           </div>
           <div className="nums font-mono text-3xl text-accent">{countdown(nextSessionIso, now)}</div>
-          <div className="font-mono text-[11px] text-ink-muted">{fmtSession(nextSessionIso, hour12)}</div>
+          <div className="font-mono text-mini text-ink-muted">{fmtSession(nextSessionIso, hour12)}</div>
         </div>
       </div>
 
@@ -130,9 +130,9 @@ function NextRaceCard({
                 upcoming ? "border-line-card bg-surface-inset" : "border-line bg-transparent opacity-60"
               }`}
             >
-              <div className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">{s.name}</div>
+              <div className="font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">{s.name}</div>
               <div className="text-sm text-ink">{fmtSession(s.date, hour12)}</div>
-              {upcoming && <div className="font-mono text-[11px] text-accent">in {countdown(s.date, now)}</div>}
+              {upcoming && <div className="font-mono text-mini text-accent">in {countdown(s.date, now)}</div>}
             </div>
           );
         })}
@@ -201,7 +201,7 @@ function SessionTimeline({ sessions, now }: { sessions: CalendarSession[]; now: 
                 passed ? "border-accent bg-accent" : "border-line-hover bg-surface-page"
               }`}
             />
-            <span className="absolute top-4 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">
+            <span className="absolute top-4 whitespace-nowrap font-mono text-micro uppercase tracking-[0.1em] text-ink-faint">
               {s.name}
             </span>
           </div>
@@ -230,24 +230,24 @@ function PredictedPodium({ round }: { round: number }) {
   return (
     <div className="mt-4 border-t border-line pt-3">
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+        <span className="flex items-center gap-1.5 font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
           <PodiumIcon width={13} height={13} />
           Model's predicted podium
         </span>
-        <a href="#/outcome" className="font-mono text-[11px] text-accent transition hover:opacity-80">
+        <a href="#/outcome" className="font-mono text-mini text-accent transition hover:opacity-80">
           tune the grid in Outcome →
         </a>
       </div>
       <div className="flex flex-wrap gap-2">
         {podium.map((p, i) => (
           <span key={p.driver} className="rounded-lg border border-line-card bg-surface-inset px-3 py-1.5">
-            <span className="mr-1.5 font-mono text-[11px] text-ink-faint">P{i + 1}</span>
+            <span className="mr-1.5 font-mono text-mini text-ink-faint">P{i + 1}</span>
             <span className="font-700 text-ink">{p.driver}</span>{" "}
-            <span className="nums font-mono text-[12px] text-accent">{pct(p.podium_prob)}</span>
+            <span className="nums font-mono text-data text-accent">{pct(p.podium_prob)}</span>
           </span>
         ))}
       </div>
-      <p className="mt-1.5 text-[11px] text-ink-muted">
+      <p className="mt-1.5 text-mini text-ink-muted">
         From current form; the grid defaults to qualifying form until the real grid is set.
       </p>
     </div>
@@ -257,18 +257,18 @@ function PredictedPodium({ round }: { round: number }) {
 function RoundRow({ r, isNext }: { r: CalendarRound; isNext: boolean }) {
   return (
     <div className={`flex items-center gap-3 py-2.5 ${r.done ? "opacity-55" : ""}`}>
-      <span className="w-7 text-center font-mono text-[12px] text-ink-faint">{r.round}</span>
-      <span className="w-14 font-mono text-[12px] text-ink-muted">{fmtDay(r.event_date)}</span>
+      <span className="w-7 text-center font-mono text-data text-ink-faint">{r.round}</span>
+      <span className="w-14 font-mono text-data text-ink-muted">{fmtDay(r.event_date)}</span>
       <span className={`font-600 ${isNext ? "text-accent" : "text-ink"}`}>{r.event_name}</span>
       <span className="text-xs text-ink-muted">{r.country}</span>
       {r.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
       <span className="ml-auto">
         {r.done ? (
-          <span className="font-mono text-[11px] text-ink-faint">✓ done</span>
+          <span className="font-mono text-mini text-ink-faint">✓ done</span>
         ) : isNext ? (
           <Badge tone="red">next</Badge>
         ) : (
-          <span className="font-mono text-[11px] text-ink-faint">upcoming</span>
+          <span className="font-mono text-mini text-ink-faint">upcoming</span>
         )}
       </span>
     </div>

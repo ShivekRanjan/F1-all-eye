@@ -40,7 +40,7 @@ export function DataTable<R>({
             {columns.map((c) => (
               <th
                 key={c.key}
-                className={`px-3 py-2 text-[11px] font-600 uppercase tracking-wide text-ink-muted ${alignCls[c.align ?? "left"]} ${narrowCls(c)}`}
+                className={`px-3 py-2 text-mini font-600 uppercase tracking-wide text-ink-muted ${alignCls[c.align ?? "left"]} ${narrowCls(c)}`}
               >
                 {c.header}
               </th>

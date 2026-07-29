@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-wide text-ink-muted">
+      <span className="mb-1 block text-mini uppercase tracking-wide text-ink-muted">
         {label}
       </span>
       {children}

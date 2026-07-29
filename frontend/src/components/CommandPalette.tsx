@@ -119,7 +119,7 @@ export function CommandPalette({
             placeholder="Jump to…"
             className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-dim"
           />
-          <kbd className="rounded border border-line-ctl px-1.5 py-0.5 font-mono text-[10px] text-ink-faint">
+          <kbd className="rounded border border-line-ctl px-1.5 py-0.5 font-mono text-micro text-ink-faint">
             esc
           </kbd>
         </div>
@@ -143,7 +143,7 @@ export function CommandPalette({
                 {it.icon}
               </span>
               <span className="flex-1 truncate">{it.label}</span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-ink-faint">{it.group}</span>
+              <span className="font-mono text-micro uppercase tracking-[0.1em] text-ink-faint">{it.group}</span>
             </button>
           ))}
         </div>
@@ -183,14 +183,14 @@ export function ShortcutsHelp({ open, onClose }: { open: boolean; onClose: () =>
         className="w-full max-w-sm overflow-hidden rounded-xl2 border border-line-card bg-carbon-800 p-5 shadow-card animate-fadein"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+        <div className="mb-3 font-mono text-mini uppercase tracking-[0.16em] text-accent">
           ◆ Keyboard shortcuts
         </div>
         <div className="space-y-2">
           {rows.map(([key, desc]) => (
             <div key={key} className="flex items-center justify-between text-sm">
               <span className="text-ink-muted">{desc}</span>
-              <kbd className="rounded border border-line-ctl bg-surface-inset px-2 py-0.5 font-mono text-[11px] text-ink">
+              <kbd className="rounded border border-line-ctl bg-surface-inset px-2 py-0.5 font-mono text-mini text-ink">
                 {key}
               </kbd>
             </div>

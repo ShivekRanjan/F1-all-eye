@@ -77,7 +77,7 @@ export function DriverName({
       {code}
       {hover && name && (
         <span
-          className="pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-line-card bg-carbon-900 px-2.5 py-1 font-mono text-[11px] text-ink shadow-card animate-fadein"
+          className="pointer-events-none absolute left-1/2 top-full z-20 mt-1.5 -translate-x-1/2 whitespace-nowrap rounded-md border border-line-card bg-carbon-900 px-2.5 py-1 font-mono text-mini text-ink shadow-card animate-fadein"
           role="tooltip"
         >
           {code} <span className="text-accent">{"--->"}</span> {name}

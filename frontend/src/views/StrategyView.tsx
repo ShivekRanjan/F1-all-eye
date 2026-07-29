@@ -12,9 +12,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Field, Segmented, Select, Slider } from "../components/controls";
-import { Card, CardSkeleton, EmptyState, ErrorNote, SectionTitle, Spinner } from "../components/ui";
+import { Card, CardSkeleton, EmptyState, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
 import { NoSignalIcon, SearchOffIcon } from "../components/NavIcons";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { beatsPick, clock, compoundColor, trackSearchText } from "../lib/format";
@@ -175,10 +176,10 @@ function Rail(props: {
       {/* Ceremony header — same status language as the recommendation banner,
           so the control rail reads as the pit wall, not a bare settings form. */}
       <div className="-mx-4 -mt-4 flex items-center justify-between border-b border-line bg-surface-inset px-4 py-2.5">
-        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+        <span className="font-mono text-mini uppercase tracking-[0.18em] text-accent">
           ◆ Pit wall
         </span>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">
+        <span className="flex items-center gap-1.5 font-mono text-micro uppercase tracking-[0.12em] text-ink-faint">
           <span className="h-[6px] w-[6px] animate-f1pulse rounded-full bg-accent" />
           race setup
         </span>
@@ -212,8 +213,8 @@ function Rail(props: {
               >
                 <TrackOutline track={t.track} size={30} className={active ? "text-accent" : "text-ink-dim"} />
                 <div>
-                  <div className="text-[13px] font-600">{shortName(t.track)}</div>
-                  <div className="font-mono text-[11px] text-ink-dim">
+                  <div className="text-data-lg font-600">{shortName(t.track)}</div>
+                  <div className="font-mono text-mini text-ink-dim">
                     {t.total_laps} laps{!t.well_sampled && " · limited data"}
                   </div>
                 </div>
@@ -236,7 +237,7 @@ function Rail(props: {
         <SectionTitle>Objective</SectionTitle>
         <Segmented value={p.objective} options={OBJECTIVES} onChange={p.setObjective} />
         {/* Immediate feedback: say what the choice *does*, in outcome terms. */}
-        <p className="mt-1.5 text-[11px] leading-snug text-ink-muted">
+        <p className="mt-1.5 text-mini leading-snug text-ink-muted">
           {p.objective === "mean" && "Optimises the average race — fastest overall, exposed to bad luck."}
           {p.objective === "median" && "Optimises the typical race — ignores freak outcomes either way."}
           {p.objective === "p85" && "Protects the bad-luck tail — trades a little pace for safety."}
@@ -261,7 +262,7 @@ function Rail(props: {
       <div className="border-t border-line pt-2">
         <button
           onClick={() => p.setShowAdvanced(!p.showAdvanced)}
-          className="flex w-full items-center justify-between py-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-dim transition hover:text-ink-soft"
+          className="flex w-full items-center justify-between py-1 font-mono text-mini uppercase tracking-[0.12em] text-ink-dim transition hover:text-ink-soft"
         >
           <span>Advanced · model assumptions</span>
           <span>{p.showAdvanced ? "−" : "+"}</span>
@@ -276,10 +277,10 @@ function Rail(props: {
               }`}
             >
               <span>
-                <span className="block text-[12.5px] font-600 text-ink-soft">Cliff prior</span>
-                <span className="font-mono text-[11px] text-ink-dim">domain assumption</span>
+                <span className="block text-data font-600 text-ink-soft">Cliff prior</span>
+                <span className="font-mono text-mini text-ink-dim">domain assumption</span>
               </span>
-              <span className={`rounded px-1.5 py-0.5 font-mono text-[11px] font-600 ${
+              <span className={`rounded px-1.5 py-0.5 font-mono text-mini font-600 ${
                 p.cliff ? "bg-accent/20 text-accent" : "bg-surface-inset2 text-ink-dim"
               }`}>
                 {p.cliff ? "ON" : "OFF"}
@@ -287,7 +288,7 @@ function Rail(props: {
             </button>
 
             {p.info && (
-              <div className="space-y-1 font-mono text-[11px] text-ink-faint">
+              <div className="space-y-1 font-mono text-mini text-ink-faint">
                 <div>pit loss · {p.info.pit_loss_s.toFixed(1)}s (measured)</div>
                 <div
                   title="Chance of at least one neutralised lap — virtual safety car, full safety car or red flag. Each opens a discounted pit stop."
@@ -348,7 +349,7 @@ function RecommendationBanner({
       <div className="flex flex-wrap">
         <div className="min-w-[280px] flex-1 border-line p-5 sm:border-r">
           <div className="flex items-center gap-2">
-            <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+            <div className="font-mono text-mini uppercase tracking-[0.18em] text-accent">
               ◆ Recommended plan <span className="text-ink-dim">· {rec.track}</span>
             </div>
             <TrackOutline track={rec.track} size={26} className="ml-auto text-accent" />
@@ -361,16 +362,16 @@ function RecommendationBanner({
               </span>
             ))}
           </div>
-          <div className="mt-3 font-mono text-[12px] text-ink-muted">
+          <div className="mt-3 font-mono text-data text-ink-muted">
             {best.pit_laps.length ? `pit lap ${best.pit_laps.join(", ")} · ` : ""}
             {best.pit_laps.length}-stop{softLaps ? ` · ${softLaps} laps on soft` : ""}
           </div>
         </div>
         <div className="grid flex-1 grid-cols-2">
-          <KpiCell label="Expected race" value={clock(best.mean_s)} />
-          <KpiCell label="Typical (p50)" value={clock(best.p50_s)} />
-          <KpiCell label="Bad luck (p90)" value={clock(best.p90_s)} />
-          <KpiCell label="Pick confidence" value={`${confidence}%`} accent />
+          <Metric variant="cell" label="Expected race" value={clock(best.mean_s)} />
+          <Metric variant="cell" label="Typical (p50)" value={clock(best.p50_s)} />
+          <Metric variant="cell" label="Bad luck (p90)" value={clock(best.p90_s)} />
+          <Metric variant="cell" label="Pick confidence" value={`${confidence}%`} accent />
         </div>
       </div>
       <StintTimeline best={best} total={rec.total_laps} />
@@ -378,20 +379,11 @@ function RecommendationBanner({
   );
 }
 
-function KpiCell({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="border-b border-l border-line p-4">
-      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">{label}</div>
-      <div className={`nums mt-1 font-mono text-[22px] ${accent ? "text-accent" : "text-ink"}`}>{value}</div>
-    </div>
-  );
-}
-
 function StintTimeline({ best, total }: { best: StrategySummary; total: number }) {
   const stints = stintLaps(best, total);
   return (
     <div className="border-t border-line bg-surface-strip p-5">
-      <div className="mb-2 flex justify-between font-mono text-[11px] uppercase tracking-wide text-ink-faint">
+      <div className="mb-2 flex justify-between font-mono text-mini uppercase tracking-wide text-ink-faint">
         <span>Stint plan</span>
         <span>lap 1 → {total}</span>
       </div>
@@ -401,7 +393,7 @@ function StintTimeline({ best, total }: { best: StrategySummary; total: number }
           return (
             <div
               key={i}
-              className="flex items-center justify-center font-mono text-[11px] font-600"
+              className="flex items-center justify-center font-mono text-mini font-600"
               style={{
                 width: `${(s.laps / total) * 100}%`,
                 background: `linear-gradient(180deg, ${compoundColor(s.compound)}E6, ${compoundColor(s.compound)}B0)`,
@@ -418,7 +410,7 @@ function StintTimeline({ best, total }: { best: StrategySummary; total: number }
         {best.pit_laps.map((lap, i) => (
           <span
             key={i}
-            className="absolute font-mono text-[11px] text-accent"
+            className="absolute font-mono text-mini text-accent"
             style={{ left: `${(lap / total) * 100}%`, transform: "translateX(-50%)" }}
           >
             ▲ L{lap}
@@ -433,7 +425,7 @@ function CompoundChip({ compound }: { compound: string }) {
   const c = compoundColor(compound);
   return (
     <span
-      className="flex items-center gap-2 rounded-lg px-3 py-2 text-[15px] font-700 text-ink"
+      className="flex items-center gap-2 rounded-lg px-3 py-2 text-base font-700 text-ink"
       style={{ background: `${c}22`, border: `1px solid ${c}55` }}
     >
       <span className="h-2.5 w-2.5 rounded-full" style={{ background: c, boxShadow: `0 0 8px ${c}` }} />
@@ -449,11 +441,11 @@ function DegradationCard({ deg, loading, cliff }: { deg: DegradationResp | null 
       <div className="flex items-start justify-between">
         <div>
           <SectionTitle>Tyre degradation model</SectionTitle>
-          <div className="-mt-2 mb-3 font-mono text-[11px] text-ink-faint">
+          <div className="-mt-2 mb-3 font-mono text-mini text-ink-faint">
             pace loss vs fresh · dashed = linear · solid = +cliff
           </div>
         </div>
-        <div className="flex gap-3 font-mono text-[11px]">
+        <div className="flex gap-3 font-mono text-mini">
           {COMPS.map((c) => (
             <span key={c} className="flex items-center gap-1 text-ink-muted">
               <span className="inline-block h-[3px] w-3.5 rounded" style={{ background: compoundColor(c) }} />
@@ -487,9 +479,9 @@ function DegradationChart({ deg, cliff }: { deg: DegradationResp; cliff: boolean
   return (
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={data} margin={{ top: 6, right: 10, bottom: 2, left: -20 }}>
-        <CartesianGrid stroke="#1a212b" vertical={false} />
-        <XAxis dataKey="age" stroke="#9a9aa6" fontSize={11} tickCount={8} />
-        <YAxis stroke="#9a9aa6" fontSize={11} tickFormatter={(v) => `+${v.toFixed(0)}`} />
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="age" stroke={CHART.axis} fontSize={11} tickCount={8} />
+        <YAxis stroke={CHART.axis} fontSize={11} tickFormatter={(v) => `+${v.toFixed(0)}`} />
         <Tooltip
           labelFormatter={(v) => `tyre age ${v}`}
           formatter={(val: number, name: string) => [`+${val.toFixed(2)}s`, name.replace("_cliff", "").replace("_lin", "")]}
@@ -513,7 +505,7 @@ function OutcomeCard({ sim }: { sim: SimulateResp | null | undefined }) {
   return (
     <Card className="p-4">
       <SectionTitle>Monte-Carlo outcome</SectionTitle>
-      <div className="-mt-2 mb-3 font-mono text-[11px] text-ink-faint">
+      <div className="-mt-2 mb-3 font-mono text-mini text-ink-faint">
         race-time distribution · stochastic safety car
       </div>
       {!sim ? <div className="h-[260px]"><Spinner label="Simulating…" /></div> : <OutcomeChart sim={sim} />}
@@ -528,17 +520,17 @@ function OutcomeChart({ sim }: { sim: SimulateResp }) {
     <>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 6, right: 10, bottom: 2, left: -22 }}>
-          <CartesianGrid stroke="#1a212b" vertical={false} />
-          <XAxis dataKey="x" tickFormatter={(v) => v.toFixed(0)} stroke="#9a9aa6" fontSize={11} />
-          <YAxis stroke="#9a9aa6" fontSize={11} />
+          <CartesianGrid stroke={CHART.grid} vertical={false} />
+          <XAxis dataKey="x" tickFormatter={(v) => v.toFixed(0)} stroke={CHART.axis} fontSize={11} />
+          <YAxis stroke={CHART.axis} fontSize={11} />
           <Tooltip labelFormatter={(v) => `${Number(v).toFixed(1)} min`} formatter={(v) => [v, "races"]} />
-          <ReferenceLine x={sim.p50_s / 60} stroke="#eef1f5" strokeWidth={1.6} />
+          <ReferenceLine x={sim.p50_s / 60} stroke={CHART.ink} strokeWidth={1.6} />
           <Bar dataKey="c" radius={[1, 1, 0, 0]}>
             {data.map((_, i) => <Cell key={i} fill="rgb(var(--accent))" fillOpacity={0.82} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <div className="nums mt-1 font-mono text-[11px] text-ink-faint">
+      <div className="nums mt-1 font-mono text-mini text-ink-faint">
         P(neutralisation) {Math.round((sim.p_neutralised ?? sim.p_safety_car) * 100)}% · of which full SC/red{" "}
         {Math.round(sim.p_safety_car * 100)}% · spread (p90−p10) {(sim.p90_s - sim.p10_s).toFixed(0)}s · white line = median
       </div>
@@ -552,9 +544,9 @@ function ShortlistCard({ rec }: { rec: RecommendResp }) {
     <Card className="p-4">
       <SectionTitle>Ranked shortlist</SectionTitle>
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse font-mono text-[12.5px]">
+        <table className="w-full border-collapse font-mono text-data">
           <thead>
-            <tr className="border-b border-line text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+            <tr className="border-b border-line text-mini uppercase tracking-[0.1em] text-ink-faint">
               <th className="px-3 py-2 text-left">#</th>
               <th className="px-3 py-2 text-left">Strategy</th>
               <th className="px-3 py-2 text-center">Stops</th>

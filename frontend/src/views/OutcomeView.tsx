@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { PodiumIcon } from "../components/NavIcons";
@@ -52,8 +53,8 @@ function Body({ o }: { o: OutcomeResp }) {
         </SectionTitle>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart layout="vertical" data={data} margin={{ left: 8, right: 44, top: 4, bottom: 4 }}>
-            <XAxis type="number" domain={[0, 100]} stroke="#9a9aa6" fontSize={11} unit="%" />
-            <YAxis type="category" dataKey="driver" stroke="#ecedf0" fontSize={12} width={48} />
+            <XAxis type="number" domain={[0, 100]} stroke={CHART.axis} fontSize={11} unit="%" />
+            <YAxis type="category" dataKey="driver" stroke={CHART.ink} fontSize={12} width={48} />
             <Bar dataKey="p" radius={[0, 3, 3, 0]}>
               {data.map((_, i) => (
                 <Cell key={i} fill="rgb(var(--accent))" />
@@ -62,7 +63,7 @@ function Body({ o }: { o: OutcomeResp }) {
                 dataKey="p"
                 position="right"
                 formatter={(v: number) => (v >= 0.5 ? `${v.toFixed(0)}%` : `${v.toFixed(1)}%`)}
-                fill="#ecedf0"
+                fill={CHART.ink}
                 fontSize={11}
               />
             </Bar>
@@ -169,9 +170,9 @@ function UpcomingBody({
       <div className="mb-3 flex flex-wrap gap-2">
         {podium.map((p, i) => (
           <span key={p.driver} className="rounded-lg border border-line-card bg-surface-inset px-3 py-2">
-            <span className="mr-1 font-mono text-[11px] text-ink-faint">P{i + 1}</span>
+            <span className="mr-1 font-mono text-mini text-ink-faint">P{i + 1}</span>
             <span className="font-700 text-ink">{p.driver}</span>{" "}
-            <span className="nums font-mono text-[12px] text-accent">{pct(p.podium_prob)}</span>
+            <span className="nums font-mono text-data text-accent">{pct(p.podium_prob)}</span>
           </span>
         ))}
       </div>

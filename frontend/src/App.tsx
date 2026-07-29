@@ -183,7 +183,7 @@ export default function App() {
           {GROUP_ORDER.map((g) => (
             <div key={g} className="mb-5">
               {!collapsed && (
-                <div className="mb-1.5 px-2 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+                <div className="mb-1.5 px-2 font-mono text-mini uppercase tracking-[0.16em] text-ink-faint">
                   {g}
                 </div>
               )}
@@ -209,7 +209,7 @@ export default function App() {
           <button
             onClick={() => setPaletteOpen(true)}
             title="Jump to (Ctrl+K)"
-            className={`mb-1 flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[13px] text-ink-dim transition hover:bg-surface-inset/70 hover:text-ink-soft ${
+            className={`mb-1 flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-data-lg text-ink-dim transition hover:bg-surface-inset/70 hover:text-ink-soft ${
               collapsed ? "justify-center px-0" : ""
             }`}
           >
@@ -219,7 +219,7 @@ export default function App() {
             {!collapsed && (
               <>
                 <span className="flex-1 truncate">Jump to…</span>
-                <kbd className="rounded border border-line-ctl px-1.5 py-0.5 font-mono text-[10px] text-ink-faint">
+                <kbd className="rounded border border-line-ctl px-1.5 py-0.5 font-mono text-micro text-ink-faint">
                   ⌘K
                 </kbd>
               </>
@@ -240,7 +240,7 @@ export default function App() {
       <header className="sticky top-0 z-20 border-b border-line bg-surface-rail/95 backdrop-blur lg:hidden">
         <div className="flex h-[56px] items-center justify-between px-4">
           <Brand />
-          <a href={REPO} target="_blank" rel="noreferrer" className="font-mono text-[11px] text-ink-dim">
+          <a href={REPO} target="_blank" rel="noreferrer" className="font-mono text-mini text-ink-dim">
             repo ↗
           </a>
         </div>
@@ -261,12 +261,12 @@ export default function App() {
       {/* ---- Main content ------------------------------------------------- */}
       <div className="min-w-0 flex-1">
         <div className="hidden items-center justify-between border-b border-line px-6 py-3 lg:flex">
-          <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-muted">
+          <div className="font-mono text-mini uppercase tracking-[0.14em] text-ink-muted">
             <span className="text-ink-faint">{active.group === "_pinned" ? "System" : active.group}</span>
             <span className="px-2 text-ink-faint">/</span>
             <span className="text-ink">{active.label}</span>
           </div>
-          <div className="flex items-center gap-4 font-mono text-[11px]">
+          <div className="flex items-center gap-4 font-mono text-mini">
             <span className="flex items-center gap-2 text-accent">
               <span className="h-[7px] w-[7px] animate-f1pulse rounded-full bg-accent" />
               LIVE MODEL
@@ -301,12 +301,12 @@ function Brand() {
     <div className="flex min-w-0 items-center gap-3">
       <Logo />
       <div className="min-w-0 leading-tight">
-        <div className="truncate text-[15px] font-700 text-ink">
+        <div className="truncate text-base font-700 text-ink">
           F1<span className="text-accent">SE</span>
           <span className="px-1 font-500 text-ink-faint">/</span>
           <span className="text-ink-soft">F1 OS</span>
         </div>
-        <div className="truncate font-mono text-[11px] uppercase tracking-[0.14em] text-ink-faint">
+        <div className="truncate font-mono text-mini uppercase tracking-[0.14em] text-ink-faint">
           v2 · strategy · live
         </div>
       </div>
@@ -343,7 +343,7 @@ const NavItem = forwardRef<
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       title={collapsed ? label : undefined}
-      className={`relative flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-[13px] transition ${
+      className={`relative flex min-h-[40px] w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-data-lg transition ${
         active ? "bg-accent/15 text-accent" : "text-ink-dim hover:bg-surface-inset/70 hover:text-ink-soft"
       } ${collapsed ? "justify-center px-0" : ""}`}
     >
@@ -362,7 +362,7 @@ function MobileTab({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       onClick={onClick}
-      className={`flex min-h-[44px] items-center whitespace-nowrap rounded-md px-3 font-mono text-[12px] transition ${
+      className={`flex min-h-[44px] items-center whitespace-nowrap rounded-md px-3 font-mono text-data transition ${
         active ? "bg-accent/15 text-accent" : "text-ink-dim hover:text-ink-muted"
       }`}
     >
@@ -378,7 +378,7 @@ function Footer() {
         href={REPO}
         target="_blank"
         rel="noreferrer"
-        className="flex items-center justify-between font-mono text-[11px] text-ink-dim transition hover:text-ink-soft"
+        className="flex items-center justify-between font-mono text-mini text-ink-dim transition hover:text-ink-soft"
       >
         <span>github ↗</span>
         <span className="flex items-center gap-1.5 text-accent">
@@ -386,7 +386,7 @@ function Footer() {
           live
         </span>
       </a>
-      <div className="font-mono text-[11px] text-ink-faint">
+      <div className="font-mono text-mini text-ink-faint">
         v{__APP_VERSION__} · {__BUILD_SHA__}
       </div>
     </div>

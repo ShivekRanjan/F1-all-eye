@@ -1,3 +1,4 @@
+import { Button } from "../components/Button";
 import { useEffect, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
@@ -89,7 +90,7 @@ function Body({
     <>
       {/* Season selector + refresh */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-1 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+        <span className="mr-1 font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
           Season
         </span>
         {data.seasons
@@ -100,7 +101,7 @@ function Body({
               key={y}
               onClick={() => setSeason(y === data.latest ? null : y)}
               aria-pressed={y === active}
-              className={`rounded-md border px-3 py-1.5 font-mono text-[12px] transition ${
+              className={`rounded-md border px-3 py-1.5 font-mono text-data transition ${
                 y === active
                   ? "border-accent/60 bg-accent/10 font-700 text-accent"
                   : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
@@ -115,15 +116,16 @@ function Body({
             live · {data.races_done} of {data.total_races} races
           </Badge>
         )}
-        <button
+        <Button
+          size="sm"
+          loading={refreshing}
           onClick={onRefresh}
-          disabled={refreshing}
           title="Pull the latest official result from FastF1 (no redeploy needed)"
-          className="ml-auto flex items-center gap-1.5 rounded-md border border-line-ctl px-3 py-1.5 font-mono text-[12px] text-ink-dim transition hover:border-line-hover hover:text-ink-soft disabled:opacity-60"
+          className="ml-auto font-mono"
+          icon="↻"
         >
-          <span className={refreshing ? "inline-block animate-spin" : ""}>↻</span>
           {refreshing ? "Checking for new races…" : "Refresh"}
-        </button>
+        </Button>
       </div>
 
       <RefreshNote data={data} error={refreshErr} />
@@ -178,7 +180,7 @@ function LeaderStrip({ data }: { data: StandingsResp }) {
           podium. */}
       <DriverCutout code={leader.driver} height={92} className="drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)]" />
       <div>
-        <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+        <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
           Championship leader
         </div>
         <div className="mt-1 flex items-baseline gap-2">
@@ -221,11 +223,11 @@ function Stat({
 }) {
   return (
     <div>
-      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">{label}</div>
+      <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">{label}</div>
       <div className={`nums mt-1 font-mono text-2xl ${accent ? "text-accent" : "text-ink"}`}>
         {value}
       </div>
-      {sub && <div className="nums font-mono text-[11px] text-ink-muted">{sub}</div>}
+      {sub && <div className="nums font-mono text-mini text-ink-muted">{sub}</div>}
     </div>
   );
 }

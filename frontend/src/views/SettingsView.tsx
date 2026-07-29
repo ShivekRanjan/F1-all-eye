@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { api, checkHealth } from "../api/client";
 import { Callout, Card, SectionTitle } from "../components/ui";
+import { Button } from "../components/Button";
+import { Segmented } from "../components/controls";
 import { DriverAvatar } from "../components/Driver";
 import { useAsync } from "../lib/useAsync";
 import { type Accent, type Density, type TimeFormat, resetSettings, useSettings } from "../lib/useSettings";
@@ -45,7 +47,7 @@ export default function SettingsView() {
                 }`}
                 style={{ background: a.hex }}
               />
-              <span className={`text-[12px] ${settings.accent === a.id ? "text-ink" : "text-ink-dim"}`}>
+              <span className={`text-data ${settings.accent === a.id ? "text-ink" : "text-ink-dim"}`}>
                 {a.label}
               </span>
             </button>
@@ -88,19 +90,16 @@ export default function SettingsView() {
       {/* Density */}
       <Card className="p-5">
         <SectionTitle>Density</SectionTitle>
-        <div className="inline-flex rounded-lg border border-line bg-surface-inset p-0.5">
-          {(["comfortable", "compact"] as Density[]).map((d) => (
-            <button
-              key={d}
-              onClick={() => update({ density: d })}
-              className={`rounded-md px-4 py-1.5 text-sm font-600 capitalize transition ${
-                settings.density === d ? "bg-accent text-accent-ink" : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
+        {/* Was a hand-rolled copy of Segmented, which already existed — the
+            duplicate had drifted to px-4 where the real one uses px-3. */}
+        <Segmented<Density>
+          value={settings.density}
+          options={[
+            { value: "comfortable", label: "Comfortable" },
+            { value: "compact", label: "Compact" },
+          ]}
+          onChange={(density) => update({ density })}
+        />
         <p className="mt-2 text-xs text-ink-muted">
           Compact tightens paddings and table rows across data-heavy views.
         </p>
@@ -112,19 +111,14 @@ export default function SettingsView() {
       {/* Time display */}
       <Card className="p-5">
         <SectionTitle>Time display</SectionTitle>
-        <div className="inline-flex rounded-lg border border-line bg-surface-inset p-0.5">
-          {(["24h", "12h"] as TimeFormat[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => update({ timeFormat: f })}
-              className={`rounded-md px-4 py-1.5 text-sm font-600 transition ${
-                settings.timeFormat === f ? "bg-accent text-accent-ink" : "text-ink-muted hover:text-ink"
-              }`}
-            >
-              {f === "24h" ? "24-hour" : "12-hour"}
-            </button>
-          ))}
-        </div>
+        <Segmented<TimeFormat>
+          value={settings.timeFormat}
+          options={[
+            { value: "24h", label: "24-hour" },
+            { value: "12h", label: "12-hour" },
+          ]}
+          onChange={(timeFormat) => update({ timeFormat })}
+        />
         <p className="mt-2 text-xs text-ink-muted">
           Session times on Home and Calendar — {settings.timeFormat === "24h" ? "17:00" : "5:00 PM"}{" "}
           instead of {settings.timeFormat === "24h" ? "5:00 PM" : "17:00"}. Always your local timezone.
@@ -163,7 +157,7 @@ function FavoriteDriverCard({
         {settings.favoriteDriver && (
           <button
             onClick={() => update({ favoriteDriver: null })}
-            className="font-mono text-[11px] text-ink-dim hover:text-ink-soft"
+            className="font-mono text-mini text-ink-dim hover:text-ink-soft"
           >
             clear
           </button>
@@ -192,7 +186,7 @@ function FavoriteDriverCard({
                 }`}
               >
                 <DriverAvatar code={code} team={map[code].team ?? ""} size={32} />
-                <span className={`font-mono text-[10px] ${isFav ? "text-accent" : "text-ink-dim"}`}>
+                <span className={`font-mono text-micro ${isFav ? "text-accent" : "text-ink-dim"}`}>
                   {code}
                 </span>
               </button>
@@ -226,7 +220,7 @@ function DefaultSeasonCard({
         <button
           onClick={() => update({ defaultSeason: null })}
           aria-pressed={settings.defaultSeason == null}
-          className={`rounded-md border px-3 py-1.5 font-mono text-[12px] transition ${
+          className={`rounded-md border px-3 py-1.5 font-mono text-data transition ${
             settings.defaultSeason == null
               ? "border-accent/60 bg-accent/10 text-accent"
               : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
@@ -242,7 +236,7 @@ function DefaultSeasonCard({
               key={y}
               onClick={() => update({ defaultSeason: y })}
               aria-pressed={settings.defaultSeason === y}
-              className={`rounded-md border px-3 py-1.5 font-mono text-[12px] transition ${
+              className={`rounded-md border px-3 py-1.5 font-mono text-data transition ${
                 settings.defaultSeason === y
                   ? "border-accent/60 bg-accent/10 text-accent"
                   : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
@@ -274,7 +268,7 @@ function SystemCard() {
       <div className="space-y-2.5 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-ink-muted">Engine API</span>
-          <span className="flex items-center gap-1.5 font-mono text-[12px]">
+          <span className="flex items-center gap-1.5 font-mono text-data">
             <span
               className={`h-[7px] w-[7px] rounded-full ${
                 health === "checking"
@@ -291,20 +285,25 @@ function SystemCard() {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-ink-muted">Version</span>
-          <span className="font-mono text-[12px] text-ink-dim">
+          <span className="font-mono text-data text-ink-dim">
             v{__APP_VERSION__} · {__BUILD_SHA__}
           </span>
         </div>
       </div>
-      <button
+      {/* Destructive: wipes every stored preference. `danger` uses the fixed
+          red rather than the runtime accent, so it stays a warning even for a
+          user who themed the app gold. */}
+      <Button
+        variant="danger"
+        size="sm"
+        className="mt-4"
         onClick={() => {
           resetSettings();
           window.location.reload();
         }}
-        className="mt-4 rounded-md border border-line-ctl px-3 py-1.5 font-mono text-[12px] text-ink-dim transition hover:border-line-hover hover:text-ink-soft"
       >
         Clear saved preferences
-      </button>
+      </Button>
     </Card>
   );
 }

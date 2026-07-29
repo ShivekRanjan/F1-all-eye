@@ -75,6 +75,17 @@ export default {
         sans: ["'Space Grotesk'", "system-ui", "sans-serif"],
         mono: ["'IBM Plex Mono'", "ui-monospace", "monospace"],
       },
+      // The small end of the scale, which had been living entirely in arbitrary
+      // `text-[11px]` utilities — 124 of them across 8 values, including
+      // half-pixel sizes (10.5, 12.5) that were clearly ad-hoc nudges rather
+      // than decisions. A data app legitimately needs steps below Tailwind's
+      // 12px `text-xs`; it does not need eight of them defined nowhere.
+      fontSize: {
+        micro: ["10px", { lineHeight: "1.3" }], // dense table meta, tick labels
+        mini: ["11px", { lineHeight: "1.35" }], // the app's workhorse mono label
+        data: ["12px", { lineHeight: "1.4" }], // numeric cells, chips
+        "data-lg": ["13px", { lineHeight: "1.45" }], // emphasised data text
+      },
       // Numeric weight utilities (font-500/600/700) used ~50x across the app
       // for hierarchy — Space Grotesk is loaded at these exact weights
       // (index.html). Without this extension Tailwind silently drops them

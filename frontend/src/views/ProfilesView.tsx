@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field } from "../components/controls";
@@ -39,7 +40,7 @@ export default function ProfilesView() {
           <button
             key={m}
             onClick={() => setMode(m)}
-            className={`rounded-md border px-4 py-1.5 font-mono text-[12px] uppercase tracking-[0.08em] transition ${
+            className={`rounded-md border px-4 py-1.5 font-mono text-data uppercase tracking-[0.08em] transition ${
               mode === m
                 ? "border-accent/60 bg-accent/10 text-accent"
                 : "border-line-ctl text-ink-dim hover:border-line-hover hover:text-ink-soft"
@@ -106,7 +107,7 @@ function DriverBody({ p }: { p: DriverProfile }) {
           <div className="text-2xl font-700 text-ink">{p.driver}</div>
           <div className="text-sm text-ink-muted">{p.team}</div>
         </div>
-        <div className="ml-auto font-mono text-[11px] text-ink-faint">
+        <div className="ml-auto font-mono text-mini text-ink-faint">
           {p.seasons[0]}–{p.seasons.at(-1)} · {p.seasons.length} season{p.seasons.length === 1 ? "" : "s"}
         </div>
       </Card>
@@ -117,7 +118,7 @@ function DriverBody({ p }: { p: DriverProfile }) {
           <SectionTitle>
             {p.seasons[0]}–{String(p.seasons.at(-1)).slice(2)} totals
           </SectionTitle>
-          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+          <span className="font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
             within dataset · not all-time career
           </span>
         </div>
@@ -170,7 +171,7 @@ function TeammateCard({
               </div>
               <ScoreBar label="Qualifying" self={h.quali_ahead} total={h.quali_races} />
               <ScoreBar label="Race" self={h.race_ahead} total={h.race_races} />
-              <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-muted">
+              <div className="mt-1 flex justify-between font-mono text-mini text-ink-muted">
                 <span>{(h.pts_self ?? 0).toFixed(0)} pts</span>
                 <span>points</span>
                 <span>{(h.pts_mate ?? 0).toFixed(0)} pts</span>
@@ -187,7 +188,7 @@ function ScoreBar({ label, self, total }: { label: string; self: number; total: 
   const pct = total ? (self / total) * 100 : 50;
   return (
     <div className="mb-1.5">
-      <div className="mb-0.5 flex justify-between font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+      <div className="mb-0.5 flex justify-between font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
         <span>
           {label} {self}–{total - self}
         </span>
@@ -305,7 +306,7 @@ function ConstructorBody({ p }: { p: ConstructorProfile }) {
       <Card className="flex flex-wrap items-center gap-x-6 gap-y-2 p-4">
         <span className="inline-block h-8 w-1.5 rounded-sm" style={{ background: teamColor(p.team) }} />
         <div className="text-2xl font-700 text-ink">{p.team}</div>
-        <div className="ml-auto font-mono text-[11px] text-ink-faint">
+        <div className="ml-auto font-mono text-mini text-ink-faint">
           {p.seasons[0]}–{p.seasons.at(-1)}
         </div>
       </Card>
@@ -315,7 +316,7 @@ function ConstructorBody({ p }: { p: ConstructorProfile }) {
           <SectionTitle>
             {p.seasons[0]}–{String(p.seasons.at(-1)).slice(2)} totals
           </SectionTitle>
-          <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+          <span className="font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
             within dataset · not all-time
           </span>
         </div>
@@ -351,13 +352,13 @@ function PointsBySeason({ data }: { data: { label: string; points: number }[] })
       <SectionTitle>Points by season</SectionTitle>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={data} margin={{ top: 12, right: 12, bottom: 4, left: -12 }}>
-          <XAxis dataKey="label" stroke="#9a9aa6" fontSize={11} />
-          <YAxis stroke="#9a9aa6" fontSize={11} />
+          <XAxis dataKey="label" stroke={CHART.axis} fontSize={11} />
+          <YAxis stroke={CHART.axis} fontSize={11} />
           <Bar dataKey="points" radius={[3, 3, 0, 0]}>
             {data.map((_, i) => (
               <Cell key={i} fill="rgb(var(--accent))" />
             ))}
-            <LabelList dataKey="points" position="top" formatter={(v: number) => v.toFixed(0)} fill="#ecedf0" fontSize={11} />
+            <LabelList dataKey="points" position="top" formatter={(v: number) => v.toFixed(0)} fill={CHART.ink} fontSize={11} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

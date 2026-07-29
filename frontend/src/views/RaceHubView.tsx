@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select } from "../components/controls";
@@ -98,7 +99,7 @@ function RaceHub({ track, season }: { track: string; season: number }) {
         <TrackWatermark track={track} className="-right-14 -top-14 h-60 w-60" />
         <TrackOutline track={track} size={44} className="text-accent" />
         <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
+          <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">
             {season}
             {card.data ? ` · Round ${card.data.round}` : ""}
           </div>
@@ -156,7 +157,7 @@ function SectionNav() {
         <button
           key={id}
           onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          className="whitespace-nowrap rounded-md px-3 py-1 font-mono text-[12px] text-ink-dim transition hover:bg-surface-inset/70 hover:text-ink-soft"
+          className="whitespace-nowrap rounded-md px-3 py-1 font-mono text-data text-ink-dim transition hover:bg-surface-inset/70 hover:text-ink-soft"
         >
           {label}
         </button>
@@ -168,7 +169,7 @@ function SectionNav() {
 function HeadStat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">{label}</div>
+      <div className="font-mono text-mini uppercase tracking-[0.12em] text-ink-faint">{label}</div>
       <div className="nums mt-0.5 font-mono text-lg text-ink">{value}</div>
     </div>
   );
@@ -195,7 +196,7 @@ function PodiumCompare({ card }: { card: RaceCardResp }) {
       </SectionTitle>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+          <div className="mb-2 font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
             Model predicted · before the race
           </div>
           {pred ? (
@@ -216,7 +217,7 @@ function PodiumCompare({ card }: { card: RaceCardResp }) {
           )}
         </div>
         <div>
-          <div className="mb-2 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+          <div className="mb-2 font-mono text-mini uppercase tracking-[0.1em] text-ink-faint">
             Actual result
           </div>
           <ol className="space-y-1.5">
@@ -252,7 +253,7 @@ function PodiumRow({
 }) {
   return (
     <li className="flex items-center gap-2.5 rounded-md border border-line-card bg-surface-inset px-3 py-1.5">
-      <span className="font-mono text-[11px] text-ink-faint">P{place}</span>
+      <span className="font-mono text-mini text-ink-faint">P{place}</span>
       <DriverCutout code={driver} height={40} className="drop-shadow-[0_3px_5px_rgba(0,0,0,0.4)]" />
       {team && (
         <span className="inline-block h-3.5 w-1 rounded-sm" style={{ background: teamColor(team) }} />
@@ -260,11 +261,11 @@ function PodiumRow({
       <span className="font-700 text-ink">{driver}</span>
       {team && <span className="text-xs text-ink-muted">{team}</span>}
       <span className="ml-auto flex items-center gap-2">
-        {right && <span className="nums font-mono text-[12px] text-accent">{right}</span>}
+        {right && <span className="nums font-mono text-data text-accent">{right}</span>}
         {hit && (
           <span
             title="in the model's top-3"
-            className="flex h-4 w-4 animate-popin items-center justify-center rounded-full bg-accent/20 text-[10px] text-accent shadow-glow"
+            className="flex h-4 w-4 animate-popin items-center justify-center rounded-full bg-accent/20 text-micro text-accent shadow-glow"
           >
             ✓
           </span>
@@ -405,9 +406,9 @@ function DegChart({ deg }: { deg: DegradationResp }) {
     <>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 4, left: -12 }}>
-          <CartesianGrid stroke="#1a212b" vertical={false} />
-          <XAxis dataKey="age" stroke="#9a9aa6" fontSize={11} label={{ value: "tyre age (laps)", position: "insideBottom", offset: -2, fill: "#9a9aa6", fontSize: 11 }} />
-          <YAxis stroke="#9a9aa6" fontSize={11} tickFormatter={(v) => `+${v.toFixed(1)}`} unit="s" width={52} />
+          <CartesianGrid stroke={CHART.grid} vertical={false} />
+          <XAxis dataKey="age" stroke={CHART.axis} fontSize={11} label={{ value: "tyre age (laps)", position: "insideBottom", offset: -2, fill: CHART.axis, fontSize: 11 }} />
+          <YAxis stroke={CHART.axis} fontSize={11} tickFormatter={(v) => `+${v.toFixed(1)}`} unit="s" width={52} />
           <Tooltip
             labelFormatter={(v) => `age ${v} laps`}
             formatter={(v: number, n: string) => [`+${v.toFixed(2)} s`, n]}
@@ -474,9 +475,9 @@ function PaceTraceInner({ hist }: { hist: LapHistory }) {
   return (
     <ResponsiveContainer width="100%" height={280}>
       <LineChart data={series} margin={{ top: 8, right: 12, bottom: 4, left: -8 }}>
-        <CartesianGrid stroke="#1a212b" vertical={false} />
-        <XAxis dataKey="lap" stroke="#9a9aa6" fontSize={11} type="number" domain={["dataMin", "dataMax"]} />
-        <YAxis stroke="#9a9aa6" fontSize={11} domain={["auto", "auto"]} tickFormatter={(v) => v.toFixed(0)} width={40} />
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="lap" stroke={CHART.axis} fontSize={11} type="number" domain={["dataMin", "dataMax"]} />
+        <YAxis stroke={CHART.axis} fontSize={11} domain={["auto", "auto"]} tickFormatter={(v) => v.toFixed(0)} width={40} />
         <Tooltip
           labelFormatter={(v) => `lap ${v}`}
           formatter={(v: number) => [`${v.toFixed(2)} s`, "fuel-corr"]}
@@ -484,7 +485,7 @@ function PaceTraceInner({ hist }: { hist: LapHistory }) {
         {pits.map((p) => (
           <ReferenceLine key={p} x={p} stroke="rgb(var(--accent))" strokeDasharray="3 3" strokeOpacity={0.6} />
         ))}
-        <Line type="monotone" dataKey="t" stroke="#ecedf0" strokeWidth={1.6} dot={false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="t" stroke={CHART.ink} strokeWidth={1.6} dot={false} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   );

@@ -10,6 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Column, DataTable } from "../components/DataTable";
 import { Combobox, Field, Select, Slider } from "../components/controls";
@@ -140,7 +141,7 @@ function ReplayInner({
     <div className="space-y-5">
       <Card className="p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3">
-          <span className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-accent">
+          <span className="flex items-center gap-1.5 font-mono text-mini uppercase tracking-[0.16em] text-accent">
             <span className="h-[7px] w-[7px] animate-f1pulse rounded-full bg-accent" />
             Replay
           </span>
@@ -269,15 +270,15 @@ function PaceChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={series} margin={{ top: 8, right: 12, bottom: 4, left: -12 }}>
-        <CartesianGrid stroke="#1a212b" vertical={false} />
-        <XAxis dataKey="lap" stroke="#9a9aa6" fontSize={11} type="number" domain={["dataMin", "dataMax"]} />
-        <YAxis stroke="#9a9aa6" fontSize={11} domain={["auto", "auto"]} tickFormatter={(v) => v.toFixed(0)} />
+        <CartesianGrid stroke={CHART.grid} vertical={false} />
+        <XAxis dataKey="lap" stroke={CHART.axis} fontSize={11} type="number" domain={["dataMin", "dataMax"]} />
+        <YAxis stroke={CHART.axis} fontSize={11} domain={["auto", "auto"]} tickFormatter={(v) => v.toFixed(0)} />
         <Tooltip
           labelFormatter={(v) => `lap ${v}`}
           formatter={(v: number) => [`${v.toFixed(2)} s`, "fuel-corr"]}
         />
         <ReferenceLine x={cur} stroke="rgb(var(--accent))" strokeDasharray="4 3" />
-        <Line type="monotone" dataKey="t" stroke="#ecedf0" strokeWidth={1.6} dot={false} isAnimationActive={false} />
+        <Line type="monotone" dataKey="t" stroke={CHART.ink} strokeWidth={1.6} dot={false} isAnimationActive={false} />
         {nowcast?.ok && (
           <ReferenceDot x={cur + 1} y={nowcast.predicted_s!} r={4} fill="rgb(var(--accent))" stroke="#080b11" />
         )}
