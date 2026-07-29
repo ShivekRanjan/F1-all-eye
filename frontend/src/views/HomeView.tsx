@@ -14,6 +14,13 @@ import { useParallax } from "../lib/useParallax";
 import { useSettings } from "../lib/useSettings";
 import type { CalendarResp, GridSource, NewsResp, StandingsResp, UpcomingResp } from "../api/types";
 
+/** Secondary "go to the full section" links. Deliberately not accent-coloured:
+ *  gold is reserved for what the *models* say — podium probabilities, the
+ *  recommended strategy, title odds — so that seeing gold means "this is a
+ *  claim the engine is making", not "this is a link". */
+const SECONDARY_LINK =
+  "font-mono text-[11px] text-ink-dim transition hover:text-ink-soft";
+
 /** The OS home: what's next, what the model expects, where the title stands,
  *  and what the paddock is talking about — each block deep-links to its section. */
 export default function HomeView() {
@@ -140,7 +147,12 @@ function Hero({
                 Next race · Round {round.round}
               </div>
               <div className="mt-1 flex items-center gap-2">
-                <span className="text-2xl font-700 text-ink">{round.event_name}</span>
+                {/* The race is the subject of this card, so it gets the largest
+                    and heaviest type. It previously sat at 24px/700 under a
+                    30px countdown — size said "look at the clock" while weight
+                    said "look at the race", and three weeks out the clock is
+                    the least actionable thing on the page. */}
+                <span className="text-3xl font-700 leading-tight text-ink">{round.event_name}</span>
                 {round.format?.includes("sprint") && <Badge tone="amber">Sprint</Badge>}
               </div>
               <div className="text-sm text-ink-muted">
@@ -152,9 +164,16 @@ function Hero({
             <div className="font-mono text-[11px] uppercase tracking-[0.12em] text-ink-faint">
               {next.name} in
             </div>
+            {/* Supporting by default, promoted on race day. Gold is reserved
+                for the model's own output, so a countdown — plain fact, not a
+                prediction — only earns the accent once it's genuinely urgent.
+                That makes race-day mode read as an event rather than a
+                slightly larger version of the same card. */}
             <div
-              className={`nums font-mono text-accent ${
-                raceMode ? "animate-f1pulse text-4xl font-700" : "text-3xl"
+              className={`nums font-mono ${
+                raceMode
+                  ? "animate-f1pulse text-4xl font-700 text-accent"
+                  : "text-xl text-ink-soft"
               }`}
             >
               {countdown(next.date, now)}
@@ -194,10 +213,14 @@ function Hero({
                 {preview ? "✕ exit preview" : "▸ preview race day"}
               </button>
             )}
-            <a href="#/outcome" className="font-mono text-[11px] text-accent hover:opacity-80">
+            {/* Secondary navigation, so it reads as such. These were gold —
+                four of them, at the same weight as the model's own output,
+                which is what left the page with seven equally-loud exits and
+                no primary one. */}
+            <a href="#/outcome" className={SECONDARY_LINK}>
               tune the grid →
             </a>
-            <a href="#/calendar" className="font-mono text-[11px] text-accent hover:opacity-80">
+            <a href="#/calendar" className={SECONDARY_LINK}>
               full schedule →
             </a>
           </span>
@@ -345,7 +368,7 @@ function TitleRaceBody({ data }: { data: StandingsResp }) {
             </Badge>
           )}
         </SectionTitle>
-        <a href="#/standings" className="font-mono text-[11px] text-accent hover:opacity-80">
+        <a href="#/standings" className={SECONDARY_LINK}>
           full standings →
         </a>
       </div>
@@ -397,7 +420,7 @@ function HeadlinesBody({ data }: { data: NewsResp }) {
     <Card className="p-4">
       <div className="mb-2 flex items-baseline justify-between">
         <SectionTitle>Paddock news</SectionTitle>
-        <a href="#/news" className="font-mono text-[11px] text-accent hover:opacity-80">
+        <a href="#/news" className={SECONDARY_LINK}>
           all headlines →
         </a>
       </div>
@@ -428,11 +451,6 @@ function HeadlinesBody({ data }: { data: NewsResp }) {
 // --- Explore the toolkit --------------------------------------------------------
 const TOOLS = [
   {
-    href: "#/strategy",
-    title: "Strategy optimiser",
-    blurb: "Monte-Carlo search over 1,000+ pit plans — with a track-temp control.",
-  },
-  {
     href: "#/racehub",
     title: "Race Hub",
     blurb: "Any race: prediction vs result, strategy call, tyre curves, pace trace.",
@@ -444,19 +462,43 @@ const TOOLS = [
   },
 ] as const;
 
+/** One primary action, then the rest.
+ *
+ *  Home used to offer seven exits at identical weight — a hub with no opinion.
+ *  The project does have one: the README's first line is "not who will win —
+ *  what should the team do", and that is the strategy optimiser. So it gets a
+ *  filled accent card at full width and the others sit beneath it as secondary
+ *  outlines. Nothing was removed; the ordering just now says something. */
 function ExploreStrip() {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      {TOOLS.map((t) => (
-        <a
-          key={t.href}
-          href={t.href}
-          className="group rounded-xl2 border border-line bg-carbon-800 p-4 shadow-card transition hover:border-accent/40"
-        >
-          <div className="mb-1 font-700 text-ink group-hover:text-accent">{t.title} →</div>
-          <div className="text-sm text-ink-muted">{t.blurb}</div>
-        </a>
-      ))}
+    <div className="space-y-3">
+      <a
+        href="#/strategy"
+        className="group flex items-center justify-between gap-4 rounded-xl2 border border-accent/50 bg-accent/[0.07] p-4 shadow-card transition hover:bg-accent/[0.12]"
+      >
+        <span>
+          <span className="block font-700 text-accent">Strategy optimiser →</span>
+          <span className="mt-0.5 block text-sm text-ink-soft">
+            The question the engine exists to answer: when to stop and on what, with the
+            honest spread. Monte-Carlo over 1,000+ pit plans.
+          </span>
+        </span>
+        <span className="hidden shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-accent/70 sm:block">
+          start here
+        </span>
+      </a>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {TOOLS.map((t) => (
+          <a
+            key={t.href}
+            href={t.href}
+            className="group rounded-xl2 border border-line bg-carbon-800 p-4 shadow-card transition hover:border-line-hover"
+          >
+            <div className="mb-1 font-700 text-ink">{t.title} →</div>
+            <div className="text-sm text-ink-muted">{t.blurb}</div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
