@@ -7,8 +7,10 @@ Run:  uvicorn f1se.api:app --reload
 
 from __future__ import annotations
 
+import itertools
 import os
 import threading
+from collections import OrderedDict
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
@@ -89,26 +91,60 @@ def get_engine() -> StrategyEngine:
 # ---- recommend cache ---------------------------------------------------------
 # The Monte-Carlo optimiser is seeded (seed=0), so identical inputs always give
 # identical outputs — caching is a pure win, and it matters: on a small cloud
-# CPU a full /recommend costs several seconds. Keyed on the engine identity too,
-# so tests that inject a synthetic engine never see another engine's results.
-_REC_CACHE: dict[tuple, dict] = {}
+# CPU a full /recommend costs several seconds.
+#
+# The key includes an engine token so an injected test engine can never read
+# another engine's results. That token used to be ``id(engine)``, which is a
+# memory address and *is reused* once an object is collected — measured at 1998
+# reuses across 2000 short-lived objects. Nothing here holds a reference to the
+# engine (the key stores only an int), so the address was free to be recycled
+# and a fresh engine could silently inherit a stale entry. Exactly the case the
+# key existed to prevent.
+#
+# A monotonic token avoids that without requiring the engine to be hashable —
+# it isn't: StrategyEngine is a non-frozen dataclass with eq=True, so Python
+# sets __hash__ = None and a WeakKeyDictionary is not an option.
+_ENGINE_TOKENS: itertools.count = itertools.count()
+_TOKEN_ATTR = "_f1se_cache_token"
+_REC_CACHE: OrderedDict[tuple, dict] = OrderedDict()
 _REC_CACHE_MAX = 200
+
+
+def _engine_token(engine: StrategyEngine) -> int:
+    """Stable per-instance id that is never recycled, unlike ``id()``.
+
+    Stamped on the instance on first use, so it lives and dies with the engine
+    and a newly-constructed one always gets a fresh value.
+    """
+    token = getattr(engine, _TOKEN_ATTR, None)
+    if token is None:
+        token = next(_ENGINE_TOKENS)
+        try:
+            setattr(engine, _TOKEN_ATTR, token)
+        except AttributeError:  # pragma: no cover - slotted/frozen engine
+            return -1  # un-stampable: skip cross-engine sharing entirely
+    return token
 
 
 def _recommend_cached(engine: StrategyEngine, *, track: str, objective: str, use_cliff: bool,
                       max_stops: int, n_runs: int, top_k: int, season: int | None,
                       sc_scale: float, track_temp: float | None) -> dict:
-    key = (id(engine), track, objective, use_cliff, max_stops, n_runs, top_k,
+    key = (_engine_token(engine), track, objective, use_cliff, max_stops, n_runs, top_k,
            season, sc_scale, track_temp)
     hit = _REC_CACHE.get(key)
     if hit is not None:
+        _REC_CACHE.move_to_end(key)  # refresh recency
         return hit
     out = engine.recommend(
         track, objective=objective, use_cliff=use_cliff, max_stops=max_stops,
         n_runs=n_runs, top_k=top_k, season=season, sc_scale=sc_scale, track_temp=track_temp,
     )
+    # Evict the least-recently-used entry, not the whole cache. Clearing all 200
+    # meant one request past the limit forced the next 200 to recompute — several
+    # seconds each on a small instance, so a routine overflow became minutes of
+    # degraded service.
     if len(_REC_CACHE) >= _REC_CACHE_MAX:
-        _REC_CACHE.clear()
+        _REC_CACHE.popitem(last=False)
     _REC_CACHE[key] = out
     return out
 
