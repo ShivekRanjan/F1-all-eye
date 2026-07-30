@@ -465,6 +465,34 @@ quietly buried under a "tuned hyperparameter" instead of found.
 
 *Reproduce: `analysis/phase_2026_shrinkage_sweep.py`*
 
+### Per-compound k — rejected, and the reason is the interesting part
+
+§13 left one thread open: 2026 lap counts differ sharply by compound (HARD
+4,915, MEDIUM 3,830, SOFT 1,354), so in principle each deserves its own prior
+weight — a compound with plenty of evidence should lean on the prior less.
+Swept the same way, leave-one-race-out, over a 3x3x3 grid.
+
+| | LORO MAE |
+|---|---|
+| Global k=150 | 0.4901 |
+| Best per-compound | **0.4878** (+0.48%) |
+| Spread across all 27 combinations | 0.4878 .. 0.4916 (**0.78%**) |
+
+The gain is *smaller than the spread of the grid it was found in*. Three free
+parameters searching 27 combinations will beat a single value almost by
+construction, and 0.48% is what that costs.
+
+The decisive detail is not the size though — it is the direction. The winning
+setting is : lean hardest on the pre-2026 prior
+for HARD, the compound with **the most** 2026 evidence, and trust 2026 most for
+MEDIUM. That is backwards from the entire rationale for splitting k. A result
+that contradicts its own mechanism is fitting noise, whatever its MAE says.
+
+**Rejected.** k stays global at 150.  now accepts a
+per-compound mapping anyway, because the experiment needed it and a future
+season with more data may revisit the question — but nothing passes one.
+
+
 ## 14. The "transferable" half of §7, finally measured
 
 §7 splits the engine in two: regime-sensitive components get shrinkage,

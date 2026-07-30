@@ -39,7 +39,7 @@ def fit_era_shrunk_degradation(
     target_min_year: int = 2026,
     group_cols: tuple[str, ...] = DEFAULT_GROUP_COLS,
     min_laps: int = 20,
-    shrinkage_laps: float = 150.0,
+    shrinkage_laps: float | dict[str, float] = 150.0,
     recency_halflife: float | None = None,
 ) -> DegradationModel:
     """Degradation model for the target era, shrunk toward the pre-era prior.
@@ -77,8 +77,23 @@ def fit_era_shrunk_degradation(
         abar = float(np.average(grp[AGE_COL].to_numpy(float), weights=wt))
         return ybar - slope * abar
 
-    def _blend(n: int, est: float, prior_val: float) -> float:
-        return (n * est + shrinkage_laps * prior_val) / (n + shrinkage_laps)
+    def _k_for(compound: str | None) -> float:
+        """Prior strength for this group.
+
+        ``shrinkage_laps`` may be a scalar (one k for everything, the original
+        behaviour) or a per-compound mapping. The mapping exists because lap
+        counts differ sharply by compound — the hards carry several times the
+        evidence of the softs — so in principle each deserves its own prior
+        weight. Whether that is worth doing is an empirical question, answered
+        in `analysis/phase_2026_shrinkage_percompound.py`.
+        """
+        if isinstance(shrinkage_laps, dict):
+            return float(shrinkage_laps.get(str(compound), shrinkage_laps.get("_default", 150.0)))
+        return float(shrinkage_laps)
+
+    def _blend(n: int, est: float, prior_val: float, compound: str | None = None) -> float:
+        k = _k_for(compound)
+        return (n * est + k * prior_val) / (n + k)
 
     def _kd(key) -> dict:
         return dict(zip(group_cols, key if isinstance(key, tuple) else (key,)))
@@ -96,11 +111,11 @@ def fit_era_shrunk_degradation(
         key = key if isinstance(key, tuple) else (key,)
         n = len(grp)
         s_prior = prior.slope(compound, track)
-        slopes[key] = _blend(n, s_t, s_prior)
+        slopes[key] = _blend(n, s_t, s_prior, compound)
         # Base pace: target mean de-aged at the (shrunk) slope, blended with prior.
         b_t = _wbase(grp, slopes[key])
         b_prior = prior.intercepts.get(key, prior.track_base.get(track, prior.global_base))
-        intercepts[key] = _blend(n, b_t, b_prior)
+        intercepts[key] = _blend(n, b_t, b_prior, compound)
         n_2026[key] = n
 
     # Per-track base + per-compound slope fallbacks, also shrunk.
@@ -114,7 +129,7 @@ def fit_era_shrunk_degradation(
         s_t = _fe_slope(grp["_age_dm"].to_numpy(float), grp["_corr_dm"].to_numpy(float), _w(grp))
         if s_t is not None:
             s_prior = prior.compound_slope.get(str(comp), prior.global_slope)
-            compound_slope[str(comp)] = _blend(len(grp), s_t, s_prior)
+            compound_slope[str(comp)] = _blend(len(grp), s_t, s_prior, str(comp))
 
     # Propagate the 2026 era shift to tracks NOT yet raced in 2026: their
     # pre-2026 per-track slope is nudged by how much that compound's degradation
