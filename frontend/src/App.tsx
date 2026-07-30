@@ -173,7 +173,14 @@ export default function App() {
 
         <nav ref={navRef} className="relative flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
           <div
-            className="pointer-events-none absolute left-0 w-[3px] rounded-r bg-accent shadow-glow transition-[transform,height,opacity] duration-300 ease-out"
+            // top-0 is load-bearing, not cosmetic. Without it the indicator has
+            // `top: auto` and resolves to its *static* position — the top of the
+            // nav's content box, i.e. already past the py-4 padding. The
+            // translateY below comes from btn.offsetTop, which is measured from
+            // the offsetParent's *padding* box and therefore includes that same
+            // 16px. The padding got counted twice and the bar sat 16px below the
+            // icon it was meant to mark.
+            className="pointer-events-none absolute left-0 top-0 w-[3px] rounded-r bg-accent shadow-glow transition-[transform,height,opacity] duration-300 ease-out"
             style={{
               transform: `translateY(${indicator.top}px)`,
               height: indicator.height,
