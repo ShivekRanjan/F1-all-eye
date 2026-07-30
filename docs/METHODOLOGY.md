@@ -200,6 +200,32 @@ this document previously quoted from the Austrian GP (§9) turns out to be the
 **best of the eleven**, not a typical one — a single race was always going to be
 whatever it was, and it happened to flatter. The honest headline is **+13.4%**.
 
+### Retraining on 2025 was tested too, and bought nothing
+
+The shipped forecaster trains on <= 2024. Folding in 2025 -- a whole season
+currently used only for scoring -- looks like free accuracy. Training on 2026 was
+never on the table: those are the races the claim is measured on.
+
+Same held-out 2026 either way, both models fitted identically, differing only in
+training data (30,063 -> 45,425 windows, **+51%**):
+
+| | Mean vs persistence | Mean MAE | Beats persistence |
+|---|---|---|---|
+| A, train <= 2024 | +12.9% | 0.3673 | 11 / 11 |
+| B, train <= 2025 | +12.9% | **0.3673** | 11 / 11 |
+
+**+0.00%.** B is better in 5 of 11 races -- a coin flip. Half again as much data
+moves the fourth decimal place, which says the model is capacity-limited, not
+data-limited; more sequences of the same kind teach it nothing new.
+
+**Rejected.** Training stays at <= 2024, which keeps 2025 as an independent
+holdout *and* 2026 as the unseen test. Giving up a holdout season for nothing
+would be a poor trade.
+
+(Both models here are fresh fits without the race-grouped validation split the
+shipped artifact uses, so A scores +12.9% where the exported model scores +13.4%.
+The A-vs-B comparison is unaffected -- they differ only in training years.)
+
 But the claim gets *stronger* where it counts: winning 11 of 11 unseen races
 with a 3.7-point spread is a far better argument than one impressive race,
 because it can't be luck. This is the difference between "the model beat a
