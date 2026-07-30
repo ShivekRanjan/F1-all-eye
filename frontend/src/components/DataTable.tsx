@@ -18,12 +18,20 @@ export function DataTable<R>({
   highlightFirst = false,
   isHighlighted,
   getKey,
+  label,
 }: {
   columns: Column<R>[];
   rows: R[];
   highlightFirst?: boolean;
   isHighlighted?: (row: R) => boolean;
   getKey: (row: R, i: number) => string | number;
+  /** What this table is, for screen readers.
+   *
+   *  Sighted users get the surrounding heading for free; a screen reader
+   *  navigating table-by-table announces only "table, 23 rows" and has no way
+   *  to tell the drivers' standings from the constructors'. Rendered as a
+   *  visually-hidden <caption>, which is the element made for this. */
+  label?: string;
 }) {
   const alignCls = { left: "text-left", right: "text-right", center: "text-center" };
   // Right/center-aligned columns are numeric-ish and content-width — collapsing
@@ -35,6 +43,7 @@ export function DataTable<R>({
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-sm">
+        {label && <caption className="sr-only">{label}</caption>}
         <thead>
           <tr className="border-b border-line">
             {columns.map((c) => (

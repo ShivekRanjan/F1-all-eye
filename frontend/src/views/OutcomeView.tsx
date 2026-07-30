@@ -177,7 +177,8 @@ function UpcomingBody({
         ))}
       </div>
       <div className="max-h-72 overflow-y-auto">
-        <DataTable columns={cols} rows={data.predictions} getKey={(p) => p.driver} highlightFirst />
+        <DataTable
+              label="Predicted podium probabilities" columns={cols} rows={data.predictions} getKey={(p) => p.driver} highlightFirst />
       </div>
     </>
   );
@@ -214,7 +215,12 @@ function PodiumSection({ o }: { o: OutcomeResp }) {
           />
         </Field>
       </div>
-      <DataTable columns={cols} rows={round.predictions} getKey={(p) => p.driver} />
+      <DataTable
+        label="Podium prediction vs actual result for this round"
+        columns={cols}
+        rows={round.predictions}
+        getKey={(p) => p.driver}
+      />
 
       <div className="mt-4 grid grid-cols-3 gap-3">
         <Metric label="ROC-AUC" value={o.model_metrics.auc.toFixed(3)} title="Ranks podium vs non-podium drivers (1.0 = perfect)." />

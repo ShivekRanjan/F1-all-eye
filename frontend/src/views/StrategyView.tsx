@@ -189,6 +189,7 @@ function Rail(props: {
         <input
           value={circuitQ}
           onChange={(e) => setCircuitQ(e.target.value)}
+          aria-label="Filter circuits by name"
           placeholder="Search circuits…"
           className="mb-2 w-full rounded-lg border border-line bg-carbon-700 px-3 py-2 text-sm text-ink outline-none transition placeholder:text-ink-dim focus:border-f1/60 focus:ring-1 focus:ring-f1/40"
         />
@@ -545,6 +546,7 @@ function ShortlistCard({ rec }: { rec: RecommendResp }) {
       <SectionTitle>Ranked shortlist</SectionTitle>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse font-mono text-data">
+          <caption className="sr-only">Alternative strategies, ranked</caption>
           <thead>
             <tr className="border-b border-line text-mini uppercase tracking-[0.1em] text-ink-faint">
               <th className="px-3 py-2 text-left">#</th>

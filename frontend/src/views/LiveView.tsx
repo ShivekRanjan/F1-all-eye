@@ -219,7 +219,8 @@ function RecCard({ rec, usedCount }: { rec: LiveRecommendation; usedCount: numbe
       <div className="mb-3 text-xs text-ink-muted">
         {usedCount} compound{usedCount === 1 ? "" : "s"} used · evaluated {rec.n_evaluated} remaining plans
       </div>
-      <DataTable columns={cols} rows={rec.shortlist} highlightFirst getKey={(r) => r.rank} />
+      <DataTable
+              label="Remaining-strategy options" columns={cols} rows={rec.shortlist} highlightFirst getKey={(r) => r.rank} />
     </Card>
   );
 }

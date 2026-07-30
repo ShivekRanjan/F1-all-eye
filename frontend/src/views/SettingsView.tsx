@@ -69,6 +69,7 @@ export default function SettingsView() {
           </p>
           <button
             role="switch"
+            aria-label="Ambient motion"
             aria-checked={settings.motion}
             onClick={() => update({ motion: !settings.motion })}
             className={`relative h-[26px] w-[46px] shrink-0 rounded-full transition ${

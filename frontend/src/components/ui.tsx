@@ -149,12 +149,26 @@ export function Callout({
 /** F1 start lights: fill 1→5 red, hold, go dark together ("lights out"),
  *  repeat — the loading state as an actual pre-race ritual instead of a
  *  generic spinner. Degrades to a static gentle pulse when motion is off. */
+/** Loading state — and the app's only live region.
+ *
+ *  An audit across all 12 views found zero `aria-live` anywhere. Every heavy
+ *  surface here is async (the optimiser takes seconds), and a screen-reader user
+ *  got no announcement that anything was happening or had finished — the page
+ *  simply went quiet and later contained different numbers.
+ *
+ *  `role="status"` is implicitly polite and atomic, so it waits for a pause
+ *  rather than interrupting, which is right for progress. The F1 start-light
+ *  animation is decorative and hidden; the label is the message. */
 export function Spinner({ label }: { label?: string }) {
   const step = useLightStep();
   const staticMode = !motionEnabled();
   return (
-    <div className="flex items-center gap-2.5 text-sm text-ink-muted">
-      <div className={`flex gap-1 ${staticMode ? "animate-pulse" : ""}`}>
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex items-center gap-2.5 text-sm text-ink-muted"
+    >
+      <div aria-hidden className={`flex gap-1 ${staticMode ? "animate-pulse" : ""}`}>
         {Array.from({ length: 5 }).map((_, i) => (
           <span
             key={i}

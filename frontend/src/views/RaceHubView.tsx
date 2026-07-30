@@ -318,6 +318,7 @@ function ResultTable({ card }: { card: RaceCardResp }) {
       <SectionTitle>Finishing order</SectionTitle>
       <div className="max-h-96 overflow-y-auto">
         <DataTable
+              label="Race result"
           columns={cols}
           rows={card.result}
           getKey={(r) => r.driver}
@@ -372,7 +373,8 @@ function StrategyBody({ rec }: { rec: RecommendResp }) {
       <div className="mb-3 text-xs text-ink-muted">
         evaluated {rec.n_evaluated} strategies · median race {clock(rec.best.p50_s)}
       </div>
-      <DataTable columns={cols} rows={rec.shortlist} highlightFirst getKey={(r) => r.rank} />
+      <DataTable
+              label="Pre-race podium prediction" columns={cols} rows={rec.shortlist} highlightFirst getKey={(r) => r.rank} />
     </>
   );
 }

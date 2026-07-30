@@ -223,7 +223,8 @@ function SeasonTable({ rows }: { rows: DriverProfile["by_season"] }) {
   return (
     <Card className="p-4">
       <SectionTitle>Season by season</SectionTitle>
-      <DataTable columns={cols} rows={rows} getKey={(s) => `${s.season}-${s.team}`} />
+      <DataTable
+              label="Drivers" columns={cols} rows={rows} getKey={(s) => `${s.season}-${s.team}`} />
     </Card>
   );
 }
@@ -244,7 +245,8 @@ function RecentTable({ rows }: { rows: RecentResult[] }) {
   return (
     <Card className="p-4">
       <SectionTitle>Recent results</SectionTitle>
-      <DataTable columns={cols} rows={rows} getKey={(r) => `${r.season}-${r.round}`} />
+      <DataTable
+              label="Constructors" columns={cols} rows={rows} getKey={(r) => `${r.season}-${r.round}`} />
     </Card>
   );
 }

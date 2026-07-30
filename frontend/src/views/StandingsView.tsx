@@ -276,6 +276,7 @@ function DriversCard({ data }: { data: StandingsResp }) {
     <Card className="p-4">
       <SectionTitle>Drivers’ championship — {data.season}</SectionTitle>
       <DataTable
+              label="Drivers' championship standings"
         columns={cols}
         rows={data.drivers}
         getKey={(d) => d.driver}
@@ -304,7 +305,8 @@ function ConstructorsCard({ rows }: { rows: ConstructorStanding[] }) {
   return (
     <Card className="p-4">
       <SectionTitle>Constructors’ championship</SectionTitle>
-      <DataTable columns={cols} rows={rows} getKey={(c) => c.team} highlightFirst />
+      <DataTable
+              label="Constructors' championship standings" columns={cols} rows={rows} getKey={(c) => c.team} highlightFirst />
     </Card>
   );
 }
