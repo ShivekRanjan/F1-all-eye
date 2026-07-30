@@ -298,6 +298,33 @@ def undercut(req: UndercutRequest, engine: StrategyEngine = Depends(get_engine))
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
+# ---- natural language ------------------------------------------------------
+class AskRequest(BaseModel):
+    q: str = Field(..., min_length=1, max_length=500, description="a question in plain English")
+    parser: str = Field("rules", description="rules | transformer")
+
+
+@app.post("/ask")
+def ask(req: AskRequest) -> dict:
+    """Answer a plain-English strategy question.
+
+    Thin, like every other endpoint: parse the sentence into an intent plus
+    slots, hand that to the engine, phrase the result. No modelling here.
+
+    The response always carries ``parsed`` — the resolved parameters — because
+    the parse is fuzzy and a user needs to see that "Monza" wasn't heard as
+    "Monaco". A missing required slot comes back as a question, not a default.
+    """
+    from f1se.nlu import parse
+    from f1se.nlu.answer import answer as build_answer
+
+    try:
+        pq = parse(req.q, parser=req.parser)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    return build_answer(pq, get_engine()).to_dict()
+
+
 # ---- race-replay (live view) data endpoints --------------------------------
 @app.get("/seasons")
 def all_seasons(engine: StrategyEngine = Depends(get_engine)) -> dict:
