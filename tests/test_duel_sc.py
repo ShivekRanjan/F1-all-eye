@@ -65,3 +65,41 @@ def test_red_flag_is_the_cheapest_discount_in_the_duel():
     sc = _gaps(SafetyCarModel(prob_per_lap=0.10, mean_duration=2))
     # A free stop for the rival hurts you more than a merely cheap one.
     assert np.mean(red) > np.mean(sc)
+
+
+# --- extrapolation guard ------------------------------------------------------
+def test_flags_a_tyre_run_past_the_modelled_range():
+    """Everywhere else the optimiser is confined to stint lengths the field
+    actually ran. A duel takes explicit plans, so it reports instead."""
+    from f1se.sim.duel import beyond_modelled_range
+
+    cars = {"rival": CarPlan("MEDIUM", 40, 40, "HARD")}
+    out = beyond_modelled_range(cars, current_lap=20, end_lap=28,
+                                max_stint={"MEDIUM": 32, "HARD": 43})
+    assert len(out) == 1
+    assert out[0]["car"] == "rival" and out[0]["compound"] == "MEDIUM"
+    assert out[0]["age"] > out[0]["modelled_to"] == 32
+
+
+def test_a_normal_duel_is_not_flagged():
+    from f1se.sim.duel import beyond_modelled_range
+
+    cars = {"you": CarPlan("MEDIUM", 10, 21, "HARD"),
+            "rival": CarPlan("MEDIUM", 10, 25, "HARD")}
+    assert beyond_modelled_range(cars, 20, 28, {"MEDIUM": 32, "HARD": 43}) == []
+
+
+def test_no_limits_means_no_claims():
+    """Without stint limits we know nothing, so we must assert nothing."""
+    from f1se.sim.duel import beyond_modelled_range
+
+    assert beyond_modelled_range({"rival": CarPlan("SOFT", 99, None, "HARD")}, 20, 40, None) == []
+
+
+def test_peak_age_tracks_both_sides_of_a_stop():
+    """A car that pits mid-window ages two compounds, not one."""
+    from f1se.sim.duel import peak_tyre_ages
+
+    ages = peak_tyre_ages(CarPlan("MEDIUM", 12, 24, "SOFT"), current_lap=20, end_lap=30)
+    assert ages["MEDIUM"] == 16  # 12 + (24 - 20)
+    assert ages["SOFT"] == 6     # 30 - 24

@@ -57,6 +57,50 @@ def car_pit_index(plan: CarPlan, current_lap: int, end_lap: int) -> int | None:
     return plan.pit_lap - current_lap - 1
 
 
+def peak_tyre_ages(plan: CarPlan, current_lap: int, end_lap: int) -> dict[str, int]:
+    """Oldest each compound gets over the window, per compound."""
+    ages: dict[str, int] = {}
+    has_pit = plan.pit_lap is not None and plan.pit_lap > current_lap
+    for lap in range(current_lap + 1, end_lap + 1):
+        if has_pit and lap > plan.pit_lap:
+            comp, age = plan.new_compound, lap - plan.pit_lap
+        else:
+            comp, age = plan.compound, plan.tyre_age + (lap - current_lap)
+        ages[comp] = max(ages.get(comp, 0), age)
+    return ages
+
+
+def beyond_modelled_range(
+    cars: dict[str, CarPlan], current_lap: int, end_lap: int,
+    max_stint: dict[str, int] | None,
+) -> list[dict]:
+    """Where this duel asks the pace model to extrapolate past its evidence.
+
+    Everywhere else the engine refuses to run a tyre older than the field
+    actually ran it (:func:`f1se.eda.compound_stint_limits`) — the cliff is
+    censored out of race data, so a linear fit has no support beyond the
+    observed range and reads far too gentle out there (METHODOLOGY §3).
+
+    The duel takes explicit plans rather than enumerating them, so there is
+    nothing to constrain: the user can legitimately ask "what if my rival
+    stays out ten more laps?" and that is the whole point of the tool. Clamping
+    would silently answer a different question. So it answers the one asked and
+    says where the answer stops being evidence-backed — which matters because
+    the error is *directional*: understated degradation always flatters the car
+    staying out, i.e. it biases against the undercut.
+    """
+    if not max_stint:
+        return []
+    out: list[dict] = []
+    for who, plan in cars.items():
+        for comp, age in peak_tyre_ages(plan, current_lap, end_lap).items():
+            limit = max_stint.get(comp)
+            if limit is not None and age > limit:
+                out.append({"car": who, "compound": comp, "age": int(age),
+                            "modelled_to": int(limit)})
+    return out
+
+
 def simulate_duel(you: CarPlan, rival: CarPlan, *, current_lap: int, total_laps: int,
                   pace_fn: PaceFn, gap_s: float, end_lap: int | None = None,
                   pit_loss_s: float = 21.0, pace_noise_s: float = 0.3,
@@ -107,6 +151,7 @@ def undercut_decision(
     rival_compound: str, rival_age: int, rival_new_compound: str, rival_pit_lap: int,
     your_pace_offset_s: float = 0.0, pit_loss_s: float = 21.0, settle_laps: int = 3,
     pace_noise_s: float = 0.3, sc_model: SafetyCarModel | None = None,
+    max_stint: dict[str, int] | None = None,
     n_runs: int = 2000, seed: int = 0,
 ) -> dict:
     """Compare pitting NOW (undercut) vs covering the rival (pit on the same lap).
@@ -147,12 +192,21 @@ def undercut_decision(
         "your_pit_lap": current_lap + 1,
         "rival_pit_lap": rival_pit_lap,
     }
+    # Both options are checked: the undercut runs YOUR tyre short and the
+    # rival's long, the cover does the reverse, so they strain the model at
+    # opposite ends and either can be the one that leaves its evidence.
+    extrapolated = beyond_modelled_range(
+        {"you": CarPlan(your_compound, your_age, current_lap + 1, your_new_compound),
+         "rival": rival},
+        current_lap, horizon, max_stint,
+    )
     return {
         "undercut": undercut,
         "cover": cover,
         "undercut_gain_s": gain,
         "undercut_works": works,
         "trajectory": trajectory,
+        "beyond_modelled_range": extrapolated,
         "verdict": (
             f"Undercut now — it gains ~{gain:.1f}s on the rival and "
             f"ends ahead {undercut['p_ahead']*100:.0f}% of the time."

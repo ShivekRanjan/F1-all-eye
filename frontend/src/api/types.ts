@@ -88,8 +88,18 @@ export interface UndercutTrajectory {
   your_pit_lap: number;
   rival_pit_lap: number;
 }
+/** Where the duel asked the pace model to run a tyre older than the field ever
+ *  ran it. The optimiser is confined to that range everywhere else; a duel takes
+ *  explicit plans, so it answers the question asked and reports the limit. */
+export interface BeyondModelledRange {
+  car: "you" | "rival";
+  compound: string;
+  age: number;
+  modelled_to: number;
+}
 export interface UndercutResp {
   verdict: string;
+  beyond_modelled_range?: BeyondModelledRange[];
   undercut_works: boolean;
   undercut_gain_s: number;
   undercut: UndercutOption;

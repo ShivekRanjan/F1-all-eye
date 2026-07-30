@@ -13,11 +13,11 @@ import {
 import { CHART } from "../lib/chartTokens";
 import { api } from "../api/client";
 import { Combobox, Field, Select, Slider } from "../components/controls";
-import { Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
+import { Callout, Card, ErrorNote, Metric, SectionTitle, Spinner } from "../components/ui";
 import { TrackOutline, TrackWatermark } from "../components/TrackOutline";
 import { gapText, trackSearchText } from "../lib/format";
 import { useAsync, useDebounced } from "../lib/useAsync";
-import type { UndercutTrajectory } from "../api/types";
+import type { BeyondModelledRange, UndercutTrajectory } from "../api/types";
 import { TracksGate, ViewIntro, pickDefaultTrack } from "./common";
 
 const COMPS = ["SOFT", "MEDIUM", "HARD"] as const;
@@ -138,6 +138,7 @@ function Panel({ track, total }: { track: string; total: number }) {
       {res.data && (
         <>
           <VerdictBanner works={res.data.undercut_works} verdict={res.data.verdict} />
+          <ExtrapolationNote rows={res.data.beyond_modelled_range} />
           {res.data.trajectory && <CrossoverChart t={res.data.trajectory} track={track} />}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Metric
@@ -261,6 +262,35 @@ function DriverPanel({
 /** A broadcast-style verdict — pit-wall header language + a pulse dot,
  *  replacing a plain callout box for the one moment this view actually
  *  makes a call. */
+/** Says where the answer stops being evidence-backed.
+ *
+ *  The optimiser is confined to stint lengths the field actually ran, because
+ *  the tyre cliff is censored out of race data and a linear fit reads far too
+ *  gentle beyond it. A duel takes explicit plans, so clamping would silently
+ *  answer a different question than the one asked — it answers this one and
+ *  flags the limit instead. The bias has a direction worth stating: understated
+ *  degradation always flatters the car staying out. */
+function ExtrapolationNote({ rows }: { rows?: BeyondModelledRange[] }) {
+  if (!rows?.length) return null;
+  return (
+    <Callout tone="warn">
+      Past the data on{" "}
+      {rows.map((r, i) => (
+        <span key={`${r.car}-${r.compound}`}>
+          {i > 0 && ", "}
+          <strong>
+            {r.car === "you" ? "your" : "the rival's"} {r.compound.toLowerCase()}
+          </strong>{" "}
+          — {r.age} laps old, but the field never ran it past {r.modelled_to}
+        </span>
+      ))}
+      . Degradation out there is extrapolated, and the error runs one way: it{" "}
+      <strong>understates</strong> wear, which flatters whoever stays out. Treat the
+      undercut as the more conservative read.
+    </Callout>
+  );
+}
+
 function VerdictBanner({ works, verdict }: { works: boolean; verdict: string }) {
   return (
     <Card className={`overflow-hidden border-l-2 p-4 ${works ? "border-l-accent" : "border-l-line-hover"}`}>

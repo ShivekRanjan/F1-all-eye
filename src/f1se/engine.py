@@ -367,6 +367,11 @@ class StrategyEngine:
             rival_compound=rival_compound, rival_age=rival_age,
             rival_new_compound=rival_new_compound, rival_pit_lap=rival_pit_lap,
             pit_loss_s=self._pit_loss(track), n_runs=n_runs,
+            # Flags where the duel asks the pace model to run a tyre older than
+            # the field ever ran it — the optimiser is constrained to this range
+            # everywhere else, but a duel takes explicit plans, so it reports
+            # rather than clamps.
+            max_stint=self._stint_limits_for(track, season),
             # A neutralisation during the duel window can hand the rival a cheap
             # stop and wipe out an undercut that was working. The duel used to
             # model none, so it answered a strictly green-flag question.
