@@ -1,0 +1,32 @@
+{"_comment": "Hand-written evaluation set. NOT generated from generate.py, and no parser was tuned against it. Phrasings deliberately differ in word order, register and vocabulary from the training templates. Written before either parser was scored, so neither could be fitted to it."}
+{"q": "im stuck behind lando at silverstone, lap 28, hes got 12 lap old mediums and mine are softs from lap 20 — worth boxing?", "intent": "undercut", "slots": {"track": "British Grand Prix", "current_lap": 28, "rival_compound": "MEDIUM", "rival_age": 12, "your_compound": "SOFT", "rival_driver": "NOR"}}
+{"q": "quickest way round monaco?", "intent": "recommend", "slots": {"track": "Monaco Grand Prix", "objective": "mean"}}
+{"q": "talk me through the tyre situation at zandvoort", "intent": "degradation", "slots": {"track": "Dutch Grand Prix"}}
+{"q": "any chance of a one stopper in hungary", "intent": "recommend", "slots": {"track": "Hungarian Grand Prix", "max_stops": 1}}
+{"q": "whos top of the table right now", "intent": "standings", "slots": {}}
+{"q": "point me at the safest plan for jeddah", "intent": "recommend", "slots": {"track": "Saudi Arabian Grand Prix", "objective": "p85"}}
+{"q": "we are lap 41 in mexico, tyres are hards done 19 laps, checo is a second back on reds fitted 4 laps ago", "intent": "undercut", "slots": {"track": "Mexico City Grand Prix", "current_lap": 41, "your_compound": "HARD", "your_age": 19, "rival_compound": "SOFT", "rival_age": 4, "rival_driver": "PER"}}
+{"q": "who took the win in brazil", "intent": "race_result", "slots": {"track": "São Paulo Grand Prix"}}
+{"q": "how badly do the tyres go off round the hungaroring", "intent": "degradation", "slots": {"track": "Hungarian Grand Prix"}}
+{"q": "give me a read on the title fight", "intent": "standings", "slots": {}}
+{"q": "whats coming up next and whos favourite", "intent": "next_race", "slots": {}}
+{"q": "on whites 22 laps in at spa, russell right there on yellows 8 laps, lap 30, do i box", "intent": "undercut", "slots": {"track": "Belgian Grand Prix", "current_lap": 30, "your_compound": "HARD", "your_age": 22, "rival_compound": "MEDIUM", "rival_age": 8, "rival_driver": "RUS"}}
+{"q": "plan for imola please, id rather not gamble", "intent": "recommend", "slots": {"track": "Emilia Romagna Grand Prix", "objective": "p85"}}
+{"q": "how did the race go at suzuka in 2024", "intent": "race_result", "slots": {"track": "Japanese Grand Prix", "season": 2024}}
+{"q": "im running out of tyre at cota, lap 44, 21 laps on the mediums, max is behind me on fresh softs 3 laps", "intent": "undercut", "slots": {"track": "United States Grand Prix", "current_lap": 44, "your_compound": "MEDIUM", "your_age": 21, "rival_compound": "SOFT", "rival_age": 3, "rival_driver": "VER"}}
+{"q": "two stopper or one at baku", "intent": "recommend", "slots": {"track": "Azerbaijan Grand Prix", "max_stops": 2}}
+{"q": "tell me about degradation in singapore", "intent": "degradation", "slots": {"track": "Singapore Grand Prix"}}
+{"q": "standings after the last round", "intent": "standings", "slots": {}}
+{"q": "predicted top three for the upcoming one", "intent": "next_race", "slots": {}}
+{"q": "best approach for the vegas race", "intent": "recommend", "slots": {"track": "Las Vegas Grand Prix"}}
+{"q": "leclerc is glued to my gearbox at monza, lap 33, he has softs on 5 laps, im on hards 24 laps", "intent": "undercut", "slots": {"track": "Italian Grand Prix", "current_lap": 33, "rival_compound": "SOFT", "rival_age": 5, "your_compound": "HARD", "your_age": 24, "rival_driver": "LEC"}}
+{"q": "what went down at interlagos", "intent": "race_result", "slots": {"track": "São Paulo Grand Prix"}}
+{"q": "which rubber lasts longest at yas marina", "intent": "degradation", "slots": {"track": "Abu Dhabi Grand Prix"}}
+{"q": "im after the fastest run through austria", "intent": "recommend", "slots": {"track": "Austrian Grand Prix", "objective": "mean"}}
+{"q": "who is going to take the next grand prix", "intent": "next_race", "slots": {}}
+{"q": "lap 12 at shanghai, bottas ahead of me on hards 9 laps old, ive got mediums 11 laps", "intent": "undercut", "slots": {"track": "Chinese Grand Prix", "current_lap": 12, "rival_compound": "HARD", "rival_age": 9, "your_compound": "MEDIUM", "your_age": 11, "rival_driver": "BOT"}}
+{"q": "results from the canadian round", "intent": "race_result", "slots": {"track": "Canadian Grand Prix"}}
+{"q": "sort me out a strategy for melbourne", "intent": "recommend", "slots": {"track": "Australian Grand Prix"}}
+{"q": "how much life is in the tyres at bahrain", "intent": "degradation", "slots": {"track": "Bahrain Grand Prix"}}
+{"q": "whos got the championship lead in 2025", "intent": "standings", "slots": {"season": 2025}}
+{"q": "alonso is two tenths back at qatar on 14 lap hards, im on 6 lap softs, lap 25, undercut on", "intent": "undercut", "slots": {"track": "Qatar Grand Prix", "current_lap": 25, "rival_compound": "HARD", "rival_age": 14, "your_compound": "SOFT", "your_age": 6, "rival_driver": "ALO"}}
