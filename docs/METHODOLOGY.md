@@ -683,6 +683,66 @@ an early guess rather than a measurement.
 
 *Reproduce: `analysis/phase_2026_sc_hazard.py`*
 
+## 15. A transformer built from scratch — and beaten by regex
+
+The app takes plain-English questions ("fastest strategy for Mexico City",
+"Verstappen is behind me on softs two laps old, lap 19"). Two parsers were built
+and benchmarked against each other: a hand-written rule/slot-filler, and a small
+transformer written from scratch — tokeniser, scaled dot-product attention,
+multi-head wrapper, pre-norm encoder, joint intent + BIO-slot heads. 445,594
+parameters, 25 minutes on a CPU.
+
+Training data is synthetic and self-labelling: the generator picks the slot
+values, so a query and its parse are emitted together and annotation costs
+nothing. Every labelled example is decoded back and compared to gold — 91.7%
+round-tripped, the rest discarded — because a silent alignment bug would poison
+training and surface only as a mysteriously bad model.
+
+The evaluation set is **hand-written** (31 phrasings), never generated, in
+deliberately different word order and register, and written **before either
+parser was scored** — the same pre-registration as the locked race prediction.
+
+| | Intent | Slot F1 | Exact |
+|---|---|---|---|
+| *Generated templates (n=2000)* | | | |
+| rules | 0.972 | 0.908 | 0.731 |
+| **transformer** | **1.000** | **0.973** | **0.845** |
+| *Hand-written, unseen (n=31) — the test* | | | |
+| **rules** | 0.516 | **0.845** | 0.290 |
+| transformer | 0.516 | 0.775 | 0.290 |
+
+**Rules ship.** The transformer wins comfortably on generated templates and
+loses where it matters — tying on intent and giving up 7 points of slot F1.
+
+**The prediction was wrong, which is why it was tested.** I expected the learned
+model to win exactly here: regex is brittle to rewording, a tagger is not.
+Recorded because the reasoning sounded good and the data disagreed.
+
+**Why it lost, measured rather than guessed.** 25.3% of tokens in the
+hand-written set are out-of-vocabulary — one word in four arrives as an unknown
+token. The vocabulary is 300 words because it was built entirely from the
+synthetic templates, while real speech uses *gearbox*, *glued*, *boxing*,
+*fitted*, *gamble*, *fresh*. The failure is not that a transformer cannot
+generalise; it is that **synthetic data can only teach the vocabulary it
+contains**. The model generalises well inside its 300 words and is blind outside
+them, whereas the rule parser degrades gracefully — it ignores unknown words
+rather than being confused by them.
+
+That also explains the odd symmetry of both parsers scoring 0.516 on intent:
+they fail on the same examples, for different reasons.
+
+**What a fix would require.** Broader training vocabulary is the obvious remedy,
+but having inspected the held-out set's vocabulary to diagnose this, tuning
+against it would be fitting the test. An honest retry needs a *second*
+hand-written set, written before the next attempt. Logged as the condition for
+revisiting rather than quietly done.
+
+One asymmetry worth keeping: the rule parser has **precision 1.000** and recall
+0.731 — when it extracts something it is right, it just misses. If a future
+model has the opposite profile the two compose rather than compete.
+
+*Reproduce: `analysis/nlu_train.py`, `analysis/nlu_benchmark.py`*
+
 ---
 
 ### The pattern
