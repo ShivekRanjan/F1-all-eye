@@ -4,6 +4,7 @@ import { CursorGlow } from "./components/CursorGlow";
 import {
   BarsIcon,
   CalendarIcon,
+  ChatIcon,
   DiceIcon,
   HelmetIcon,
   HomeIcon,
@@ -21,6 +22,7 @@ import { useSettings } from "./lib/useSettings";
 // Views are lazy-loaded: each section (and the chart library the heavy ones
 // pull in) ships as its own chunk instead of one entry bundle.
 const HomeView = lazy(() => import("./views/HomeView"));
+const AskView = lazy(() => import("./views/AskView"));
 const StrategyView = lazy(() => import("./views/StrategyView"));
 const RaceHubView = lazy(() => import("./views/RaceHubView"));
 const UndercutView = lazy(() => import("./views/UndercutView"));
@@ -37,6 +39,10 @@ const REPO = "https://github.com/ShivekRanjan/f1-strategy-engine";
 
 const TABS = [
   { id: "home", label: "Home", group: "Overview", el: <HomeView />, Icon: HomeIcon },
+  // Sits in Overview rather than Strategy: it answers across the whole app
+  // (strategy, tyres, standings, past races), so filing it under one of those
+  // would understate it.
+  { id: "ask", label: "Ask", group: "Overview", el: <AskView />, Icon: ChatIcon },
   { id: "strategy", label: "Strategy", group: "Strategy", el: <StrategyView />, Icon: TargetIcon },
   { id: "undercut", label: "Undercut", group: "Strategy", el: <UndercutView />, Icon: SwapIcon },
   { id: "calendar", label: "Calendar", group: "Race weekend", el: <CalendarView />, Icon: CalendarIcon },

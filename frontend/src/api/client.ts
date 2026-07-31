@@ -1,5 +1,6 @@
 // Tiny typed fetch wrapper around the FastAPI backend.
 import type {
+  AskResp,
   DegradationResp,
   LapHistory,
   LiveResp,
@@ -122,6 +123,13 @@ export const api = {
     current_lap: number;
     n_runs?: number;
   }) => post<LiveResp>("/live", body),
+
+  /** Plain-English question -> parsed intent + slots -> engine call -> answer.
+   *  `parser` selects the implementation; "rules" is the one that won the
+   *  head-to-head, "transformer" is kept switchable so the comparison in
+   *  METHODOLOGY §15 can be reproduced from the UI. */
+  ask: (q: string, parser: "rules" | "transformer" = "rules") =>
+    post<AskResp>("/ask", { q, parser }),
 
   outcome: () => req<OutcomeResp>("/outcome"),
   predictUpcoming: (grid?: Record<string, number>) =>

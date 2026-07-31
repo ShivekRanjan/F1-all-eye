@@ -396,3 +396,32 @@ export interface CalendarResp {
   next_round: number | null;
   next_session: { round: number; event_name: string; name: string; date: string } | null;
 }
+
+/** What the NLU layer understood, echoed back with every answer.
+ *
+ *  Surfaced in the UI on purpose rather than kept server-side: the parse is
+ *  fuzzy, and a user who can see the bot resolved "Monza" to *Monaco* catches
+ *  the mistake before acting on a confident wrong answer. `parser` records
+ *  which of the two implementations answered — see METHODOLOGY §15 for why the
+ *  regex baseline is the one that ships. */
+export interface ParsedQuery {
+  intent: string;
+  /** Only the slots actually found. An absent key means "not asked about",
+   *  which is different from null — defaults belong to the engine. */
+  slots: Record<string, string | number | unknown>;
+  confidence: number;
+  parser: string;
+  unsupported: string[];
+}
+
+export interface AskResp {
+  text: string;
+  parsed: ParsedQuery;
+  /** The full engine response behind the sentence, shape depending on intent.
+   *  Null when the answer is a clarifying question rather than a result. */
+  data: Record<string, unknown> | null;
+  /** Slots the intent requires that the question didn't supply. */
+  needs: string[];
+  followup: string | null;
+  note: string | null;
+}

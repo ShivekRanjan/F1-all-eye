@@ -174,6 +174,17 @@ export function ForecastIcon(p: IconProps) {
   );
 }
 
+/** A speech bubble with a pit-board tail. Two text rules rather than three:
+ *  at 16px a third line closes the counters up into a solid block. */
+export function ChatIcon(p: IconProps) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M2.5 4a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v5.5a1 1 0 0 1-1 1H6.5L3.5 13V10.5a1 1 0 0 1-1-1V4Z" />
+      <path d="M5.5 5.75h5M5.5 8h3" />
+    </svg>
+  );
+}
+
 // --- Empty-state icons (larger default size, same restrained line style) ---
 const emptyBase = { ...base, width: 28, height: 28 };
 
