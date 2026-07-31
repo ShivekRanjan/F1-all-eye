@@ -9,8 +9,13 @@ from __future__ import annotations
 
 import pytest
 
-from f1se.nlu import parse
+# Imported from the module under test, NOT from the `f1se.nlu` dispatcher.
+# These assertions are about the rule parser specifically, and routing them
+# through the dispatcher silently re-points the whole file at whatever happens
+# to be the default parser — which is exactly what happened when the default
+# moved to the hybrid and this file started failing for the wrong reason.
 from f1se.nlu.lexicon import canonical_track
+from f1se.nlu.rules import parse
 from f1se.nlu.schema import Intent
 
 

@@ -139,6 +139,18 @@ def main() -> int:
         rows.append(r)
         print(_row(name, r))
 
+    # The composition: transformer intent + rule slots. Scored here rather than
+    # asserted, because "take the better half of each" is exactly the kind of
+    # claim that sounds obviously right and needs a number.
+    if models:
+        from f1se.nlu import compose
+
+        print()
+        for name, m in models:
+            def hybrid(text, _m=m):
+                return compose(_m.parse(text), rules_parse(text))
+            print(_row("hybrid " + name.split(" ")[1], score(hand, hybrid)))
+
     if not rows:
         return 0
 

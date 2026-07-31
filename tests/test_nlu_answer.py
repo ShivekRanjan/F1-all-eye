@@ -82,7 +82,7 @@ def test_third_car_is_surfaced_not_dropped():
 def test_answer_always_reports_what_it_understood():
     a = answer(parse("fastest strategy for spa"), _StubEngine())
     assert a.parsed["slots"]["track"] == "Belgian Grand Prix"
-    assert a.parsed["parser"] == "rules"
+    assert a.parsed["parser"] == "hybrid"
 
 
 def test_a_negative_degradation_slope_is_not_read_out_as_a_double_negative():

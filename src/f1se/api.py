@@ -301,7 +301,7 @@ def undercut(req: UndercutRequest, engine: StrategyEngine = Depends(get_engine))
 # ---- natural language ------------------------------------------------------
 class AskRequest(BaseModel):
     q: str = Field(..., min_length=1, max_length=500, description="a question in plain English")
-    parser: str = Field("rules", description="rules | transformer")
+    parser: str = Field("hybrid", description="hybrid | rules | transformer")
 
 
 @app.post("/ask")

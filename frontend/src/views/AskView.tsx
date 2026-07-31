@@ -28,6 +28,10 @@ import { ViewIntro } from "./common";
  *  "Monza" produces a confident wrong answer, and the only defence is letting
  *  the user see what was understood. */
 
+/** Ordered so the shipped default reads first. */
+const PARSERS = ["hybrid", "rules", "transformer"] as const;
+type Parser = (typeof PARSERS)[number];
+
 type Turn =
   | { role: "you"; text: string }
   | { role: "engine"; answer: AskResp }
@@ -75,7 +79,7 @@ export default function AskView() {
   });
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
-  const [parser, setParser] = useState<"rules" | "transformer">("rules");
+  const [parser, setParser] = useState<Parser>("hybrid");
 
   // The API is stateless — every question is parsed on its own. So when an
   // answer comes back asking for a missing slot ("What lap are we on?"), the
@@ -245,17 +249,20 @@ function Composer({
   );
 }
 
-function ParserToggle({
-  value,
-  onChange,
-}: {
-  value: "rules" | "transformer";
-  onChange: (v: "rules" | "transformer") => void;
-}) {
+const PARSER_HELP: Record<Parser, string> = {
+  hybrid:
+    "Ships. Transformer picks the intent, the rule parser fills the slots — each the half that measurably won across three seeds (METHODOLOGY §15).",
+  rules:
+    "Hand-written rules alone. Perfect slot precision, but reads the intent correctly on only about half of unseen phrasings.",
+  transformer:
+    "The from-scratch transformer alone. Best intent accuracy, slightly lower slot precision. Kept switchable so the comparison is reproducible.",
+};
+
+function ParserToggle({ value, onChange }: { value: Parser; onChange: (v: Parser) => void }) {
   return (
     <div className="flex items-center gap-2">
       <span className="font-mono text-mini uppercase tracking-[0.14em] text-ink-faint">parser</span>
-      {(["rules", "transformer"] as const).map((p) => (
+      {PARSERS.map((p) => (
         <Button
           key={p}
           size="sm"
@@ -264,12 +271,8 @@ function ParserToggle({
           onClick={() => onChange(p)}
           // aria-label, not just title: the visible word is "rules", which says
           // nothing on its own about what the control does.
-          aria-label={p === "rules" ? "Use the rules parser" : "Use the transformer parser"}
-          title={
-            p === "rules"
-              ? "Hand-written rules — won the head-to-head on unseen phrasings and is what ships."
-              : "The from-scratch transformer. Kept switchable so the comparison is reproducible; it lost, see METHODOLOGY §15."
-          }
+          aria-label={`Use the ${p} parser`}
+          title={PARSER_HELP[p]}
         >
           {p}
         </Button>

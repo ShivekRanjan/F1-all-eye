@@ -125,10 +125,11 @@ export const api = {
   }) => post<LiveResp>("/live", body),
 
   /** Plain-English question -> parsed intent + slots -> engine call -> answer.
-   *  `parser` selects the implementation; "rules" is the one that won the
-   *  head-to-head, "transformer" is kept switchable so the comparison in
-   *  METHODOLOGY §15 can be reproduced from the UI. */
-  ask: (q: string, parser: "rules" | "transformer" = "rules") =>
+   *  `parser` selects the implementation. "hybrid" ships — transformer intent,
+   *  rule slots, each the half that measurably won. The other two stay
+   *  switchable so the head-to-head in METHODOLOGY §15 is reproducible from the
+   *  UI rather than merely asserted. */
+  ask: (q: string, parser: "hybrid" | "rules" | "transformer" = "hybrid") =>
     post<AskResp>("/ask", { q, parser }),
 
   outcome: () => req<OutcomeResp>("/outcome"),

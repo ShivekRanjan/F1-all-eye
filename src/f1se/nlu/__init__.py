@@ -38,14 +38,69 @@ def _transformer():
     return NumpyIntentSlot.load(path)
 
 
-def parse(text: str, *, parser: str = "rules") -> ParsedQuery:
+def _hybrid(text: str) -> ParsedQuery:
+    """Transformer for the intent, rules for the slots.
+
+    Not a hedge — each half is the one that measurably won its half. Across three
+    seeds on the hand-written set the transformer takes intent 3/3 (0.645-0.677
+    vs 0.516) while the rule parser takes slot extraction 3/3, at **precision
+    1.000** against 0.974-0.978. Composing them keeps both: intent accuracy rises
+    to the transformer's, slot precision stays perfect, and exact match goes
+    0.290 -> 0.419-0.452.
+
+    The split is not arbitrary either. Classifying a sentence into one of seven
+    intents is pattern recognition over the whole utterance, which is what a
+    learned model is for; pulling "18 laps old" out and deciding *whose* tyres
+    they are is bounded, checkable logic with a right answer, which is what a
+    rule is for. That the measurement agrees with that reasoning is the reason to
+    trust it.
+
+    Pre-registered: METHODOLOGY §15 named this experiment before the data that
+    confirms it existed.
+    """
+    from f1se.nlu.rules import parse as _rules
+
+    return compose(_transformer().parse(text), _rules(text))
+
+
+def compose(t: ParsedQuery, r: ParsedQuery) -> ParsedQuery:
+    """Combine a model parse and a rule parse into the shipped answer.
+
+    Split out so `analysis/nlu_benchmark.py` scores the composition that
+    actually ships rather than its own re-implementation of it — the two drifting
+    apart is how a benchmark starts measuring something nobody runs.
+    """
+    from f1se.nlu.schema import Intent
+
+    intent = t.intent
+    # The slots are evidence about the intent, not just cargo. A sentence that
+    # names two cars on different tyres at a given lap IS a duel, whatever a
+    # classifier scores it — and the model does get this wrong: "verstappen is
+    # behind me on softs 2 laps old, lap 19 at monza" came back as `degradation`
+    # at 0.594 while the rule parser read it correctly.
+    #
+    # Deliberately a structural check and not a confidence threshold. Thresholds
+    # have to be tuned, and the only set available to tune one against is the 31
+    # examples that decide the benchmark.
+    s = r.slots
+    duel = (s.your_compound and s.rival_compound) or (
+        s.rival_compound and s.rival_age is not None and s.current_lap is not None)
+    if duel:
+        intent = Intent.UNDERCUT
+
+    return ParsedQuery(intent=intent, slots=s, confidence=t.confidence,
+                       parser="hybrid", unsupported=r.unsupported)
+
+
+def parse(text: str, *, parser: str = "hybrid") -> ParsedQuery:
     """Parse ``text``. ``parser`` selects the implementation.
 
-    Both are reachable at runtime even though only the rules parser ships as the
-    default. The transformer lost the head-to-head (METHODOLOGY §15) and keeping
-    it callable is the difference between a documented rejection and an
-    unverifiable claim — the comparison can be re-run from the app itself.
+    All three are reachable at runtime, because a benchmark nobody can re-run is
+    an assertion rather than a result — the comparison in METHODOLOGY §15 can be
+    reproduced from the app itself.
     """
+    if parser == "hybrid":
+        return _hybrid(text)
     if parser == "rules":
         from f1se.nlu.rules import parse as _p
         return _p(text)
