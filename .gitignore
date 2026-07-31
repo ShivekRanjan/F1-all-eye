@@ -42,6 +42,11 @@ data/processed/by_race_sprints/
 *.pt
 *.joblib
 models_out/
+# Seed replicates of the NLU transformer. Only the shipped artifact
+# (nlu_intent_slot.npz) is tracked; the replicates exist to measure run-to-run
+# variance and are regenerable with `nlu_train.py --seed N --out ...`. Three
+# more copies of the same 1.7 MB archive is not history worth keeping.
+data/processed/nlu_seed*.npz
 
 # Tooling
 .pytest_cache/

@@ -85,21 +85,41 @@ def score(pairs, parse_fn) -> dict:
 
 
 def _row(name: str, r: dict) -> str:
-    return (f"  {name:<14} intent {r['intent_acc']:.3f}   slot P {r['slot_p']:.3f} "
+    return (f"  {name:<18} intent {r['intent_acc']:.3f}   slot P {r['slot_p']:.3f} "
             f"R {r['slot_r']:.3f} F1 {r['slot_f1']:.3f}   exact {r['exact']:.3f}")
 
 
+def _models() -> list[tuple[str, object]]:
+    """Every trained artifact available, shipped one first.
+
+    More than one exists when the same config has been trained under different
+    seeds. Scoring all of them is not thoroughness for its own sake: the
+    hand-written set is 31 examples, and a single run cannot tell a real
+    difference between the parsers from where that run happened to land.
+    """
+    from f1se.nlu.model import NumpyIntentSlot
+
+    out = []
+    if MODEL.exists():
+        out.append(("seed 0 (shipped)", NumpyIntentSlot.load(MODEL)))
+    for p in sorted(MODEL.parent.glob("nlu_seed*.npz")):
+        out.append((p.stem.replace("nlu_", "").replace("seed", "seed "),
+                    NumpyIntentSlot.load(p)))
+    return out
+
+
+def _spread(rows: list[dict], key: str) -> float:
+    return max(r[key] for r in rows) - min(r[key] for r in rows)
+
+
 def main() -> int:
-    have_model = MODEL.exists()
-    model_parse = None
-    if have_model:
-        from f1se.nlu.model import NumpyIntentSlot
-        m = NumpyIntentSlot.load(MODEL)
-        model_parse = m.parse
-        meta_params = len(m.vocab)
-        print(f"transformer loaded — vocab {meta_params:,}, {m.layers} layers, d={m.d_model}\n")
-    else:
+    models = _models()
+    if not models:
         print(f"!! no trained model at {MODEL}; run analysis/nlu_train.py first\n")
+    else:
+        m0 = models[0][1]
+        print(f"transformer — vocab {len(m0.vocab):,}, {m0.layers} layers, "
+              f"d={m0.d_model}, {len(models)} run(s)\n")
 
     # Generated set, seeded away from training (seed=0) so these are unseen.
     gen = build(2000, seed=999)
@@ -107,23 +127,50 @@ def main() -> int:
 
     print(f"GENERATED held-out templates (n={len(gen)}) — table stakes")
     print(_row("rules", score(gen, rules_parse)))
-    if model_parse:
-        print(_row("transformer", score(gen, model_parse)))
+    for name, m in models:
+        print(_row(name, score(gen, m.parse)))
 
     print(f"\nHAND-WRITTEN unseen phrasings (n={len(hand)}) — THE TEST")
     r_rules = score(hand, rules_parse)
     print(_row("rules", r_rules))
-    if model_parse:
-        r_model = score(hand, model_parse)
-        print(_row("transformer", r_model))
-        d_i = r_model["intent_acc"] - r_rules["intent_acc"]
-        d_f = r_model["slot_f1"] - r_rules["slot_f1"]
-        print(f"\n  transformer - rules:  intent {d_i:+.3f}   slot F1 {d_f:+.3f}")
-        winner = "transformer" if (d_i + d_f) > 0 else "rules"
-        print(f"  -> ship: {winner}")
-        print("\n  Judged on the hand-written set only. The generated numbers say"
-              "\n  whether each parser handles its own idiom; they do not say which"
-              "\n  one survives a phrasing nobody anticipated.")
+    rows = []
+    for name, m in models:
+        r = score(hand, m.parse)
+        rows.append(r)
+        print(_row(name, r))
+
+    if not rows:
+        return 0
+
+    if len(rows) > 1:
+        # The spread across seeds is the resolution of this benchmark. Any gap
+        # between the parsers smaller than it is not a finding, it is where the
+        # run landed.
+        print(f"\n  spread across {len(rows)} seeds:"
+              f"  intent {_spread(rows, 'intent_acc'):.3f}"
+              f"   slot F1 {_spread(rows, 'slot_f1'):.3f}"
+              f"   exact {_spread(rows, 'exact'):.3f}")
+
+    d_i = [r["intent_acc"] - r_rules["intent_acc"] for r in rows]
+    d_f = [r["slot_f1"] - r_rules["slot_f1"] for r in rows]
+    print(f"\n  transformer - rules:  intent {min(d_i):+.3f} to {max(d_i):+.3f}"
+          f"   slot F1 {min(d_f):+.3f} to {max(d_f):+.3f}")
+
+    # A verdict per run, so a decision that flips between seeds is visible as a
+    # split rather than reported as whichever run went last.
+    verdicts = ["transformer" if (i + f) > 0 else "rules" for i, f in zip(d_i, d_f)]
+    if len(set(verdicts)) == 1:
+        print(f"  -> ship: {verdicts[0]} ({len(verdicts)}/{len(verdicts)} runs agree)")
+    else:
+        n_rules = verdicts.count("rules")
+        print(f"  -> SPLIT: rules {n_rules}/{len(verdicts)}, "
+              f"transformer {len(verdicts) - n_rules}/{len(verdicts)}")
+        print("     The decision is not stable at this sample size. Decide on the"
+              "\n     metric whose seed spread is smaller than the gap, and say so.")
+
+    print("\n  Judged on the hand-written set only. The generated numbers say"
+          "\n  whether each parser handles its own idiom; they do not say which"
+          "\n  one survives a phrasing nobody anticipated.")
     return 0
 
 

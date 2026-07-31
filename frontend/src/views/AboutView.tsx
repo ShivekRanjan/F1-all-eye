@@ -38,6 +38,13 @@ export default function AboutView() {
             baseline on a leakage-safe split (+8.5% vs persistence), so it's the one place it's used.
           </li>
           <li>
+            <strong>A from-scratch transformer for the Ask view</strong> — own tokeniser, attention
+            and training loop, benchmarked against a hand-written parser on phrasings written before
+            either was scored. Trained under three seeds, the two win different halves: rules extract
+            slots better (3/3), the transformer reads intent better (3/3), and the seed spread is as
+            large as the gap. Rules ship; the tie is reported, not broken.
+          </li>
+          <li>
             <strong>Podium & championship models</strong> — grid + form only, always validated{" "}
             <em>forward in time</em> (trained on earlier seasons, tested on later ones — never a
             shuffled split), with title odds that bootstrap uncertainty so an early leader doesn't

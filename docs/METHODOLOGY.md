@@ -683,14 +683,15 @@ an early guess rather than a measurement.
 
 *Reproduce: `analysis/phase_2026_sc_hazard.py`*
 
-## 15. A transformer built from scratch — and beaten by regex
+## 15. A transformer built from scratch — and what three seeds did to the verdict
 
 The app takes plain-English questions ("fastest strategy for Mexico City",
 "Verstappen is behind me on softs two laps old, lap 19"). Two parsers were built
 and benchmarked against each other: a hand-written rule/slot-filler, and a small
 transformer written from scratch — tokeniser, scaled dot-product attention,
-multi-head wrapper, pre-norm encoder, joint intent + BIO-slot heads. 445,594
-parameters, 25 minutes on a CPU.
+multi-head wrapper, pre-norm encoder, joint intent + BIO-slot heads. 450,586
+parameters, ~22 minutes on a CPU, and it ships served by a numpy forward pass so
+the deployed API needs no torch — the same trick as the LSTM nowcast.
 
 Training data is synthetic and self-labelling: the generator picks the slot
 values, so a query and its parse are emitted together and annotation costs
@@ -702,46 +703,118 @@ The evaluation set is **hand-written** (31 phrasings), never generated, in
 deliberately different word order and register, and written **before either
 parser was scored** — the same pre-registration as the locked race prediction.
 
-| | Intent | Slot F1 | Exact |
+### The first answer, and why one run was not enough
+
+The original version of this section reported a single training run and
+concluded: *rules ship, the transformer ties on intent and gives up 7 points of
+slot F1*. It then explained, at some length, the "odd symmetry" of both parsers
+scoring exactly 0.516 on intent — they must be failing on the same examples.
+
+Then the same config was trained twice more, changing nothing but the seed.
+
+| Hand-written, n=31 | Intent | Slot F1 | Exact |
 |---|---|---|---|
-| *Generated templates (n=2000)* | | | |
-| rules | 0.972 | 0.908 | 0.731 |
-| **transformer** | **1.000** | **0.973** | **0.845** |
-| *Hand-written, unseen (n=31) — the test* | | | |
 | **rules** | 0.516 | **0.845** | 0.290 |
-| transformer | 0.516 | 0.775 | 0.290 |
+| transformer, seed 0 *(shipped)* | 0.548 | 0.705 | 0.258 |
+| transformer, seed 1 | 0.677 | 0.717 | 0.419 |
+| transformer, seed 2 | 0.645 | 0.626 | 0.387 |
+| | | | |
+| **spread across seeds** | **0.129** | **0.091** | **0.161** |
 
-**Rules ship.** The transformer wins comfortably on generated templates and
-loses where it matters — tying on intent and giving up 7 points of slot F1.
+The intent tie was a coincidence of seed 0. The paragraph explaining it was
+explaining nothing.
 
-**The prediction was wrong, which is why it was tested.** I expected the learned
-model to win exactly here: regex is brittle to rewording, a tagger is not.
-Recorded because the reasoning sounded good and the data disagreed.
+**The seed spread is the resolution of this benchmark.** At n=31 one example is
+3.2 points of intent accuracy, and the composite ship rule now splits **2/3 for
+rules, 1/3 for the transformer** — the decision flips depending on which run you
+happened to do.
 
-**Why it lost, measured rather than guessed.** 25.3% of tokens in the
-hand-written set are out-of-vocabulary — one word in four arrives as an unknown
-token. The vocabulary is 300 words because it was built entirely from the
-synthetic templates, while real speech uses *gearbox*, *glued*, *boxing*,
-*fitted*, *gamble*, *fresh*. The failure is not that a transformer cannot
-generalise; it is that **synthetic data can only teach the vocabulary it
-contains**. The model generalises well inside its 300 words and is blind outside
-them, whereas the rule parser degrades gracefully — it ignores unknown words
-rather than being confused by them.
+It is worth recording how badly two runs mislead. After seeds 0 and 1 the slot-F1
+spread looked like **0.012**, and against a gap of 0.128 that reads as a
+ten-to-one margin — decisive. Seed 2 came in at 0.626 and the spread became
+**0.091**, so the true margin is nearer 1.4× the noise. A variance estimate from
+two points was wrong by a factor of seven, and three points is not obviously
+enough either.
 
-That also explains the odd symmetry of both parsers scoring 0.516 on intent:
-they fail on the same examples, for different reasons.
+### What survives all three runs
 
-**What a fix would require.** Broader training vocabulary is the obvious remedy,
-but having inspected the held-out set's vocabulary to diagnose this, tuning
-against it would be fitting the test. An honest retry needs a *second*
-hand-written set, written before the next attempt. Logged as the condition for
-revisiting rather than quietly done.
+Two things, and they point in opposite directions:
 
-One asymmetry worth keeping: the rule parser has **precision 1.000** and recall
-0.731 — when it extracts something it is right, it just misses. If a future
-model has the opposite profile the two compose rather than compete.
+* **Rules extract slots better — 3/3 runs.** 0.845 against 0.626–0.717, with
+  **precision 1.000** against 0.969–0.974. Direction never varies.
+* **The transformer classifies intent better — 3/3 runs.** 0.548–0.677 against
+  0.516. That direction never varies either.
 
-*Reproduce: `analysis/nlu_train.py`, `analysis/nlu_benchmark.py`*
+So the honest verdict is not "regex beat the transformer". It is that **the two
+parsers are good at different halves of the problem**, consistently, and the
+sample is too small to price the trade. Rules ship because a wrong slot is a
+wrong answer delivered confidently, whereas a wrong intent produces a visibly
+irrelevant reply the user can catch — and because precision 1.000 means the
+rule parser never asserts something it did not read.
+
+The old section's closing line — *"if a future model has the opposite profile
+the two compose rather than compete"* — turns out to describe the model that
+already exists. Routing intent through the transformer and slots through the
+rules is the obvious next experiment, and is not done here because it would be
+chosen on the strength of the same 31 examples.
+
+### Why the transformer is weak on slots, measured rather than guessed
+
+24.1% of tokens in the hand-written set are out-of-vocabulary — roughly one word
+in four. The vocabulary is 339 words because it was built **entirely from the
+synthetic templates**, while real speech uses *gearbox*, *glued*, *boxing*,
+*fitted*, *gamble*, *fresh*, *mine*, *stopper*. The failure is not that a
+transformer cannot generalise; it is that **synthetic data can only teach the
+vocabulary it contains**. The model generalises well inside its 339 words and is
+blind outside them, whereas the rule parser degrades gracefully — it ignores
+unknown words instead of being confused by them.
+
+(An earlier draft of this paragraph put OOV at 31.3%. That count treated every
+number as unseen; the tokeniser collapses digits to a single `<num>`, so they
+never were. Corrected figure: 24.1%, against 25.3% before the apostrophe fix
+below — essentially flat, which is why OOV does *not* explain the difference
+between seeds.)
+
+### A bug the held-out set was structurally unable to catch
+
+`normalise` collapsed punctuation to spaces, apostrophes included, so `"i'm"`
+became `"i m"` before either parser saw it — and the rule parser's ownership
+anchors are spelled `i'?m`, `he'?s`, `they'?re`. **Not one of them could ever
+match.** Dead code since the parser was written. With no self-anchor nothing
+binds a tyre to a car, so a fully specified duel came back asking a question it
+had just been told the answer to.
+
+Deleting apostrophes instead of spacing them (folding `"i'm"` onto `"im"`) moved
+the generated set from 0.908 to **0.955** slot F1 and 0.731 to **0.828** exact.
+
+The held-out score did not move at all — 0.845 before and after. Every one of
+the 31 phrasings was written as *"im"*, *"hes"*, *"ive"*, without a single
+apostrophe. **The evaluation set had inherited the same blind spot as the code
+it existed to audit.** It was found by typing a contraction into the chat UI,
+which is the sort of thing a held-out set is supposed to make unnecessary.
+
+### Conditions for revisiting
+
+Not done here, and each for a stated reason:
+
+* **A bigger evaluation set.** n=31 cannot resolve differences this size. This is
+  the binding constraint, not the model.
+* **Broader training vocabulary.** The obvious remedy for 24.1% OOV — but the
+  diagnosis came from inspecting the held-out set, so tuning against it would be
+  fitting the test. Needs a *second* hand-written set, written first.
+* **Fixing the remaining rule-parser recall gaps.** Ages without a qualifier
+  (*"on hards 20 laps"*), and anchors like *"mine are"*, *"we are"*, *"ive got"*,
+  *"he has"* — the last binds tyres to the wrong car. All eleven were found by
+  reading held-out failures, so the same rule applies.
+* **Composing the two parsers.** Justified by 3/3 consistency in both
+  directions, but the weighting would be picked on those same 31 examples.
+
+The shipped artifact is **seed 0**, not the best-scoring seed. Seed 1 is better
+on the held-out set, and choosing it for that reason would be selecting a model
+on the test set.
+
+*Reproduce: `analysis/nlu_train.py --seed N --out ...`, `analysis/nlu_benchmark.py`
+(scores every seed present and reports the spread)*
 
 ---
 
@@ -755,3 +828,10 @@ alternative**. Once — the sequence model — complexity **earned its place** o
 the identical leakage-safe footing. That's the whole point: the framework isn't
 biased toward simple *or* complex; it's biased toward what the held-out data
 supports. Parsimony plus domain knowledge, verified at every step.
+
+And once — the NLU transformer, §15 — the honest answer turned out to be
+**neither**. Three seeds showed the two parsers winning different metrics
+consistently, and a held-out set of 31 examples too small to price the trade.
+That case is kept deliberately, because "the evidence does not resolve this" is
+a real finding and the framework has to be able to return it. A method that
+always produces a winner is not measuring anything.
