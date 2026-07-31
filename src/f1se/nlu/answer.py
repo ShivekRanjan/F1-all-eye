@@ -196,10 +196,24 @@ def _undercut(s, engine, parsed) -> Answer:
     # probability that rounds to zero.
     if works:
         head = f"Yes — pit now. The undercut gains about {abs(gain):.1f} seconds on {who}"
+    elif gain < 0:
+        # A negative gain is a loss. "Undercutting only gains -4.6 seconds" is
+        # arithmetically true and reads as a typo — the reader has to work out
+        # that a negative gain means the stop costs them. Say the direction in
+        # the verb and keep the number positive.
+        head = f"No — hold and cover. Pitting now would cost you about {abs(gain):.1f} seconds"
     else:
-        head = f"No — hold and cover. Undercutting only gains {gain:+.1f} seconds"
+        head = f"No — hold and cover. Undercutting gains only {gain:.1f} seconds"
     if p >= 0.10:
         text = f"{head}, and you come out ahead {p * 100:.0f}% of the time."
+    elif gain < 0 and final_gap > 0:
+        # "It closes the gap, it doesn't make the pass" is the right thing to say
+        # about an undercut that gains time but not track position. It is the
+        # wrong thing to say about one that LOSES time — that stop closes
+        # nothing, and pairing the two halves produces a sentence that
+        # contradicts itself inside one line.
+        text = (f"{head} and leave you about {final_gap:.0f} seconds behind at the "
+                f"crossover. The stop costs more than the fresh tyres win back.")
     elif final_gap > 0:
         text = (f"{head}, but it isn't enough to get past — you'd still be about "
                 f"{final_gap:.0f} seconds behind at the crossover. It closes the gap, "

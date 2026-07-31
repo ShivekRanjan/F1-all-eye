@@ -139,3 +139,27 @@ def test_it_still_asks_when_the_calendar_cannot_say(monkeypatch):
     a = answer(parse("who won last race?"), None)
     assert a.needs == ["track"]
     assert a.text == "Which circuit?"
+
+
+def test_a_losing_undercut_is_phrased_as_a_cost_not_a_negative_gain():
+    """"Undercutting only gains -4.6 seconds" is true and reads as a typo."""
+    from f1se.nlu.answer import _undercut
+    from f1se.nlu.schema import Slots
+
+    class _E:
+        def undercut(self, *a, **k):
+            return {"undercut_gain_s": -4.6, "undercut_works": False,
+                    "undercut": {"p_ahead": 0.0, "final_gap_s": 19.0},
+                    "cover": {"p_ahead": 0.0, "final_gap_s": 19.0}}
+
+    s = Slots(track="Belgian Grand Prix", current_lap=40, your_compound="SOFT",
+              your_age=15, rival_compound="HARD", rival_age=12)
+    text = _undercut(s, _E(), {}).text
+    assert "-4.6" not in text
+    assert "cost you about 4.6 seconds" in text
+    # ...and the tail must agree with the head. A stop that loses time closes no
+    # gap, so the "it closes the gap, it doesn't make the pass" phrasing — right
+    # for an undercut that gains time without gaining position — must not fire
+    # here, or the sentence contradicts itself.
+    assert "closes the gap" not in text
+    assert "costs more than the fresh tyres win back" in text
