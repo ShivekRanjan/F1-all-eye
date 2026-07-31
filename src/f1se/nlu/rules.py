@@ -113,6 +113,21 @@ def _drivers_in_order(text: str) -> list[tuple[int, str]]:
     return uniq
 
 
+#: "What is an undercut?" asks for a definition, not a duel. The words that
+#: trigger an intent are the same words the definition is *about*, so without
+#: this the parser reads "undercut" as a request to run one and then asks for a
+#: lap number the question was never going to supply.
+_DEFINITIONAL = re.compile(
+    r"^(what (is|are|does|do)\b|whats (a|an|the)\b|explain\b|define\b"
+    r"|how (does|do) .* work\b|what .*\bmean\b)")
+
+#: Only intents that need a circuit are ambiguous this way. "What is the next
+#: race" and "what is the championship standings" are genuine requests for
+#: current state, not requests for a definition — so the two slot-free intents
+#: are exempt, or the guard starts eating real questions.
+_DEFINABLE = {Intent.RECOMMEND, Intent.UNDERCUT, Intent.DEGRADATION, Intent.RACE_RESULT}
+
+
 def parse(text: str) -> ParsedQuery:
     """Sentence -> intent + slots. Never raises; UNKNOWN is a valid answer."""
     t = normalise(text)
@@ -137,6 +152,15 @@ def parse(text: str) -> ParsedQuery:
         drivers = _drivers_in_order(t)
         if drivers:
             s.driver = drivers[0][1]
+
+    # A definitional question that named nothing concrete is a question about a
+    # word, not a request to run the engine. Gated on "no domain slot found" so
+    # it can never swallow a real query: "what is the fastest strategy for
+    # Monza" resolves a track and is left alone, while "what is an undercut"
+    # resolves nothing and is correctly refused.
+    if intent in _DEFINABLE and _DEFINITIONAL.match(t) and not s.filled():
+        return ParsedQuery(intent=Intent.UNKNOWN, slots=Slots(), confidence=0.0,
+                           parser="rules")
 
     return ParsedQuery(intent=intent, slots=s, confidence=conf, parser="rules")
 

@@ -136,3 +136,24 @@ def test_curly_apostrophe_parses_like_the_straight_one():
     assert straight.your_compound == curly.your_compound == "HARD"
     assert straight.your_age == curly.your_age == 12
     assert straight.rival_compound == curly.rival_compound == "SOFT"
+
+
+# --- definitional questions -------------------------------------------------
+def test_a_definitional_question_is_refused_not_answered():
+    """"What is an undercut?" asks about a word. The trigger words for an intent
+    are the same words a definition is *about*, so without a guard the parser
+    reads it as a request to run a duel and asks for a lap number the question
+    was never going to supply."""
+    for q in ("what is undercut?", "what is an undercut", "whats an undercut",
+              "explain degradation", "what does deg mean"):
+        assert parse(q).intent is Intent.UNKNOWN, q
+
+
+def test_the_definitional_guard_never_eats_a_real_question():
+    """Gated on "resolved no slots", so anything naming a circuit is untouched —
+    and the two slot-free intents are exempt, because "what is the next race" is
+    a genuine request for current state rather than a definition."""
+    assert parse("what is the fastest strategy for Monza").intent is Intent.RECOMMEND
+    assert parse("whats the deg like at Zandvoort").intent is Intent.DEGRADATION
+    assert parse("what is the next race").intent is Intent.NEXT_RACE
+    assert parse("what are the standings").intent is Intent.STANDINGS
