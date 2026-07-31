@@ -92,3 +92,50 @@ def test_a_negative_degradation_slope_is_not_read_out_as_a_double_negative():
 
     assert _slope_phrase("SOFT", -0.027) == "soft actually gains about 0.027 seconds per lap"
     assert _slope_phrase("HARD", 0.043) == "hard loses about 0.043 seconds per lap"
+
+
+# --- "last race" ------------------------------------------------------------
+def test_who_won_last_race_resolves_instead_of_asking_which_circuit(monkeypatch):
+    """The ask-don't-assume rule is for slots nothing can supply. Which race was
+    the last one is not one of them — the app holds the calendar. Bouncing this
+    back with "Which circuit?" is consistent and useless."""
+    import f1se.nlu.answer as A
+
+    monkeypatch.setattr(A, "_last_completed_round", lambda: (2026, "Hungarian Grand Prix"))
+    monkeypatch.setattr(
+        "f1se.standalone.races.cached_race_card",
+        lambda season, track: {"event_name": track, "actual_podium": ["NOR", "VER", "ANT"]},
+    )
+
+    a = answer(parse("who won last race?"), None)
+    assert a.needs == []
+    assert "Hungarian Grand Prix" in a.text
+    # The inference has to be visible in both the sentence and the parse — an
+    # assumption the user can't see is the failure this view exists to prevent.
+    assert a.text.startswith("Last time out")
+    assert a.parsed["slots"]["track"] == "Hungarian Grand Prix"
+
+
+def test_a_named_circuit_is_never_overridden_by_the_last_race(monkeypatch):
+    import f1se.nlu.answer as A
+
+    monkeypatch.setattr(A, "_last_completed_round", lambda: (2026, "Hungarian Grand Prix"))
+    monkeypatch.setattr(
+        "f1se.standalone.races.cached_race_card",
+        lambda season, track: {"event_name": track, "actual_podium": ["LEC", "RUS", "HAM"]},
+    )
+
+    a = answer(parse("what happened at Silverstone"), None)
+    assert a.parsed["slots"]["track"] == "British Grand Prix"
+    assert not a.text.startswith("Last time out")
+
+
+def test_it_still_asks_when_the_calendar_cannot_say(monkeypatch):
+    """No resolution available (pre-season, or the schedule fetch failed) must
+    fall back to the question, not to a guess."""
+    import f1se.nlu.answer as A
+
+    monkeypatch.setattr(A, "_last_completed_round", lambda: None)
+    a = answer(parse("who won last race?"), None)
+    assert a.needs == ["track"]
+    assert a.text == "Which circuit?"

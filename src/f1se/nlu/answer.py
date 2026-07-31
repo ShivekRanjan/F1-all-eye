@@ -75,10 +75,48 @@ def _stint_phrase(compounds: list[str], pit_laps: list[int]) -> str:
     return f"{tyres}, {stop_word} {laps}"
 
 
+def _last_completed_round() -> tuple[int, str] | None:
+    """Season and event name of the most recent race that has actually run."""
+    from f1se.standalone.schedule import cached_calendar
+    from f1se.standalone.standings import cached_standings
+
+    st = cached_standings(None)
+    season = st.get("season") if st else None
+    if season is None:
+        return None
+    cal = cached_calendar(season)
+    if not cal:
+        return None
+    done = [r for r in cal.get("rounds", []) if r.get("done")]
+    if not done:
+        return None
+    return season, done[-1]["event_name"]
+
+
 def answer(pq: ParsedQuery, engine) -> Answer:
     """Route a parsed question to the engine and phrase the result."""
-    parsed = pq.to_dict()
     s = pq.slots
+
+    # "Who won last race?" names no circuit — and the ask-don't-assume rule
+    # above would bounce it back with "Which circuit?". That is consistent and
+    # useless: the app holds the calendar, so it knows exactly which race that
+    # was. The rule is meant for things nothing can supply (what tyre you are
+    # on); "which race was the last one" is not one of them.
+    #
+    # Resolved *before* the required-slot check, and written back into the slots
+    # rather than handled off to the side, so the "understood as" strip names
+    # the race it settled on. An inference the user cannot see is the failure
+    # this whole view exists to prevent.
+    inferred_last_race = False
+    if pq.intent is Intent.RACE_RESULT and s.track is None:
+        hit = _last_completed_round()
+        if hit:
+            if s.season is None:
+                s.season = hit[0]
+            s.track = hit[1]
+            inferred_last_race = True
+
+    parsed = pq.to_dict()
 
     if pq.intent is Intent.UNKNOWN:
         return Answer(
@@ -108,7 +146,7 @@ def answer(pq: ParsedQuery, engine) -> Answer:
         if pq.intent is Intent.NEXT_RACE:
             return _next_race(parsed)
         if pq.intent is Intent.RACE_RESULT:
-            return _race_result(s, parsed)
+            return _race_result(s, parsed, inferred_last_race)
     except KeyError as e:
         return Answer(text=f"I don't have data for that: {e}", parsed=parsed)
     except Exception as e:  # pragma: no cover - engine/network surface
@@ -245,7 +283,7 @@ def _next_race(parsed) -> Answer:
                   parsed=parsed, data=up)
 
 
-def _race_result(s, parsed) -> Answer:
+def _race_result(s, parsed, inferred_last_race: bool = False) -> Answer:
     from f1se.standalone.races import cached_race_card
 
     season = s.season
@@ -257,9 +295,13 @@ def _race_result(s, parsed) -> Answer:
     if not card:
         return Answer(text=f"I don't have a result for {s.track} in {season}.", parsed=parsed)
     pod = card.get("actual_podium") or []
-    text = (f"{card['event_name']} {season}: {pod[0]} won"
+    # Lead with "Last time out" when the race was inferred rather than named, so
+    # the sentence itself says an assumption was made — the user asked about
+    # "the last race" and needs to see which one that resolved to.
+    lead = "Last time out — " if inferred_last_race else ""
+    text = (f"{lead}{card['event_name']} {season}: {pod[0]} won"
             + (f", from {pod[1]} and {pod[2]}." if len(pod) >= 3 else ".")) if pod else \
-           f"I have {card['event_name']} {season} but no podium recorded."
+           f"{lead}I have {card['event_name']} {season} but no podium recorded."
     if card.get("prediction"):
         text += f" The model had {card['prediction']['hit_at_3']} of the 3 right before the race."
     return Answer(text=text, parsed=parsed, data=card)
