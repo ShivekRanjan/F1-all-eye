@@ -67,7 +67,7 @@ class Tokenizer:
         self.stoi = {w: i for i, w in enumerate(self.vocab)}
 
     @classmethod
-    def build(cls, texts: list[str], min_count: int = 1) -> "Tokenizer":
+    def build(cls, texts: list[str], min_count: int = 1) -> Tokenizer:
         counts: dict[str, int] = {}
         for t in texts:
             for w in cls.split(t):
@@ -198,7 +198,7 @@ class NumpyIntentSlot:
         self.tok = Tokenizer(self.vocab)
 
     @classmethod
-    def load(cls, path) -> "NumpyIntentSlot":
+    def load(cls, path) -> NumpyIntentSlot:
         z = np.load(Path(path), allow_pickle=False)
         meta = json.loads(str(z["meta_json"]))
         w = {k: z[k] for k in z.files if k != "meta_json"}

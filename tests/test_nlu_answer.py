@@ -9,8 +9,7 @@ question than the one asked.
 from __future__ import annotations
 
 from f1se.nlu import parse
-from f1se.nlu.answer import Answer, answer
-from f1se.nlu.schema import Intent
+from f1se.nlu.answer import answer
 
 
 class _StubEngine:

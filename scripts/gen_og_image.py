@@ -6,6 +6,7 @@ the web fonts (Impact for the Archivo Black wordmark, Consolas for mono).
 """
 
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1200, 630

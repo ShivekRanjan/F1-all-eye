@@ -88,8 +88,10 @@ def test_vsc_pit_loss_scales_with_the_track():
     different discount at Spa (19.5 s green) than at Imola (28.5 s), while the
     SC discount scaled with the track all along."""
     laps, green, noise = 6, np.full((1, 6), 90.0), np.zeros((1, 6))
-    pit = np.zeros(laps, dtype=bool); pit[2] = True
-    states = np.zeros((1, laps), dtype=np.int8); states[0, 2] = 1
+    pit = np.zeros(laps, dtype=bool)
+    pit[2] = True
+    states = np.zeros((1, laps), dtype=np.int8)
+    states[0, 2] = 1
 
     def cost(green_pit_loss: float) -> float:
         with_pit = race_totals(green, pit, states, noise, pit_loss_s=green_pit_loss)[0]

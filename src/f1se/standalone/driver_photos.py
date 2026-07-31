@@ -134,7 +134,7 @@ def fetch_driver_photos(driver_info_path: Path | None = None) -> list[dict]:
                 print(f"  {code}: licence '{lic and lic['license']}' not free — skipped", flush=True)
                 continue
             img = None
-            for attempt, wait in enumerate((0, 3, 8)):
+            for wait in (0, 3, 8):
                 if wait:
                     time.sleep(wait)
                 resp = requests.get(img_url, headers=UA, timeout=20)

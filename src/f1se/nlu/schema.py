@@ -11,11 +11,11 @@ identical type, which is what makes them comparable on the same held-out set.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
-from enum import Enum
+from dataclasses import asdict, dataclass, field
+from enum import StrEnum
 
 
-class Intent(str, Enum):
+class Intent(StrEnum):
     """What the user is asking for. Each maps to one engine capability."""
 
     RECOMMEND = "recommend"        # fastest strategy for a race
