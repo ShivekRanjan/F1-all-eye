@@ -302,6 +302,10 @@ def undercut(req: UndercutRequest, engine: StrategyEngine = Depends(get_engine))
 class AskRequest(BaseModel):
     q: str = Field(..., min_length=1, max_length=500, description="a question in plain English")
     parser: str = Field("hybrid", description="hybrid | rules | transformer")
+    context: str | None = Field(
+        None, max_length=500,
+        description="the previous question, so a refinement like 'but the "
+                    "temperature is 35 degrees' resolves against it")
 
 
 @app.post("/ask")
@@ -315,14 +319,19 @@ def ask(req: AskRequest) -> dict:
     the parse is fuzzy and a user needs to see that "Monza" wasn't heard as
     "Monaco". A missing required slot comes back as a question, not a default.
     """
-    from f1se.nlu import parse
+    from f1se.nlu import parse_followup
     from f1se.nlu.answer import answer as build_answer
 
     try:
-        pq = parse(req.q, parser=req.parser)
+        pq, merged = parse_followup(req.q, req.context, parser=req.parser)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
-    return build_answer(pq, get_engine()).to_dict()
+    out = build_answer(pq, get_engine()).to_dict()
+    # Surfaced, not silent: if the reply was resolved against the previous
+    # question the user has to be able to see that, same as every other
+    # inference this endpoint makes.
+    out["merged_with_context"] = merged
+    return out
 
 
 # ---- race-replay (live view) data endpoints --------------------------------

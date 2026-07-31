@@ -9,7 +9,7 @@ a parser toggle and the API answered `unknown parser: 'transformer'`.
 import pytest
 
 from f1se.config import PROJECT_ROOT
-from f1se.nlu import Intent, parse
+from f1se.nlu import Intent, parse, parse_followup
 
 MODEL = PROJECT_ROOT / "data" / "processed" / "nlu_intent_slot.npz"
 needs_model = pytest.mark.skipif(
@@ -69,3 +69,49 @@ def test_hybrid_takes_the_intent_from_the_model_and_the_slots_from_the_rules():
 def test_every_parser_refuses_a_definitional_question():
     for p in ("hybrid", "rules", "transformer"):
         assert parse("what is undercut?", parser=p).intent is Intent.UNKNOWN, p
+
+
+# --- refinement follow-ups --------------------------------------------------
+CTX = "fastest strategy for silverstone"
+
+
+@needs_model
+def test_a_refinement_resolves_against_the_previous_question():
+    """"but the temperature is 35 degrees" means nothing alone. Parsed on its
+    own the classifier reaches for whatever fits — it answered with the
+    championship standings — so it has to be read against what came before."""
+    p, merged = parse_followup("but the temprature is 35 degrees", CTX)
+    assert merged
+    assert p.intent is Intent.RECOMMEND
+    assert p.slots.track == "British Grand Prix"
+    assert p.slots.track_temp == 35.0
+
+
+@needs_model
+def test_a_refinement_overrides_the_slot_it_corrects():
+    """Concatenation leaves the earlier wording in front, so "fastest ..." +
+    "make it the safest" would keep reading as `mean` and silently discard the
+    correction."""
+    p, merged = parse_followup("make it the safest plan", CTX)
+    assert merged and p.slots.objective == "p85"
+
+
+@needs_model
+def test_a_new_question_that_merely_follows_one_is_left_alone():
+    """The gate is whether the fragment can stand on its own — judged on the
+    rule parse, because the model is obliged to label every input and so makes
+    every fragment look self-sufficient."""
+    for q, want in (("who leads the championship", Intent.STANDINGS),
+                    ("what happened at monza", Intent.RACE_RESULT),
+                    ("how do the tyres go off at spa", Intent.DEGRADATION)):
+        p, merged = parse_followup(q, CTX)
+        assert not merged, q
+        assert p.intent is want, q
+    # ...and the circuit named in the follow-up must survive, not be replaced.
+    assert parse_followup("what happened at monza", CTX)[0].slots.track == "Italian Grand Prix"
+
+
+@needs_model
+def test_no_context_means_no_merge():
+    p, merged = parse_followup("but the temprature is 35 degrees", None)
+    assert not merged and p.slots.track is None

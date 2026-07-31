@@ -62,6 +62,11 @@ _AGE = r"(\d{1,2})\s*(?:laps?)\s*(?:old|used|on them)"
 _LAP = r"(?:currently\s+|we(?:'re| are)\s+on\s+|on\s+)?lap\s*(\d{1,2})"
 # "2 seconds behind", "1.5s back", "a gap of 2.4 seconds"
 _GAP = r"(\d+(?:\.\d+)?)\s*(?:s\b|secs?\b|seconds?\b)"
+# "35 degrees", "35c", "35 °c", "track temp 35", "temperature is 35".
+# Anchored on an explicit temperature word or the c suffix — a bare number must
+# never be read as a temperature, or "lap 35" silently becomes 35 °C.
+_TEMP = (r"(?:track\s*)?temp(?:erature)?\s*(?:is\s*|of\s*|at\s*)?(\d{1,2})(?:\s*°?\s*c\b)?"
+         r"|(\d{1,2})\s*(?:°\s*c\b|degrees?\b|deg\s*c\b|c\b)")
 
 
 def _first(pattern: str, text: str, group: int = 1) -> str | None:
@@ -145,6 +150,8 @@ def parse(text: str) -> ParsedQuery:
             break
     if (st := _first(r"\b(one|two|three|1|2|3)[\s-]?stop", t)):
         s.max_stops = {"one": 1, "two": 2, "three": 3}.get(st, None) or int(st)
+    if (m := re.search(_TEMP, t)):
+        s.track_temp = float(m.group(1) or m.group(2))
 
     if intent is Intent.UNDERCUT:
         _fill_duel(t, s)

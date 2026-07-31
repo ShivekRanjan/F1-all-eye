@@ -36,6 +36,11 @@ class Slots:
     current_lap: int | None = None
     objective: str | None = None          # mean | median | p85
     max_stops: int | None = None
+    #: Expected track temperature, °C. Feeds the thermal prior — the correction
+    #: that took the season backtest's stop-count match from 4/8 to 7/8
+    #: (METHODOLOGY §9). The engine and the Strategy view have always taken it;
+    #: the chat could not reach it until this slot existed.
+    track_temp: float | None = None
 
     # Undercut duel — "you" versus one rival.
     gap_s: float | None = None

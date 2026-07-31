@@ -1,19 +1,22 @@
 """Natural-language layer: turn a spoken/typed question into an engine call.
 
-Two parsers live here and produce the same :class:`ParsedQuery`:
+Three parsers live here and produce the same :class:`ParsedQuery`:
 
 * :mod:`f1se.nlu.rules` — hand-written baseline
 * :mod:`f1se.nlu.model` — a from-scratch transformer (see analysis/)
+* ``hybrid`` — the model's intent, the rules' slots. **Ships.**
 
-Which one ships is decided by measurement on a held-out set neither was tuned
-on, not by preference. Same pattern as every other model choice in this repo.
+Which one ships is decided by measurement on a held-out set none was tuned on,
+not by preference. Same pattern as every other model choice in this repo — and
+here the answer turned out to be neither of the two originally built, which is
+why the composition is scored in the benchmark rather than assumed to be better.
 """
 
 from functools import lru_cache
 
 from f1se.nlu.schema import Intent, ParsedQuery, Slots
 
-__all__ = ["Intent", "ParsedQuery", "Slots", "parse"]
+__all__ = ["Intent", "ParsedQuery", "Slots", "compose", "parse", "parse_followup"]
 
 #: Where the trained transformer weights live. Tracked in git (1.7 MB) and read
 #: back through a numpy forward pass, so serving it costs no torch dependency.
@@ -107,3 +110,58 @@ def parse(text: str, *, parser: str = "hybrid") -> ParsedQuery:
     if parser == "transformer":
         return _transformer().parse(text)
     raise ValueError(f"unknown parser: {parser!r}")
+
+
+def parse_followup(text: str, context: str | None = None, *,
+                   parser: str = "hybrid") -> tuple[ParsedQuery, bool]:
+    """Parse ``text``, treating it as a refinement of ``context`` when it is one.
+
+    Returns ``(parse, merged)``.
+
+    Conversation does not restate. Told the fastest plan for Silverstone, the
+    next thing a person says is "but the temperature is 35 degrees" — a sentence
+    that means nothing alone and everything after the one before it. Parsed on
+    its own it has no circuit, so the classifier reaches for whatever fits and
+    answers a question nobody asked. That is what happened: the reply was the
+    championship standings.
+
+    The merge is gated on **the refined question having the same intent as the
+    one it refines**. That is what separates "but the temperature is 35 degrees"
+    (still a strategy question -> merge) from "who leads the championship"
+    (a new question that happens to follow one -> leave alone), without needing
+    to enumerate which words count as refinements.
+    """
+    solo = parse(text, parser=parser)
+    if not context:
+        return solo, False
+
+    from f1se.nlu.answer import REQUIRED
+    from f1se.nlu.rules import parse as _rules
+    from f1se.nlu.schema import Intent
+
+    # Answerability is judged on the *rule* parse of the fragment, not the
+    # hybrid's. The model is obliged to pick a class for every input, so it
+    # labels "but the temperature is 35 degrees" `standings` and the fragment
+    # looks self-sufficient. The rule parser abstains when no cue fires, which
+    # is exactly the signal needed here.
+    frag = _rules(text)
+    answerable = frag.intent is not Intent.UNKNOWN and all(
+        getattr(frag.slots, f, None) is not None for f in REQUIRED.get(frag.intent, ()))
+    if answerable:
+        return solo, False        # a new question that merely follows another
+
+    merged = parse(f"{context} {text}", parser=parser)
+    # A refinement refines the same question. If gluing the two together changes
+    # what is being asked, the fragment raised a new topic and merging would
+    # staple the old circuit onto it — the answer would be right and the
+    # "understood as" strip would name a circuit nobody mentioned.
+    if merged.intent is not parse(context, parser=parser).intent:
+        return solo, False
+
+    # The refinement wins any slot it set itself. Concatenation alone leaves the
+    # earlier wording in front, so "fastest strategy for spa" + "make it the
+    # safest" would keep reading as `mean` — the user's correction silently
+    # discarded, which is worse than not supporting corrections at all.
+    for field, value in frag.slots.filled().items():
+        setattr(merged.slots, field, value)
+    return merged, True

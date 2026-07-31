@@ -424,4 +424,8 @@ export interface AskResp {
   needs: string[];
   followup: string | null;
   note: string | null;
+  /** True when the answer was resolved against the previous question rather
+   *  than this one alone — "but the temperature is 35 degrees" means nothing
+   *  by itself. Surfaced in the UI for the same reason `parsed` is. */
+  merged_with_context?: boolean;
 }

@@ -129,8 +129,11 @@ export const api = {
    *  rule slots, each the half that measurably won. The other two stay
    *  switchable so the head-to-head in METHODOLOGY §15 is reproducible from the
    *  UI rather than merely asserted. */
-  ask: (q: string, parser: "hybrid" | "rules" | "transformer" = "hybrid") =>
-    post<AskResp>("/ask", { q, parser }),
+  ask: (
+    q: string,
+    parser: "hybrid" | "rules" | "transformer" = "hybrid",
+    context?: string | null,
+  ) => post<AskResp>("/ask", { q, parser, context: context ?? null }),
 
   outcome: () => req<OutcomeResp>("/outcome"),
   predictUpcoming: (grid?: Record<string, number>) =>

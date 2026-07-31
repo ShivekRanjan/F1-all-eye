@@ -159,6 +159,7 @@ def _recommend(s, engine, parsed) -> Answer:
     r = engine.recommend(
         s.track, objective=s.objective or "mean",
         max_stops=s.max_stops or 2, season=s.season, n_runs=1500, top_k=3,
+        track_temp=s.track_temp,
     )
     best = r["best"]
     plan = _stint_phrase(list(best["compounds"]), list(best["pit_laps"]))

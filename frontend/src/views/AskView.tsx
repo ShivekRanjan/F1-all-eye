@@ -51,6 +51,7 @@ const SLOT_LABEL: Record<string, string> = {
   current_lap: "lap",
   objective: "objective",
   max_stops: "max stops",
+  track_temp: "track temp °C",
   gap_s: "gap",
   your_compound: "your tyre",
   your_age: "your age",
@@ -81,12 +82,17 @@ export default function AskView() {
   const [busy, setBusy] = useState(false);
   const [parser, setParser] = useState<Parser>("hybrid");
 
-  // The API is stateless — every question is parsed on its own. So when an
-  // answer comes back asking for a missing slot ("What lap are we on?"), the
-  // user's reply ("lap 30") is *appended to the original question* rather than
-  // sent alone, which is the difference between a bot that can hold a thread
-  // and one that forgets the circuit the moment it asks about tyres.
+  // Two kinds of thread, and they are not the same thing.
+  //
+  // `pending` is an *unfinished* question: the engine asked for a missing slot,
+  // so the reply is appended here before sending. `lastAnswered` is a *finished*
+  // one, kept because conversation does not restate — after "fastest strategy
+  // for Silverstone" the next thing a person says is "but the temperature is 35
+  // degrees", which means nothing on its own. That goes to the server as
+  // `context`, and the server decides whether it is a refinement or a new
+  // question; the client does not guess.
   const [pending, setPending] = useState<string | null>(null);
+  const [lastAnswered, setLastAnswered] = useState<string | null>(null);
 
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -108,11 +114,18 @@ export default function AskView() {
     setInput("");
     setBusy(true);
     try {
-      const answer = await api.ask(full, parser);
+      const answer = await api.ask(full, parser, pending ? null : lastAnswered);
       setTurns((t) => [...t, { role: "engine", answer }]);
+      const unfinished = answer.needs.length > 0 && answer.parsed.intent !== "unknown";
       // Still short of a required slot: keep accumulating. Otherwise the thread
       // is resolved and the next question starts clean.
-      setPending(answer.needs.length && answer.parsed.intent !== "unknown" ? full : null);
+      setPending(unfinished ? full : null);
+      // Remember what was actually answered so the next message can refine it.
+      // A merged answer replaces the context with the combined question, so
+      // refinements chain: circuit, then temperature, then stop count.
+      if (!unfinished && answer.parsed.intent !== "unknown") {
+        setLastAnswered(answer.merged_with_context && lastAnswered ? `${lastAnswered} ${q}` : full);
+      }
     } catch (e) {
       setTurns((t) => [...t, { role: "error", text: e instanceof Error ? e.message : String(e) }]);
       setPending(null);
@@ -125,6 +138,7 @@ export default function AskView() {
   function reset() {
     setTurns([]);
     setPending(null);
+    setLastAnswered(null);
     sessionStorage.removeItem(STORAGE_KEY);
     inputRef.current?.focus();
   }
@@ -314,6 +328,7 @@ function TurnRow({ turn }: { turn: Turn }) {
           <Callout tone="warn">{a.note}</Callout>
         </div>
       )}
+      {a.merged_with_context && <MergedNote />}
       {a.data && !asking && <AnswerData intent={a.parsed.intent} data={a.data} />}
       <Understood parsed={a.parsed} />
     </Card>
@@ -341,6 +356,18 @@ function Understood({ parsed }: { parsed: ParsedQuery }) {
         </span>
       ))}
       <span className="ml-auto font-mono text-micro text-ink-fainter">via {parsed.parser}</span>
+    </div>
+  );
+}
+
+/** Shown when the answer was resolved against the previous question. Silent
+ *  context-carrying is the same failure as a silent misparse: the user needs to
+ *  know the engine answered "…for Silverstone, at 35°C" and not just "35°C". */
+function MergedNote() {
+  return (
+    <div className="mt-2 flex items-center gap-1.5 font-mono text-micro text-ink-faint">
+      <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-accent" />
+      read as a refinement of your previous question
     </div>
   );
 }
