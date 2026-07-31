@@ -84,3 +84,12 @@ def test_answer_always_reports_what_it_understood():
     a = answer(parse("fastest strategy for spa"), _StubEngine())
     assert a.parsed["slots"]["track"] == "Belgian Grand Prix"
     assert a.parsed["parser"] == "rules"
+
+
+def test_a_negative_degradation_slope_is_not_read_out_as_a_double_negative():
+    """Track evolution can outrun tyre wear, giving a genuinely negative slope.
+    "loses about -0.027 seconds per lap" is true and unreadable."""
+    from f1se.nlu.answer import _slope_phrase
+
+    assert _slope_phrase("SOFT", -0.027) == "soft actually gains about 0.027 seconds per lap"
+    assert _slope_phrase("HARD", 0.043) == "hard loses about 0.043 seconds per lap"

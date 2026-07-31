@@ -44,6 +44,7 @@ sections in a grouped sidebar:
 
 | | Section | What it does |
 |---|---|---|
+| **Overview** | Ask | Plain-English questions against the same engine — *"fastest strategy for Monza"*, *"lap 30, I'm on hards 20 laps old, Norris on mediums 6 — do I box?"*. Every answer shows the intent and slots it understood, so a misheard circuit is visible rather than silent, and a missing detail is asked for rather than guessed |
 | **Strategy** | Strategy | Searches ~1,000+ pit strategies per race via Monte Carlo (stochastic safety cars, calibrated per circuit) and recommends the best plan — with the honest spread: *typical* vs *bad-luck* race, a track-temperature control (thermal prior), and whether the call is clear-cut or a coin-flip |
 | | Undercut | The two-car question: with a rival *N* seconds ahead, pit now to undercut or hold and cover? Models the cumulative-time crossover and returns the verdict with the seconds gained |
 | **Race weekend** | Calendar | The full season schedule with a live countdown to the next session; sprint weekends badged |

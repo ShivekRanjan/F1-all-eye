@@ -184,12 +184,25 @@ def _undercut(s, engine, parsed) -> Answer:
     return Answer(text=text, parsed=parsed, data=r, note=note)
 
 
+def _slope_phrase(compound: str, slope: float) -> str:
+    """A degradation slope, said out loud.
+
+    Negative slopes are real, not glitches: on a green, evolving track the
+    rubber goes down faster than the tyre wears out, so a stint gets *quicker*.
+    But "loses about -0.027 seconds per lap" is a double negative the reader has
+    to unpick, so say what it means instead of printing the sign.
+    """
+    if slope < 0:
+        return f"{compound.lower()} actually gains about {abs(slope):.3f} seconds per lap"
+    return f"{compound.lower()} loses about {slope:.3f} seconds per lap"
+
+
 def _degradation(s, engine, parsed) -> Answer:
     d = engine.degradation_curves(s.track, season=s.season)
     comps = d.get("compounds", {})
     if not comps:
         return Answer(text=f"I have no tyre data for {s.track}.", parsed=parsed)
-    parts = [f"{c.lower()} loses about {v['slope']:.3f} seconds per lap"
+    parts = [_slope_phrase(c, v["slope"])
              for c, v in comps.items() if v.get("slope") is not None]
     return Answer(text=f"At {s.track}, " + "; ".join(parts) + ".", parsed=parsed, data=d)
 
