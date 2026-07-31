@@ -112,3 +112,27 @@ def test_compound_nicknames():
     s = parse("im on the reds 5 laps old, he is on whites, lap 10 at monza").slots
     assert s.your_compound == "SOFT"
     assert s.rival_compound == "HARD"
+
+
+# --- contractions -----------------------------------------------------------
+def test_apostrophes_do_not_split_the_ownership_anchors():
+    """`normalise` used to turn "i'm" into "i m", which meant the parser's own
+    `i'?m` / `he'?s` / `they'?re` anchors could never match anything it was
+    given. With no self-anchor, neither tyre binds to a car and a fully
+    specified duel comes back asking a question it was already told.
+
+    The held-out set missed this entirely because it happens to be written
+    without apostrophes, so this is the regression test that set can't be."""
+    s = parse("i'm on softs 8 laps old at monza, he's on mediums 15 laps old, lap 22").slots
+    assert (s.your_compound, s.your_age) == ("SOFT", 8)
+    assert (s.rival_compound, s.rival_age) == ("MEDIUM", 15)
+
+
+def test_curly_apostrophe_parses_like_the_straight_one():
+    """Phones emit U+2019, not U+0027. Both must fold to the same token."""
+    q = "i{a}m on hards 12 laps old at spa, he{a}s on softs 4 laps old, lap 20"
+    straight = parse(q.format(a="'")).slots
+    curly = parse(q.format(a="\u2019")).slots
+    assert straight.your_compound == curly.your_compound == "HARD"
+    assert straight.your_age == curly.your_age == 12
+    assert straight.rival_compound == curly.rival_compound == "SOFT"

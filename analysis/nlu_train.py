@@ -132,14 +132,23 @@ def main() -> int:
     ap.add_argument("--d-model", type=int, default=128)
     ap.add_argument("--layers", type=int, default=3)
     ap.add_argument("--heads", type=int, default=4)
+    # Seed and output path are arguments so the same config can be trained
+    # twice. Without that there is no way to tell a real change in the
+    # held-out score from run-to-run variance, and the held-out set is 31
+    # examples — small enough that a few slots either way is a fifth of a
+    # point of F1. A delta you cannot attribute is not a result.
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--out", type=str, default=None,
+                    help="where to write the weights (default: the shipped artifact)")
     args = ap.parse_args()
+    out = PROJECT_ROOT / args.out if args.out else OUT
 
     from f1se.nlu.model import _build_torch
     torch, nn, IntentSlotTransformer = _build_torch()
-    torch.manual_seed(0)
+    torch.manual_seed(args.seed)
 
-    print(f"generating {args.n:,} examples...")
-    pairs = build(args.n, seed=0)
+    print(f"generating {args.n:,} examples...  (seed {args.seed})")
+    pairs = build(args.n, seed=args.seed)
     tok = Tokenizer.build([t for t, _ in pairs])
     print(f"vocabulary: {len(tok):,} words")
 
@@ -206,10 +215,11 @@ def main() -> int:
         w[p + "ff1.w"], w[p + "ff1.b"] = b.ff[3].weight.detach().numpy(), b.ff[3].bias.detach().numpy()
 
     meta = {"vocab": tok.vocab, "d_model": args.d_model, "n_heads": args.heads,
-            "layers": args.layers, "max_len": MAX_LEN, "n_params": n_params}
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    np.savez_compressed(OUT, meta_json=np.array(json.dumps(meta)), **w)
-    print(f"\ntrained in {time.time()-t0:.0f}s -> {OUT} ({OUT.stat().st_size/1e6:.1f} MB)")
+            "layers": args.layers, "max_len": MAX_LEN, "n_params": n_params,
+            "seed": args.seed}
+    out.parent.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(out, meta_json=np.array(json.dumps(meta)), **w)
+    print(f"\ntrained in {time.time()-t0:.0f}s -> {out} ({out.stat().st_size/1e6:.1f} MB)")
     return 0
 
 

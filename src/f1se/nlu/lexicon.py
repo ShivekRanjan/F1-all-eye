@@ -108,9 +108,28 @@ def strip_accents(s: str) -> str:
                    if not unicodedata.combining(c))
 
 
+#: Straight, curly, modifier-letter and backtick — a phone's keyboard produces
+#: U+2019, not U+0027, and both have to fold to the same token.
+_APOSTROPHE = re.compile(r"['‘’ʼ`]")
+
+
 def normalise(text: str) -> str:
-    """Lowercase, de-accent, collapse punctuation to spaces."""
+    """Lowercase, de-accent, drop apostrophes, collapse punctuation to spaces."""
     t = strip_accents(text.lower())
+    # Apostrophes are DELETED, not spaced. Spacing them splits every contraction
+    # in two ("i'm" -> "i m"), which silently killed the rule parser's own
+    # ownership anchors: rules.py spells them `i'?m`, `he'?s`, `they'?re`, and
+    # not one can ever match a string this function has already pulled apart. The
+    # effect was not a crash but a wrong answer — with no self-anchor, "I'm on
+    # hards, he's on softs" bound neither tyre to a car and the duel came back
+    # asking a question it had been told the answer to.
+    #
+    # It survived the held-out benchmark because that set happens to be written
+    # without a single apostrophe ("im", "hes", "ive"): the evaluation inherited
+    # the same blind spot as the code, which is the failure mode a held-out set
+    # is supposed to prevent. Deleting folds "i'm" onto "im" — the form the
+    # patterns and the lexicon already use.
+    t = _APOSTROPHE.sub("", t)
     t = re.sub(r"[^a-z0-9\s.\-]", " ", t)
     return re.sub(r"\s+", " ", t).strip()
 
