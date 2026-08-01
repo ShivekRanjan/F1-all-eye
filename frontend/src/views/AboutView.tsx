@@ -40,9 +40,9 @@ export default function AboutView() {
           <li>
             <strong>A from-scratch transformer for the Ask view</strong> — own tokeniser, attention
             and training loop, benchmarked against a hand-written parser on phrasings written before
-            either was scored. Trained under three seeds, the two win different halves: rules extract
-            slots better (3/3), the transformer reads intent better (3/3), and the seed spread is as
-            large as the gap. Rules ship; the tie is reported, not broken.
+            either was scored. Across three seeds the model reads <em>intent</em> better (3/3) and the
+            rules extract <em>slots</em> better (3/3, precision 1.000), so what ships is the
+            composition of the two rather than either one.
           </li>
           <li>
             <strong>Podium & championship models</strong> — grid + form only, always validated{" "}
