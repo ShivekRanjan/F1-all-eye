@@ -115,3 +115,25 @@ def test_a_new_question_that_merely_follows_one_is_left_alone():
 def test_no_context_means_no_merge():
     p, merged = parse_followup("but the temprature is 35 degrees", None)
     assert not merged and p.slots.track is None
+
+
+# --- evaluation sets --------------------------------------------------------
+def test_every_evaluation_set_parses_and_stays_disjoint():
+    """Guards the thing that makes a second set worth having. If a phrasing
+    appears in both, the fresh set inherits the spent one's history and stops
+    being an independent estimate — the exact failure §15 is about."""
+    import sys
+
+    sys.path.insert(0, str(PROJECT_ROOT / "analysis"))
+    from nlu_benchmark import load_sets
+
+    sets = load_sets()
+    assert sets, "no evaluation sets found"
+    seen: dict[str, str] = {}
+    for name, _desc, pairs in sets:
+        assert pairs, f"{name} is present but empty"
+        for text, gold in pairs:
+            key = text.strip().lower()
+            assert key not in seen, f"{text!r} appears in both {seen[key]} and {name}"
+            seen[key] = name
+            assert gold.intent is not None

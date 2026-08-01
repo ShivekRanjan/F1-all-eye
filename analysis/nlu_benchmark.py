@@ -33,14 +33,26 @@ from f1se.nlu.rules import parse as rules_parse
 from f1se.nlu.schema import Intent, ParsedQuery, Slots
 
 MODEL = PROJECT_ROOT / "data" / "processed" / "nlu_intent_slot.npz"
-HELDOUT = PROJECT_ROOT / "data" / "nlu" / "heldout.jsonl"
+NLU_DIR = PROJECT_ROOT / "data" / "nlu"
+HELDOUT = NLU_DIR / "heldout.jsonl"
 SCORED_SLOTS = ["track", "season", "current_lap", "your_compound", "your_age",
                 "rival_compound", "rival_age", "rival_driver"]
 
+#: Evaluation sets, in the order they were written, with what each is still
+#: worth. A set stops being an unbiased estimate the moment it is used to make
+#: decisions — `heldout.jsonl` was consulted repeatedly across a day of
+#: debugging (§15), so it is kept and scored, but it now measures "did anything
+#: regress" rather than "how good is this". Only a set that has never steered a
+#: change can answer the second question, which is what heldout2 exists for.
+SETS = [
+    ("heldout.jsonl", "set 1 — spent (used for decisions; regression check only)"),
+    ("heldout2.jsonl", "set 2 — fresh (never used to steer a change)"),
+]
 
-def load_heldout() -> list[tuple[str, ParsedQuery]]:
+
+def load_heldout(path=HELDOUT) -> list[tuple[str, ParsedQuery]]:
     out = []
-    for line in HELDOUT.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -50,6 +62,18 @@ def load_heldout() -> list[tuple[str, ParsedQuery]]:
         s = Slots(**row.get("slots", {}))
         out.append((row["q"], ParsedQuery(intent=Intent(row["intent"]), slots=s, parser="gold")))
     return out
+
+
+def load_sets() -> list[tuple[str, str, list]]:
+    """Every evaluation set present, as (filename, description, pairs)."""
+    found = []
+    for name, desc in SETS:
+        p = NLU_DIR / name
+        if p.exists():
+            pairs = load_heldout(p)
+            if pairs:
+                found.append((name, desc, pairs))
+    return found
 
 
 def score(pairs, parse_fn) -> dict:
@@ -123,33 +147,43 @@ def main() -> int:
 
     # Generated set, seeded away from training (seed=0) so these are unseen.
     gen = build(2000, seed=999)
-    hand = load_heldout()
+    sets = load_sets()
+    if not sets:
+        raise SystemExit("no evaluation sets in data/nlu/")
 
     print(f"GENERATED held-out templates (n={len(gen)}) — table stakes")
     print(_row("rules", score(gen, rules_parse)))
     for name, m in models:
         print(_row(name, score(gen, m.parse)))
 
-    print(f"\nHAND-WRITTEN unseen phrasings (n={len(hand)}) — THE TEST")
-    r_rules = score(hand, rules_parse)
-    print(_row("rules", r_rules))
-    rows = []
-    for name, m in models:
-        r = score(hand, m.parse)
-        rows.append(r)
-        print(_row(name, r))
-
-    # The composition: transformer intent + rule slots. Scored here rather than
-    # asserted, because "take the better half of each" is exactly the kind of
-    # claim that sounds obviously right and needs a number.
-    if models:
-        from f1se.nlu import compose
-
-        print()
+    rows: list[dict] = []
+    r_rules: dict = {}
+    for _file, desc, hand in sets:
+        print(f"\nHAND-WRITTEN — {desc}  (n={len(hand)})")
+        r = score(hand, rules_parse)
+        print(_row("rules", r))
+        set_rows = []
         for name, m in models:
-            def hybrid(text, _m=m):
-                return compose(_m.parse(text), rules_parse(text))
-            print(_row("hybrid " + name.split(" ")[1], score(hand, hybrid)))
+            rr = score(hand, m.parse)
+            set_rows.append(rr)
+            print(_row(name, rr))
+
+        # The composition: transformer intent + rule slots. Scored rather than
+        # asserted, because "take the better half of each" is exactly the kind
+        # of claim that sounds obviously right and needs a number.
+        if models:
+            from f1se.nlu import compose
+
+            print()
+            for name, m in models:
+                def hybrid(text, _m=m):
+                    return compose(_m.parse(text), rules_parse(text))
+                print(_row("hybrid " + name.split(" ")[1], score(hand, hybrid)))
+
+        # The verdict below is read off the *last* set listed, i.e. the freshest
+        # one present. A decision taken on a set that has already steered six
+        # decisions is not a decision, it is a memory.
+        rows, r_rules = set_rows, r
 
     if not rows:
         return 0
