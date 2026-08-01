@@ -9,7 +9,8 @@
 engine for Formula 1 — when to stop, which tyre compounds to fit, with
 quantified uncertainty, including the ongoing **2026 season** modelled across
 the regulation reset — grown into a full **F1 OS**: one app for strategy,
-predictions, standings, race analysis, the calendar, and the news.
+predictions, standings, race analysis, the calendar, and the news, with a
+**plain-English question layer** over the same engine.
 
 ### ▶ [**Live demo — f1-strategy-engine.vercel.app**](https://f1-strategy-engine.vercel.app/)
 
@@ -26,6 +27,7 @@ predictions, standings, race analysis, the calendar, and the news.
 | Podium model | ROC-AUC **0.93** forward-tested on 2026 — but precision@3 **ties** the naive grid baseline this season (0.576 each), and the pre-registered Hungary call went **1/3**. Both published, [§12](docs/METHODOLOGY.md) |
 | Degradation model | **0.060 s/lap** MAE on races the model never saw (leave-one-race-out, 11 races); on 2026 the 2026-aware model beats the old-car prior in **8 of 11** races (a leakage correction cut this claim down — [§7](docs/METHODOLOGY.md)) |
 | LSTM next-lap forecast | **+13.4%** vs persistence averaged over **11 fully unseen 2026 races — winning all 11** (+8.5% on the held-out 2025 split) |
+| Plain-English parser | On phrasings written **before** either parser was scored: the from-scratch transformer wins *intent* 3/3 seeds (0.645–0.677 vs 0.516), the hand-written parser wins *slots* 3/3 (precision **1.000**) — so the **composition of the two ships**, beating both ([§15](docs/METHODOLOGY.md)) |
 
 **Why this isn't another F1 dashboard:**
 
@@ -99,7 +101,7 @@ FastF1 ──▶ data (load, clean, fuel-correct) ──▶ models (degradation,
 The modelling lives in plain, tested functions; `api.py` is a thin wrapper over
 one `StrategyEngine` plus the results-only `standalone/` modules, and the React
 frontend is a pure client of that API. Per-circuit safety-car risk and pit loss
-are **measured** from 78 races of track-status and in/out-lap data — not assumed.
+are **measured** from 81 races of track-status and in/out-lap data — not assumed.
 
 ## Quickstart
 
@@ -108,7 +110,7 @@ Two processes — the API and the frontend. **Backend:**
 ```bash
 py -3.12 -m venv .venv && .venv\Scripts\Activate.ps1   # (or python3.12 -m venv on unix)
 pip install -e ".[app,dev]" scikit-learn   # scikit-learn powers the outcome predictor
-pytest                                     # 136 no-network tests (network ones opt-in via -m network)
+pytest                                     # 243 no-network tests (network ones opt-in via -m network)
 uvicorn f1se.api:app --reload              # REST API + Swagger at localhost:8000/docs
 pip install -e ".[models]"                 # optional: torch etc. to retrain the LSTM (heavy)
 ```
