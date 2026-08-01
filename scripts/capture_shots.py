@@ -57,13 +57,21 @@ TYPE_AND_SEND = """
 })()
 """
 
-#: (filename, hash route, setup script or None, extra settle seconds)
+#: (filename, hash route, setup script or None, settle seconds, size or None)
+#: Frames for the hero GIF. 16:9 so they scale into 1100x618 without cropping.
 SHOTS = [
-    ("01-home.png", "#/home", None, 3),
-    ("02-ask.png", "#/ask", "ASK", 2),
-    ("03-strategy.png", "#/strategy", None, 12),
-    ("04-racehub.png", "#/racehub", None, 12),
-    ("05-standings.png", "#/standings", None, 6),
+    ("01-home.png", "#/home", None, 3, None),
+    ("02-ask.png", "#/ask", "ASK", 2, None),
+    ("03-strategy.png", "#/strategy", None, 12, None),
+    ("04-racehub.png", "#/racehub", None, 12, None),
+    ("05-standings.png", "#/standings", None, 6, None),
+]
+
+#: Standalone stills embedded in the README, written straight into assets/.
+#: Taller than 16:9 on purpose — these are read, not skimmed, so the whole
+#: prediction-vs-actual panel has to fit in one image.
+DOC_SHOTS = [
+    ("racehub.png", "#/racehub", None, 12, (1600, 1600)),
 ]
 
 
@@ -112,7 +120,8 @@ async def wait_for(cdp: CDP, expression: str, timeout: float, what: str) -> bool
     return False
 
 
-async def run(base: str, out: Path, width: int, height: int, chrome: str) -> int:
+async def run(base: str, out: Path, width: int, height: int, chrome: str,
+              shots=SHOTS) -> int:
     profile = tempfile.mkdtemp(prefix="f1se-shots-")
     proc = subprocess.Popen(
         [chrome, "--headless=new", "--disable-gpu", "--hide-scrollbars",
@@ -139,8 +148,11 @@ async def run(base: str, out: Path, width: int, height: int, chrome: str) -> int
             await cdp.send("Emulation.setDeviceMetricsOverride",
                            width=width, height=height, deviceScaleFactor=1, mobile=False)
 
-            for name, route, setup, settle in SHOTS:
-                print(f"  {name:18} {route}")
+            for name, route, setup, settle, size in shots:
+                w, h = size or (width, height)
+                print(f"  {name:18} {route}  {w}x{h}")
+                await cdp.send("Emulation.setDeviceMetricsOverride",
+                               width=w, height=h, deviceScaleFactor=1, mobile=False)
                 await cdp.send("Page.navigate", url=f"{base}/{route}")
                 await asyncio.sleep(1.5)
                 # Hash-only changes are same-document, so nudge the router too.
@@ -178,10 +190,14 @@ def main() -> int:
     ap.add_argument("--width", type=int, default=1600)
     ap.add_argument("--height", type=int, default=900)
     ap.add_argument("--chrome", default=None)
+    ap.add_argument("--docs", action="store_true",
+                    help="capture the standalone README stills into assets/ instead")
     args = ap.parse_args()
-    print(f"capturing {args.url} at {args.width}x{args.height} -> {args.out}")
-    return asyncio.run(run(args.url.rstrip("/"), args.out, args.width, args.height,
-                           args.chrome or find_chrome()))
+    shots = DOC_SHOTS if args.docs else SHOTS
+    out = (PROJECT_ROOT / "assets") if args.docs else args.out
+    print(f"capturing {args.url} -> {out}")
+    return asyncio.run(run(args.url.rstrip("/"), out, args.width, args.height,
+                           args.chrome or find_chrome(), shots))
 
 
 if __name__ == "__main__":
