@@ -37,6 +37,10 @@ data/processed/by_race_sprints/
 # Notebooks
 .ipynb_checkpoints/
 
+# Hero source frames — regenerable with `scripts/capture_shots.py` against a
+# running app. The assembled assets/demo.gif is what ships.
+assets/shots/
+
 # Models
 *.pkl
 *.pt

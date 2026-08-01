@@ -16,7 +16,7 @@ predictions, standings, race analysis, the calendar, and the news.
 *(The API runs on a free tier that sleeps when idle — the first load can take
 ~30–60 s to wake it; after that it's fast.)*
 
-[![The F1 OS — home with the next-race countdown and podium call, calendar, Race Hub prediction-vs-actual, live standings](assets/demo.gif)](https://f1-strategy-engine.vercel.app/)
+[![The F1 OS — the next-race countdown with the model's podium call, plain-English strategy questions answered by the same engine, the Monte-Carlo strategy optimiser, Race Hub's pre-race prediction scored against the actual result, and live championship standings](assets/demo.gif)](https://f1-strategy-engine.vercel.app/)
 
 **Results at a glance** — every number from a leakage-safe, forward-in-time test:
 
