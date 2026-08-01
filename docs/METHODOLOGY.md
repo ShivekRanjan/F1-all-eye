@@ -102,9 +102,11 @@ multi-modal, with clusters ~2 minutes apart corresponding to 0/1/2 SC periods:
 
 ![Strategy outcome distributions](../analysis/figures/phase3_strategy_distributions.png)
 
-The hazard model was therefore calibrated from 76 races of per-lap track-status
-data: **0.0105 SC triggers per lap, mean duration 4.1 laps** (the literature
-default of 0.013/4 was close). The real gain is **per-circuit** rates with
+The hazard model is therefore calibrated from **81 races** of per-lap
+track-status data — every race in `track_status.parquet`, refitted at engine
+start rather than baked in, so it tracks the dataset: **0.0106 SC triggers per
+lap, mean duration 5.0 laps** (the literature default of 0.013/4 was close). The
+real gain is **per-circuit** rates with
 partial pooling — Australia/Canada/Qatar average ~1.5 SC periods per race while
 Spain had zero in 2023–24, and shrinkage keeps the zero-observation tracks at a
 sensible non-zero hazard. The same treatment gives per-circuit pit loss from
@@ -544,7 +546,7 @@ hazard across the reset is now supported by data rather than by argument.
 Worth stating plainly, because it is the weaker kind of result: this is a
 *failure to detect a difference*, not proof of no difference. The 2026 interval
 is wide enough to accommodate a real ±40% shift. It should be re-run at
-season's end, when 24 races will roughly halve that interval.
+season's end, when 23 races will roughly halve that interval.
 
 ### The bigger hole this uncovered: the VSC is invisible
 

@@ -67,7 +67,7 @@ FastF1  ->  data (loader, clean)  ->  models (degradation, era shrinkage,
    standalone/ (outcome, standings,       |
    races, profiles, news, schedule) --> api.py (FastAPI, thin)
                                           |  HTTP / JSON
-                              frontend/ (React + Vite + Tailwind, 9 sections)
+                              frontend/ (React + Vite + Tailwind, 13 views)
 ```
 
 Modelling logic never goes in `api.py` or the React frontend. This decoupling is
@@ -83,7 +83,9 @@ touching the engine either.
   training only; inference is a torch-free numpy export).
 - **App (Phase 5):** FastAPI service + a React + Vite + TypeScript + Tailwind
   frontend (Recharts for charts); feedparser for the news RSS.
-- **Deploy (Phase 6):** Docker / Render (API) + Vercel-Netlify (frontend).
+- **NLU:** a hand-written slot parser plus a from-scratch intent/slot transformer
+  (own tokeniser, attention, training loop); numpy inference, no torch to serve.
+- **Deploy (live):** Docker / Render (API) + Vercel (frontend).
 
 ## Roadmap
 
@@ -106,9 +108,29 @@ touching the engine either.
 - [x] News (RSS) · Calendar + live countdown + next-race prediction
 - [x] Grouped-sidebar OS shell, hash routing (deep links), code-split bundles
 
-**Remaining (Phase 6, user-side):** live deploy (Render API + Vercel frontend —
-configs are committed and ready), hero GIF/screenshot for the README, GitHub
-About/topics/pin.
+**Deployed (July 2026):** API on Render, frontend on Vercel, both live. Keepalive
+cron + a boot warm-up thread cover the free tier's cold starts.
+
+**v2.0.0 (August 2026):**
+
+- [x] **Broadcast redesign** — black surfaces, runtime-swappable accent, driver
+      cutouts, circuit outlines drawn from FastF1 telemetry, command palette
+- [x] **Neutralisation model** — VSC and red flags modelled as their own track
+      states (the SC hazard had never counted VSC at all), priced inside the
+      undercut duel, tyre-set limits enforced
+- [x] **Ask** — a plain-English question layer over the same engine: rule parser,
+      a from-scratch intent/slot transformer, and the composition of the two
+      that ships (METHODOLOGY §15)
+- [x] **Accessibility + design system** — WCAG 2.1 AA fixes, skip link, the app's
+      first live region, a `Button` primitive and a real type scale
+- [x] **Corrections published, not buried** — a leaked shrinkage benchmark, an
+      LSTM figure that was the best of eleven races rather than the mean, and an
+      ingest path that silently dropped seasons
+
+**Remaining:** the safety-car transferability re-run is blocked until the 2026
+season ends (11 of 23 rounds run). A second hand-written NLU evaluation set is
+needed before four queued parser improvements can be judged honestly — the
+first set has been used for decisions and no longer measures quality.
 
 ## Key technical decisions & rules
 
@@ -163,20 +185,20 @@ f1-strategy-engine/
 │   │                      #   championship), standings, races (Race Hub),
 │   │                      #   profiles, news (RSS), schedule (calendar)
 │   └── api.py             # FastAPI — thin over engine + standalone
-├── frontend/              # React + Vite + TS UI — 9 views, grouped sidebar,
+├── frontend/              # React + Vite + TS UI — 13 views, grouped sidebar,
 │                          #   hash routing, code-split chunks
 ├── data/processed/        # small committed datasets (app + CI run offline)
 ├── analysis/              # EDA + phase scripts + 2026 backtests
 ├── docs/METHODOLOGY.md    # the receipts — every accepted/rejected model
-└── tests/                 # 136 no-network tests; network ones opt-in
+└── tests/                 # 250 no-network tests; network ones opt-in
 ```
 
 ## Where things stand
 
-**Everything through the F1 OS is built, tested, and pushed** (July 2026): the
-validated engine (degradation + priors + LSTM + Monte-Carlo optimiser), the
-FastAPI service, and the nine-section React app — 136 no-network tests green,
-CI runs both the Python suite and the frontend build.
+**v2.0.0 is tagged, released, and live** (August 2026): the validated engine
+(degradation + priors + LSTM + Monte-Carlo optimiser), the FastAPI service, and
+a 13-view React app — 250 no-network tests green, CI runs both the Python suite
+and the frontend build on every push.
 
 The 2026 season is handled across the regulation reset (era shrinkage +
 recency weighting) and validated the honest way: a leave-one-race-out season
@@ -184,6 +206,12 @@ backtest, whose over-stopping miss was root-caused to **weather** and fixed
 with the thermal prior (stop-count match 4/8 → 7/8; Canada remains the one
 documented miss).
 
-**What remains is Phase 6, and it's user-side:** deploy the two pieces (Render
-API + Vercel frontend — configs committed), record the README hero GIF, and
-fill in the GitHub About panel. No engineering blockers.
+**Open work is model work, not shipping work.** The season is mid-break at round
+11 of 23, so the safety-car transferability re-run waits for more races, and the
+NLU queue waits on a fresh evaluation set. Nothing is blocked on engineering.
+
+**On keeping this file true.** It was a month stale before anyone noticed —
+still describing a nine-view app that had not been deployed, at 136 tests.
+`tests/test_docs_claims.py` now re-derives the counted claims in this file, the
+README and METHODOLOGY from the data and asserts they match, because prose is
+the one part of a repo that nothing executes.

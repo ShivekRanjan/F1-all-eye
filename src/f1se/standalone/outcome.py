@@ -1,8 +1,8 @@
 """Outcome predictor orchestration — championship projection + per-race podium.
 
 Assembles the standalone championship simulator and the podium classifier into a
-single JSON-friendly payload for the API (and, previously, the Streamlit app).
-Kept here, not in the API layer, so it's reusable and tested in one place.
+single JSON-friendly payload for the API. Kept here, not in the API layer, so
+it's reusable and tested in one place.
 """
 
 from __future__ import annotations
@@ -37,9 +37,9 @@ def _f(x) -> float | None:
 def compute_outcome(data_dir: str | Path | None = None, *, n_sims: int = 5000) -> dict | None:
     """Build the full outcome payload, or ``None`` if the results dataset is absent.
 
-    Mirrors the old Streamlit ``load_outcome``: trains the podium model with a
-    forward holdout on the latest season, projects (or simulates) the title race,
-    and returns per-round podium predictions with the actual podium flagged.
+    Trains the podium model with a forward holdout on the latest season, projects
+    (or simulates) the title race, and returns per-round podium predictions with
+    the actual podium flagged.
     """
     fp = _resolve_results(data_dir)
     if fp is None:
