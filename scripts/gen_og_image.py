@@ -17,7 +17,6 @@ MEDIUM = "#f6c700"
 INK = "#eef1f5"
 INK_MUTED = "#aab3c0"
 INK_FAINT = "#7d8698"
-LINE = "#1c212b"
 
 FONTS = Path(r"C:\Windows\Fonts")
 
@@ -49,7 +48,15 @@ mono = ImageFont.truetype(str(FONTS / "consola.ttf"), 24)
 y = 300
 d.text((bx, y), "F1SE", font=display, fill=INK)
 w1 = d.textlength("F1SE", font=display)
-d.text((bx + w1 + 14, y + 12), "/", font=display, fill=LINE)
+# No vertical offset on the separator. Impact's "/" inks 17..86 against the
+# wordmark's 18..86 at the same baseline — centres 51.5 vs 52.0, i.e. already
+# aligned. An earlier +12 nudge pushed it visibly below the text; it was solving
+# a problem the font does not have.
+#
+# INK_FAINT, not LINE: LINE (#1c212b) is the border token and renders as a
+# near-invisible smudge on the near-black card. The app's own wordmark separator
+# is ink-faint, so this now matches it.
+d.text((bx + w1 + 14, y), "/", font=display, fill=INK_FAINT)
 w2 = d.textlength("/", font=display)
 d.text((bx + w1 + 14 + w2 + 14, y), "F1 OS", font=display, fill=GOLD)
 
