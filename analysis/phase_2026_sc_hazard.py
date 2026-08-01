@@ -56,7 +56,8 @@ def race_stats(status: pd.DataFrame) -> pd.DataFrame:
         if laps <= 0:
             continue
         sc = sc_laps_in_race(g)
-        vsc_only = [l for l in _laps_with(g, VSC_CODES) if l not in set(sc)]
+        sc_set = set(sc)
+        vsc_only = [lap for lap in _laps_with(g, VSC_CODES) if lap not in sc_set]
         both = sorted(set(sc) | set(vsc_only))
         rows.append({"year": int(year), "round": int(rnd),
                      "event": str(g["event_name"].iloc[0]),
@@ -108,7 +109,7 @@ def main() -> int:
 
     r_pre, lo_pre, hi_pre, _, _ = out["pre-2026"]
     r_cur, lo_cur, hi_cur, _, _ = out["2026"]
-    print(f"\nmodel default (SafetyCarModel.prob_per_lap): 0.013")
+    print("\nmodel default (SafetyCarModel.prob_per_lap): 0.013")
 
     def verdict(label, rp, lp, hp, rc, lc, hc):
         print(f"\n[{label}] 2026 vs pre-2026: {100 * (rc - rp) / rp:+.1f}%")

@@ -140,7 +140,7 @@ def main() -> None:
     total_laps = clean.groupby(["year", "round"])["lap_number"].max().mean()
     fuel_per_lap = fuel.start_fuel_kg / total_laps
 
-    print(f"\nFuel sensitivity (median slope s/lap by sec_per_kg):")
+    print("\nFuel sensitivity (median slope s/lap by sec_per_kg):")
     print(sens.pivot_table(index="compound", columns="sec_per_kg",
                            values="median_slope", observed=True).round(4).to_string())
     print(f"\nAnalytical: each +0.01 in sec_per_kg should raise every slope by "

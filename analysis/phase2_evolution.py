@@ -63,10 +63,12 @@ def main() -> None:
     cor = [evo.deg_slope.get(c, np.nan) for c in comps]
     ax.bar(x - 0.2, unc, 0.4, label="uncorrected (within-stint)", color="#bbbbbb")
     ax.bar(x + 0.2, cor, 0.4, label="evolution-corrected", color="#1f6feb")
-    ax.set_xticks(x); ax.set_xticklabels(comps)
+    ax.set_xticks(x)
+    ax.set_xticklabels(comps)
     ax.set_ylabel("Degradation slope (s/lap)")
     ax.set_title("Tyre degradation: correcting for track evolution")
-    ax.legend(); ax.grid(True, axis="y", alpha=0.3)
+    ax.legend()
+    ax.grid(True, axis="y", alpha=0.3)
     fig.tight_layout()
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = FIG_DIR / "phase2_evolution_correction.png"

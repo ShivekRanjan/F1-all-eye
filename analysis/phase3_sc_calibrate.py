@@ -9,8 +9,6 @@ across 2023-24, replaces the defaults, and shows the effect on a race's SC risk.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 
 from f1se.config import PROJECT_ROOT
@@ -45,7 +43,7 @@ def main() -> None:
 
     # Per-circuit SC rate — strategy risk is very track-dependent.
     rows = []
-    for (yr, rnd), race in status.groupby(["year", "round"]):
+    for (yr, _rnd), race in status.groupby(["year", "round"]):
         durs = sc_period_durations(sc_laps_in_race(race))
         rows.append({"event": race["event_name"].iloc[0], "year": int(yr),
                      "sc_periods": len(durs), "sc_laps": sum(durs)})

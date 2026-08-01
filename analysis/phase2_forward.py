@@ -13,20 +13,15 @@ Loads the bulk dry dataset (run ``python -m f1se.data.ingest`` first), then:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
 from f1se.config import PROJECT_ROOT
 from f1se.models.degradation import (
-    AGE_COL,
     TARGET_COL,
     fit_linear_baseline,
-    linear_shape,
     naive_pace_loss_mae,
     pace_loss_mae,
-    shape_mae,
 )
 from f1se.validation import assert_no_race_leakage, forward_year_holdout, group_kfold_races
 

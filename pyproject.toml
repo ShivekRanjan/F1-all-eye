@@ -58,8 +58,12 @@ addopts = "-m 'not network'"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-# Analysis scripts (analysis/) are exploratory; lint the package, tests, and app.
-extend-exclude = ["analysis"]
+# analysis/ used to be excluded as "exploratory". It isn't, in the way that
+# word implies: METHODOLOGY cites these scripts by name as the receipts for
+# every published number, so they are read more carefully than most of the
+# package. Excluding them let 35 lint errors accumulate — dead imports,
+# f-strings with nothing to interpolate — in exactly the files a reader opens
+# to check the work.
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -68,6 +72,13 @@ ignore = [
     "B008",  # function call in default arg: FastAPI's Depends(...) idiom
     "B905",  # zip without strict=: same-length zips throughout; noise
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# These two backtests silence warnings *before* importing f1se, because FastF1
+# is noisy at import time. Hoisting the imports would defeat the filter, so the
+# ordering is the point rather than an accident.
+"analysis/backtest_2026_season.py" = ["E402"]
+"analysis/backtest_austria_2026.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.12"

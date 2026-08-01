@@ -44,18 +44,21 @@ def main() -> None:
                 + cliff.extra_loss(comp, a) for a in ages]
         axL.plot(ages, loss, color=color, lw=2.6, label=comp)
     axL.set_title("Tyre degradation model", color="white", fontsize=13, weight="bold")
-    axL.set_xlabel("Tyre age (laps)"); axL.set_ylabel("Pace loss vs fresh (s)")
+    axL.set_xlabel("Tyre age (laps)")
+    axL.set_ylabel("Pace loss vs fresh (s)")
     axL.legend(title="Compound", facecolor="#161b22", labelcolor="white")
     axL.grid(alpha=0.15)
 
     # Right: recommended strategy outcome distribution.
-    edges = np.array(sim["hist_edges"]); centers = (edges[:-1] + edges[1:]) / 2
+    edges = np.array(sim["hist_edges"])
+    centers = (edges[:-1] + edges[1:]) / 2
     axR.bar(centers - sim["mean_s"], sim["hist_counts"], width=(edges[1] - edges[0]),
             color="#1f6feb", alpha=0.85)
     axR.axvline(0, color="#e2231a", lw=2, label="expected")
     axR.set_title("Recommended-strategy outcome (Monte Carlo)", color="white",
                   fontsize=13, weight="bold")
-    axR.set_xlabel("Race time vs expected (s)"); axR.set_ylabel("sampled races")
+    axR.set_xlabel("Race time vs expected (s)")
+    axR.set_ylabel("sampled races")
     plan = " → ".join(best["compounds"]) + f"  ·  pit lap {', '.join(map(str, best['pit_laps']))}"
     axR.legend(facecolor="#161b22", labelcolor="white")
     axR.grid(alpha=0.15)

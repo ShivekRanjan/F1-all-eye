@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from f1se.config import PROJECT_ROOT
@@ -59,7 +59,7 @@ def main() -> int:
         "season": season,
         "round": rnd,
         "event_name": event,
-        "made_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "made_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "race_start": race_start,
         "grid_source": payload["grid_source"],
         # Provenance: the model that made this call trained strictly before the

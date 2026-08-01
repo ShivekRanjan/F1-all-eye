@@ -95,7 +95,8 @@ def main() -> None:
     ax.set_xlabel(f"Total race time minus {base:.0f}s")
     ax.set_ylabel("sampled races")
     ax.set_title(f"Strategy outcome distributions — {TRACK}\n(stochastic safety car; lower is better)")
-    ax.legend(); ax.grid(True, alpha=0.3)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
     fig.tight_layout()
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = FIG_DIR / "phase3_strategy_distributions.png"

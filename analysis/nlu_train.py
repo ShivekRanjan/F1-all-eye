@@ -183,7 +183,9 @@ def main() -> int:
             li, lt = model(Xtr[idx])
             # Summed loss: the two tasks share an encoder and inform each other.
             loss = ce_i(li, Itr[idx]) + ce_t(lt.reshape(-1, len(TAGS)), Ttr[idx].reshape(-1))
-            opt.zero_grad(); loss.backward(); opt.step()
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
             tot += float(loss) * len(idx)
         model.eval()
         with torch.no_grad():

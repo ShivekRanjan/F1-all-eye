@@ -31,12 +31,12 @@ def main() -> None:
 
     cal = calibrate_effective_fuel(laps)
     betas = np.array(list(cal.implied_beta_by_race.values()))
-    print(f"\nEffective fuel coefficient implied by the net race-lap trend:")
+    print("\nEffective fuel coefficient implied by the net race-lap trend:")
     print(f"  physics assumption : {cal.physics_beta:.3f} s/kg")
     print(f"  implied  median    : {cal.median_beta:.3f} s/kg")
     print(f"  implied  mean+/-sd : {cal.mean_beta:.3f} +/- {cal.std_beta:.3f}")
     print(f"  range (10-90 pct)  : {np.percentile(betas,10):.3f} .. {np.percentile(betas,90):.3f}")
-    print(f"  (CAVEAT: bundles fuel + track-evo + late-race management; effective, not pure)")
+    print("  (CAVEAT: bundles fuel + track-evo + late-race management; effective, not pure)")
 
     # Assumption-free degradation (raw joint fit) vs the 0.03-based within-stint.
     naive = fit_linear_baseline(laps)
@@ -55,7 +55,8 @@ def main() -> None:
     ax.set_xlabel("Implied effective fuel coefficient (s/kg)")
     ax.set_ylabel("races")
     ax.set_title("Per-race effective fuel coefficient vs the physics value")
-    ax.legend(); ax.grid(True, alpha=0.3)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
     fig.tight_layout()
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = FIG_DIR / "phase2_fuel_calibration.png"

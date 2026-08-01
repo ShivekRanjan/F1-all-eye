@@ -13,7 +13,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 from f1se.config import PROJECT_ROOT
@@ -92,7 +91,7 @@ def main() -> None:
           f"   (soft laps: {soft_laps(data_res.best)})")
     _print_shortlist(data_res)
 
-    print(f"\n=== Data model + cliff prior ===")
+    print("\n=== Data model + cliff prior ===")
     print(f"Recommended: {_lbl(cliff_res.best.compounds, cliff_res.best.pit_laps)}"
           f"   (soft laps: {soft_laps(cliff_res.best)})")
     _print_shortlist(cliff_res)
@@ -115,7 +114,8 @@ def main() -> None:
     ax.set_xlabel(f"Total race time minus {base:.0f}s")
     ax.set_ylabel("sampled races")
     ax.set_title(f"Optimised vs baseline strategy — {TRACK}")
-    ax.legend(); ax.grid(True, alpha=0.3)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
     fig.tight_layout()
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     out = FIG_DIR / "phase4_optimised_strategy.png"
