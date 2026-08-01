@@ -49,9 +49,13 @@ y2 = y + 110
 d.text((bx, y2), "The F1 app that predicts — and shows its work.", font=sub, fill=INK)
 
 y3 = y2 + 58
+# Three claims, chosen because each is checkable and none is a feature list:
+# the simulation, the fact that predictions are scored against what happened,
+# and the plain-English layer — the one thing a reader cannot guess from
+# "F1 dashboard".
 d.text(
     (bx, y3),
-    "Pit-strategy Monte Carlo · podium predictions scored vs reality · live title odds",
+    "Monte-Carlo pit strategy · predictions scored against reality · ask it in plain English",
     font=small, fill=INK_MUTED,
 )
 
