@@ -27,11 +27,19 @@ d = ImageDraw.Draw(img)
 # Top accent bar
 d.rectangle([0, 0, W, 6], fill=GOLD)
 
-# Badge bars (mirrors the favicon mark)
+# Badge: the folded-flag chevron, same shape as favicon.svg and the app's
+# <Logo/>. Was three bars, which matched neither — the tab icon said one thing
+# and the sidebar another, and nobody noticed for two months.
 bx, by = 92, 130
-d.rounded_rectangle([bx, by, bx + 32, by + 116], radius=8, fill=GOLD)
-d.rounded_rectangle([bx + 40, by, bx + 66, by + 116], radius=6, fill=SOFT)
-d.rounded_rectangle([bx + 74, by, bx + 100, by + 116], radius=6, fill=MEDIUM)
+BADGE = 116
+d.rounded_rectangle([bx, by, bx + BADGE, by + BADGE], radius=26,
+                    fill="#151109", outline="#3a3020", width=3)
+# polygon(0 0, 100% 25%, 100% 100%, 0 75%), inset into the badge
+ix, iy, iw = bx + 30, by + 26, 46
+d.polygon(
+    [(ix, iy), (ix + iw, iy + int(iw * 0.26)), (ix + iw, iy + BADGE - 52), (ix, iy + BADGE - 64)],
+    fill=GOLD,
+)
 
 display = ImageFont.truetype(str(FONTS / "impact.ttf"), 84)
 sub = ImageFont.truetype(str(FONTS / "calibri.ttf"), 34)
