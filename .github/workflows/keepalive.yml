@@ -19,13 +19,32 @@ on:
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       API_URL: ${{ vars.API_URL || 'https://f1-strategy-engine.onrender.com' }}
     steps:
       - name: Ping + warm caches
         run: |
           set -e
-          curl -sf -m 90 "$API_URL/health" >/dev/null
+          # Retry before declaring failure. A single attempt failed the job
+          # whenever the instance was mid-wake or the host was redeploying —
+          # i.e. exactly when the ping was doing its job — and painted the
+          # Actions tab red for a service that was fine a minute later.
+          #
+          # Three attempts over ~3 minutes tells the two cases apart: a cold
+          # start or a deploy clears within that, a genuine outage does not.
+          for attempt in 1 2 3; do
+            if curl -sf -m 60 "$API_URL/health" >/dev/null; then
+              echo "healthy on attempt $attempt"
+              break
+            fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::API unreachable after 3 attempts over ~3 minutes"
+              exit 1
+            fi
+            echo "attempt $attempt failed (waking or redeploying?) — retrying in 45s"
+            sleep 45
+          done
           # Prime the Home page's data (best-effort — never fail the job on these).
           curl -sf -m 90 "$API_URL/standings"       -o /dev/null || true
           curl -sf -m 90 "$API_URL/calendar/2026"    -o /dev/null || true
